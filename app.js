@@ -803,7 +803,17 @@ function vTplPick(){const L=tplList();if(!L.length)return '';
 
 /* ===== Hlášení nahlas ===== */
 let warnedFor=-1;
-function say(t){if(S.pref.voice===false)return;try{const sp=window.speechSynthesis;if(!sp)return;sp.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='cs-CZ';u.rate=1;sp.speak(u)}catch(e){}}
+const csVoices=()=>{try{return window.speechSynthesis?window.speechSynthesis.getVoices().filter(v=>/^cs/i.test(v.lang)):[]}catch(e){return[]}};
+function voiceScore(v){const n=v.name;return(/premium|prémiov/i.test(n)?60:0)+(/natural|neural/i.test(n)?55:0)+(/enhanced|vylepšen/i.test(n)?45:0)+(/online/i.test(n)?20:0)+(/google/i.test(n)?30:0)+(/zuzana|vlasta|antonin|antonín/i.test(n)?8:0)+(/compact|eloquence/i.test(n)?-30:0)+(v.localService?2:0)}
+function voiceTag(v){const n=v.name;return/premium|prémiov|natural|neural/i.test(n)?'přirozený':/enhanced|vylepšen|google|online/i.test(n)?'lepší':'základní'}
+function bestVoice(){const vs=csVoices();if(S.pref.vname){const f=vs.find(v=>v.name===S.pref.vname);if(f)return f}return vs.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null}
+function say(t,force){if(!force&&S.pref.voice===false)return;try{const sp=window.speechSynthesis;if(!sp)return;sp.cancel();const u=new SpeechSynthesisUtterance(t),v=bestVoice();if(v)u.voice=v;u.lang=v?v.lang:'cs-CZ';u.rate=+S.pref.vrate||0.95;u.pitch=1;sp.speak(u)}catch(e){}}
+try{if(window.speechSynthesis){window.speechSynthesis.getVoices();window.speechSynthesis.addEventListener('voiceschanged',()=>{if(S.tab==='set')render(true)})}}catch(e){}
+function voiceSet(){if(!window.speechSynthesis)return'<p class="small muted">Tento prohlížeč hlasová hlášení neumí.</p>';const vs=csVoices().sort((a,b)=>voiceScore(b)-voiceScore(a)),b=vs[0];
+ return `<div class="field"><span class="label">Hlas hlášení</span><select id="pf_vname" data-c="vname"><option value="">automaticky${b?' – '+esc(b.name):''}</option>${vs.map(v=>`<option value="${esc(v.name)}" ${S.pref.vname===v.name?'selected':''}>${esc(v.name)} · ${voiceTag(v)}</option>`).join('')}</select></div>
+  <div class="field"><span class="label">Tempo řeči</span><select id="pf_vrate" data-c="vrate">${[['0.85','pomalé'],['0.95','klidné'],['1.05','běžné'],['1.15','rychlé']].map(([v,l])=>`<option value="${v}" ${String(S.pref.vrate||'0.95')===v?'selected':''}>${l}</option>`).join('')}</select></div>
+  <button class="btn ghost sm" data-a="vtest">▶ Přehrát ukázku</button>
+  <p class="small muted">${vs.length?'':'V tomto zařízení není žádný český hlas. '}Přirozenější hlas si stáhneš do telefonu: iPhone → Nastavení → Zpřístupnění → Předčítaný obsah → Hlasy → Čeština → Zuzana (Prémiová nebo Vylepšená). Android → Nastavení → Převod textu na řeč → Google, stáhnout češtinu. Pak tu vyber hlas označený „přirozený“ nebo „lepší“.</p>`}
 function announce(){const s=curStep();if(!s)return;const b=S.plan.blocks[s.bi];
  if(s.r!=null)say(s.r===0?'Stanoviště. Každá skupina ke svému trenérovi.':'Střídáme stanoviště! Rotace '+(s.r+1)+'.');
  else say((BT[b.type]||'')+'. '+actName(b.items[s.item])+'. '+s.min+(s.min===1?' minuta.':s.min<5?' minuty.':' minut.'))}
@@ -1093,6 +1103,7 @@ function renderHistList(){
 
 /* ===== Události ===== */
 const actions={
+ vtest:()=>say('Stanoviště. Každá skupina ke svému trenérovi. Ještě minuta.',true),
  menu:()=>{S.menu=!S.menu;render(true)},
  tab:v=>{S.menu=false;S.tab=v;ls.set('u7-tab',v);S.sel=null;render(true);window.scrollTo(0,0)},
  venue:v=>{S.draft.venue=v;saveDraft();render(true)},
@@ -1185,6 +1196,8 @@ document.addEventListener('change',async e=>{const el=e.target,c=el.dataset.c;if
  else if(c==='trname'){S.draft.name=el.value;saveDraft()}
  else if(c==='planote'){S.plan.note=el.value;savePlan();if(S.plans[S.plan.id])savePlanToHistory(true).catch(()=>{})}
  else if(c==='voice'){S.pref.voice=el.checked;savePref();if(el.checked)say('Hlášení zapnuto.')}
+ else if(c==='vname'){S.pref.vname=el.value;savePref();say('Ahoj děti, jdeme na to!',true)}
+ else if(c==='vrate'){S.pref.vrate=el.value;savePref();say('Ještě minuta.',true)}
  else if(c==='skill'){const t=clone(team()),pl=t.players.find(x=>x.num===el.dataset.p);if(!pl)return;const sk=skOf(pl);pl.sk=el.checked?[...new Set(sk.concat([el.dataset.v]))]:sk.filter(x=>x!==el.dataset.v);await saveTeam(t);openKid(el.dataset.p)}
  else if(c==='planname'){S.plan.name=el.value.trim();savePlan();render(true)}
  else if(c==='gear'){S.gear[el.dataset.v]=el.checked}
@@ -1477,6 +1490,7 @@ function vSet(){
  <section class="card"><h2>Aplikace v tomto telefonu</h2>
   <div class="field"><span class="label">Vzhled</span><select id="pf_theme" data-c="theme">${[['','podle telefonu'],['light','světlý'],['dark','tmavý'],['sun','na slunce (vysoký kontrast)']].map(([v,l])=>`<option value="${v}" ${(S.pref.theme||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>
   <label class="row"><input type="checkbox" id="pf_wake" data-c="wake" ${S.pref.wake!==false?'checked':''}> Během tréninku na hřišti nenechat obrazovku zhasnout</label>
+  ${voiceSet()}
   <p class="small muted">Aplikaci si můžeš přidat na plochu telefonu (v prohlížeči Sdílet → Přidat na plochu). Tlačítko ☀ nahoře zapne režim na slunce.</p></section>`;
  return h}
 Object.assign(actions,{
