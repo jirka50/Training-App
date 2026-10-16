@@ -599,7 +599,7 @@ const S={
  pref:Object.assign({theme:'',wake:true,voice:true},ls.get('u7-pref',{})),mv:null,
  plan:ls.get('u7-plan',null),sel:null,lib:{kind:'all',cat:'all',age:'all',q:''},ages:{},gear:{},
  run:Object.assign({i:0,left:null,endAt:null,running:false,auto:true},ls.get('u7-run',{})),
- confirm:null,imp:null
+ confirm:null,imp:null,mk:null
 };
 S.draft.date=today();if(!S.draft.coachSel)S.draft.coachSel={};if(!S.draft.guests)S.draft.guests={};
 const savePref=()=>ls.set('u7-pref',S.pref);
@@ -1000,6 +1000,7 @@ function vField(){
   <label class="row small"><input type="checkbox" id="auto" data-c="auto" ${S.run.auto?'checked':''}> Po skončení času automaticky na další blok</label>
   <label class="row small"><input type="checkbox" id="voice" data-c="voice" ${S.pref.voice!==false?'checked':''}> Hlásit střídání nahlas${window.speechSynthesis?'':' (tento prohlížeč neumí)'}</label>
   ${mid}
+  ${S.plan.groups.flat().length?'<div class="row" style="justify-content:center"><button class="btn ghost sm" data-a="mkopen">✓ Kdo co zvládl</button></div>':''}
   ${nx?`<p class="small muted">Další: <b>${esc(stepTitle(nx))}</b> · ${nx.min} min</p>`:'<p class="small muted">Poslední blok tréninku</p><button class="btn ball" data-a="rateopen">Zhodnotit trénink</button>'}
  </section>
  <section class="card"><h2>Průběh</h2><div class="steps">${st.map((x,i)=>{let a2=0;for(let j=0;j<i;j++)a2+=st[j].min;return `<button class="stp ${i===S.run.i?'cur':i<S.run.i?'done':''}" data-a="goto" data-v="${i}"><span>${a2}′</span><span>${esc(stepTitle(x))}</span><span>${x.min}′</span></button>`}).join('')}</div></section>`
@@ -1007,6 +1008,22 @@ function vField(){
 let actx=null,beeped=false,wl=null;
 function beep(){try{if(!actx)return;[0,.35,.7].forEach(t=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=880;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.001,actx.currentTime+t);g.gain.exponentialRampToValueAtTime(.4,actx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+t+.25);o.start(actx.currentTime+t);o.stop(actx.currentTime+t+.3)})}catch(e){}if(navigator.vibrate)try{navigator.vibrate([200,100,200])}catch(e){}}
 function curStep(){return steps()[S.run.i]}
+/* ===== Na hřišti: rychlé odškrtnutí zvládnuté dovednosti ===== */
+function mkDefault(){const s=curStep(),p=S.plan;let c=null;if(s){const b=p.blocks[s.bi],id=s.r!=null?b.items[s.r%b.items.length]:b.items[s.item],a=ACT[id];c=a&&FOCUS.includes(a.c)?a.c:null}
+ c=c||(p.focus||[]).find(f=>FOCUS.includes(f))||'hazeni';const ks=p.groups.flat().map(n=>kid(n,p));
+ const sk=SK.filter(x=>x.c===c);return(sk.find(x=>ks.some(k=>!skOf(plOf(k.tid).find(q=>q.num===k.num)).includes(x.id)))||sk[0]).id}
+function openMk(){const p=S.plan;if(!p)return;if(!S.mk||!SK.some(x=>x.id===S.mk))S.mk=mkDefault();const sk=SK.find(x=>x.id===S.mk),s=curStep(),sh=$('#sheet');
+ const has=k=>{const pl=plOf(k.tid).find(q=>q.num===k.num);return skOf(pl).includes(sk.id)};
+ const st=s&&s.r!=null?p.blocks[s.bi]:null;let done=0,tot=0;
+ const grp=p.groups.map((g,gi)=>{const ks=g.map(n=>Object.assign(kid(n,p),{key:n}));ks.forEach(k=>{tot++;if(has(k))done++});
+  return `<div class="field"><span class="label">Skupina ${GL[gi]}${p.coaches[gi]?' · '+esc(p.coaches[gi]):''}${st?' · '+esc(actName(st.items[(gi+s.r)%st.items.length])):''}</span><div class="kids">${ks.map(k=>`<button class="chip kid mk ${has(k)?'on':''}" data-a="mkkid" data-v="${esc(k.key)}" aria-pressed="${has(k)}">${kidPh(k)}<b>${esc(numShort(k.num))}</b>${esc(k.name||'?')}${has(k)?' ✓':''}</button>`).join('')||'<span class="muted small">prázdná</span>'}</div></div>`}).join('');
+ sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Kdo co zvládl"><div class="sumline"><h2>Kdo co zvládl</h2><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
+  <div class="field"><span class="label">Dovednost</span><select id="mk_sk" data-c="mksk">${FOCUS.map(f=>`<optgroup label="${esc(CATS[f])}">${SK.filter(x=>x.c===f).map(x=>`<option value="${x.id}" ${x.id===sk.id?'selected':''}>${esc(x.n)}</option>`).join('')}</optgroup>`).join('')}</select></div>
+  <p class="small"><b>${done} z ${tot}</b> dětí na tréninku to zvládá. Klepni na dítě, které to dnes předvedlo; dalším klepnutím značku zrušíš.</p>
+  ${grp}<p class="small muted">Ukládá se hned do karty dítěte (Děti → dovednosti) a počítá se do návrhu úrovně.</p></div>`;
+ sh.hidden=false;sh.dataset.id=''}
+async function mkToggle(key){const p=S.plan,x=kid(key,p),t=clone(S.teams[x.tid]);if(!t)return;const pl=(t.players||[]).find(q=>q.num===x.num);if(!pl)return;const sk=skOf(pl),id=S.mk;
+ pl.sk=sk.includes(id)?sk.filter(q=>q!==id):sk.concat([id]);await Store.put('teams',x.tid,t);openMk()}
 function remaining(){const s=curStep();if(!s)return 0;if(S.run.running&&S.run.endAt)return S.run.endAt-Date.now();return S.run.left!=null?S.run.left:s.min*60000}
 function tick(force){
  if(S.tab!=='field'||!S.plan)return;const s=curStep();if(!s)return;
@@ -1176,7 +1193,7 @@ const actions={
   else{const ms=remaining();S.run.endAt=Date.now()+ms;S.run.running=true;S.run.left=null;beeped=ms<=0;lock(true);if(ms>=curStep().min*60000-1000)announce()}saveRun();render(true)},
  plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();tick()},
  next:()=>gotoStep(S.run.i+1),prev:()=>gotoStep(S.run.i-1),goto:v=>gotoStep(+v),
- lk:v=>{S.lib.kind=v;render(true)},la:v=>{S.lib.age=v;render(true)},
+ lk:v=>{S.lib.kind=v;render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
  agetog:async v=>{const id=$('#sheet').dataset.id,a=ACT[id];if(!a)return;const cur=agOf(a),nx=cur.includes(v)?cur.filter(x=>x!==v):AGES.filter(x=>x===v||cur.includes(x));if(!nx.length){toast('Aspoň jedna kategorie musí zůstat.');return}
   if(nx.join()===agDef(a).join())await Store.del('ages',id);else await Store.put('ages',id,{ag:nx});openAct(id);renderLibList()},
  agereset:async()=>{const id=$('#sheet').dataset.id;await Store.del('ages',id);openAct(id);renderLibList()},lc:v=>{S.lib.cat=v;render(true)},
@@ -1212,6 +1229,7 @@ document.addEventListener('change',async e=>{const el=e.target,c=el.dataset.c;if
  if(c==='date'){S.draft.date=el.value||today();saveDraft();if(S.plan){S.plan.date=S.draft.date;savePlan()}render()}
  else if(c==='trname'){S.draft.name=el.value;saveDraft()}
  else if(c==='planote'){S.plan.note=el.value;savePlan();if(S.plans[S.plan.id])savePlanToHistory(true).catch(()=>{})}
+ else if(c==='mksk'){S.mk=el.value;openMk()}
  else if(c==='voice'){S.pref.voice=el.checked;savePref();if(el.checked)say('Hlášení zapnuto.')}
  else if(c==='vname'){S.pref.vname=el.value;savePref();say('Ahoj děti, jdeme na to!',true)}
  else if(c==='vrate'){S.pref.vrate=el.value;savePref();say('Ještě minuta.',true)}
