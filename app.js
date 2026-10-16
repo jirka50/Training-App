@@ -648,8 +648,10 @@ const coachCount=()=>coachNames().length;
 
 /* ===== Generátor ===== */
 function recentIds(){const s=new Set(),st=selTeams();Object.values(S.plans).filter(p=>planTeams(p).some(t=>st.includes(t))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,2).forEach(p=>(p.blocks||[]).forEach(b=>(b.items||[]).forEach(i=>s.add(i))));return s}
-function ctx(){const d=S.draft;return{kids:presentKeys().length,coaches:coachCount(),venue:d.venue,focus:d.focus.length?d.focus:FOCUS.slice(),recent:recentIds(),used:new Set()}}
-function fits(a,c,kids){if((a.kids||1)>(kids==null?c.kids:kids))return false;if(a.out&&c.venue==='hala')return false;if((a.co||1)>c.coaches)return false;return true}
+const autoAge=()=>selTeams().some(t=>/U\s?6/i.test(tName(t)))?'U6':'U7';
+const draftAge=()=>AGES.includes(S.draft.age)?S.draft.age:autoAge();
+function ctx(p){const d=S.draft;return{age:(p&&p.age)||draftAge(),kids:presentKeys().length,coaches:coachCount(),venue:d.venue,focus:d.focus.length?d.focus:FOCUS.slice(),recent:recentIds(),used:new Set()}}
+function fits(a,c,kids){if(c.age&&!agOf(a).includes(c.age))return false;if((a.kids||1)>(kids==null?c.kids:kids))return false;if(a.out&&c.venue==='hala')return false;if((a.co||1)>c.coaches)return false;return true}
 function score(a,c,cat){let s=Math.random()*1.5;const tags=[a.c].concat(a.t||[]);
  if(cat){if(a.c===cat)s+=4;else if(tags.includes(cat))s+=2}
  else if(c.focus.includes(a.c))s+=3;else if(tags.some(t=>c.focus.includes(t)))s+=1.5;
@@ -675,7 +677,7 @@ function generate(){
  const c=ctx();const blocks=[],G=c.coaches>=2?c.coaches:1;RS=rateStats();
  if(!c.kids){toast('Označ aspoň jedno přítomné dítě.');return}
  const tp=S.draft.tpl&&S.tpls[S.draft.tpl],struct=tp?tp.blocks.map(b=>[b.type,+b.min||5,b.mode]):TPL[S.draft.minutes];
- const wk=S.draft.week?SEASON[S.draft.week-1]:null,must=(wk?wk.must:[]).filter(id=>ACT[id]);must.forEach(id=>c.used.add(id));
+ const wk=S.draft.week?SEASON[S.draft.week-1]:null,must=(wk?wk.must:[]).filter(id=>ACT[id]&&agOf(ACT[id]).includes(c.age));must.forEach(id=>c.used.add(id));
  const hasR=struct.some(x=>x[0]==='skillr');
  const mSeq=must.filter(id=>ACT[id].k==='seq'&&hasR),mMatch=must.filter(id=>ACT[id].match),mGame=must.filter(id=>ACT[id].k==='game'&&!ACT[id].st&&!ACT[id].match),mSt=must.filter(id=>!mSeq.includes(id)&&!mMatch.includes(id)&&!mGame.includes(id));
  struct.forEach(([type,min])=>{
@@ -698,7 +700,7 @@ function generate(){
   if(b.items.length)blocks.push(b)
  });
  const names=coachNames();
- const ts=selTeams();S.plan={id:uid(),name:(S.draft.name||'').trim()||(wk?'Týden '+S.draft.week+': '+wk.n:''),week:S.draft.week||0,team:ts[0],teams:ts,date:S.draft.date,minutes:tp?tplMin(tp):S.draft.minutes,coaches:names,focus:S.draft.focus.slice(),venue:S.draft.venue,present:presentKeys(),blocks,groups:makeGroups(presentKeys(),G,S.draft.mix!==false)};
+ const ts=selTeams();S.plan={id:uid(),name:(S.draft.name||'').trim()||(wk?'Týden '+S.draft.week+': '+wk.n:''),week:S.draft.week||0,team:ts[0],teams:ts,date:S.draft.date,minutes:tp?tplMin(tp):S.draft.minutes,age:c.age,coaches:names,focus:S.draft.focus.slice(),venue:S.draft.venue,present:presentKeys(),blocks,groups:makeGroups(presentKeys(),G,S.draft.mix!==false)};
  if(tp)S.plan.blocks.forEach((b,i)=>{const want=(tp.blocks[i]||{}).mode;if(want&&MODEABLE.includes(b.type)&&want!==(b.mode==='st'?'st':'same')&&!(want==='st'&&nG(S.plan)<2))setMode(b,want)});
  S.gear={};S.openRate=false;S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();savePlan();actions.tab('train');toast('Trénink sestaven.')
 }
@@ -728,7 +730,7 @@ const stepsHtml=a=>`<ol class="steps-list">${a.steps.map(x=>`<li><b>${esc(x.n)}<
 function mountAnims(root){if(!root)return;root.querySelectorAll('[data-anim]').forEach(el=>{try{animate(el,el.dataset.anim)}catch(e){el.remove()}})}
 function rotInfo(b){const n=b.items.length||1;const rot=Math.min(n,Math.max(1,Math.floor(b.min/5)));const rotMin=Math.floor(b.min/rot);return{n,rot,rotMin,last:b.min-rotMin*(rot-1)}}
 function swap(bi,si){
- const p=S.plan,b=p.blocks[bi],c=ctx();p.blocks.forEach(x=>x.items.forEach(i=>c.used.add(i)));
+ const p=S.plan,b=p.blocks[bi],c=ctx(p);p.blocks.forEach(x=>x.items.forEach(i=>c.used.add(i)));
  const cur=b.items[si];let pool;
  if(b.mode==='st')pool=pools.station(c,groupSize(c));
  else if(b.type==='warm')pool=pools.warm(c);
@@ -877,6 +879,7 @@ function vPlan(){
    <div class="field"><span class="label">Datum</span><input type="date" id="pdate" data-c="date" value="${esc(d.date)}"></div>
    <div class="field"><span class="label">Prostor</span><div class="seg">${[['venku','Venku'],['hala','Hala']].map(([k,l])=>`<button data-a="venue" data-v="${k}" class="${d.venue===k?'on':''}">${l}</button>`).join('')}</div></div>
   </div>
+  <div class="field"><span class="label">Věková kategorie</span><div class="seg">${AGES.map(g=>`<button data-a="age" data-v="${g}" class="${draftAge()===g?'on':''}">${g}</button>`).join('')}</div><span class="small muted">Do tréninku se vyberou jen hry a cviky vhodné pro ${draftAge()}${AGES.includes(d.age)?'':autoAge()==='U6'?' (podle názvu týmu)':' (výchozí)'}. Označení se mění v Knihovně.</span></div>
   ${vSeason()}
   <div class="field"><span class="label">Délka tréninku</span><div class="seg">${Object.keys(TPL).map(m=>`<button data-a="min" data-v="${m}" class="${!d.tpl&&+m===d.minutes?'on':''}">${m} min</button>`).join('')}</div></div>
   ${vTplPick()}
@@ -920,7 +923,7 @@ function vPlanOut(){
   return `<div class="blk"><div class="clock">${start}′<small>${BT[b.type]||b.type}</small></div><div class="bbody">${seg}${body}${ctr}</div></div>`
  }).join('');
  let h=`<section class="card" id="planCard">
-  <div class="sumline"><h2 style="flex:1 1 100%">${esc(planTitle(p))}</h2><span class="total ${total!==p.minutes?'bad':''}">${total} / ${p.minutes} min</span></div>
+  <div class="sumline"><h2 style="flex:1 1 100%">${esc(planTitle(p))}</h2><span class="total ${total!==p.minutes?'bad':''}">${p.age?p.age+' · ':''}${total} / ${p.minutes} min</span></div>
   <div class="field"><span class="label">Název</span><input type="text" id="plan_name" data-c="planname" value="${esc(p.name||'')}" placeholder="${esc('Trénink '+fmtDate(p.date))}"></div>
   <p class="small muted">${fmtDate(p.date)} · ${planTeams(p).length>1?planTeams(p).map(t=>esc(tName(t))).join(' + ')+' · ':''}${p.present.length} dětí · ${p.coaches.length} ${p.coaches.length===1?'trenér':p.coaches.length<5?'trenéři':'trenérů'} · ${p.venue==='hala'?'hala':'venku'} · ${p.focus.map(f=>CATS[f]).join(', ')}</p>
   <div class="tl">${blocks}</div>
@@ -1114,7 +1117,7 @@ const actions={
  vtest:()=>say('Stanoviště. Každá skupina ke svému trenérovi. Ještě minuta.',true),
  menu:()=>{S.menu=!S.menu;render(true)},
  tab:v=>{S.menu=false;S.tab=v;ls.set('u7-tab',v);S.sel=null;render(true);window.scrollTo(0,0)},
- venue:v=>{S.draft.venue=v;saveDraft();render(true)},
+ venue:v=>{S.draft.venue=v;saveDraft();render(true)},age:v=>{S.draft.age=v;saveDraft();render(true)},
  min:v=>{S.draft.minutes=+v;S.draft.tpl='';saveDraft();render(true)},
  focus:v=>{const f=S.draft.focus;const i=f.indexOf(v);if(i>=0)f.splice(i,1);else f.push(v);saveDraft();render(true)},
  ctog:v=>{const s=coachSelIds();const i=s.indexOf(v);if(i>=0)s.splice(i,1);else s.push(v);S.draft.coachSel[selKey()]=s;saveDraft();render(true)},
@@ -1143,7 +1146,7 @@ const actions={
  rm:(v,el)=>{S.plan.blocks.splice(+el.dataset.b,1);savePlan();render(true)},
  swap:(v,el)=>swap(+el.dataset.b,+el.dataset.s),
  bmode:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(!b||b.mode===v||(v!=='st'&&b.mode!=='st'))return;setMode(b,v);savePlan();render(true)},
- additem:(v,el)=>{const p=S.plan,b=p.blocks[+el.dataset.b],c=ctx();p.blocks.forEach(x=>x.items.forEach(i=>c.used.add(i)));const pool=(b.type==='warm'?pools.warm(c):b.type==='game'?pools.gameAny(c):b.type==='skillr'?pools.skillr(c).concat(pools.seq(c)):pools.seq(c)).filter(a=>!c.used.has(a.id));const a=best(pool,c);if(!a)return toast('Další vhodná položka už není.');b.items.push(a.id);savePlan();render(true)},
+ additem:(v,el)=>{const p=S.plan,b=p.blocks[+el.dataset.b],c=ctx(p);p.blocks.forEach(x=>x.items.forEach(i=>c.used.add(i)));const pool=(b.type==='warm'?pools.warm(c):b.type==='game'?pools.gameAny(c):b.type==='skillr'?pools.skillr(c).concat(pools.seq(c)):pools.seq(c)).filter(a=>!c.used.has(a.id));const a=best(pool,c);if(!a)return toast('Další vhodná položka už není.');b.items.push(a.id);savePlan();render(true)},
  rmitem:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(b&&b.items.length>1){b.items.splice(+el.dataset.s,1);savePlan();render(true)}},
  addblk:()=>{const c=ctx();S.plan.blocks.forEach(b=>b.items.forEach(i=>c.used.add(i)));const a=best(pools.gameAny(c).filter(x=>!c.used.has(x.id)),c);if(!a)return toast('Žádná další vhodná hra.');const endI=S.plan.blocks.findIndex(b=>b.type==='end');S.plan.blocks.splice(endI<0?S.plan.blocks.length:endI,0,{id:uid(),type:'game',min:a.min,items:[a.id]});savePlan();render(true)},
  adddrink:()=>{const B=S.plan.blocks;const i=Math.max(1,Math.floor(B.length/2));B.splice(i,0,{id:uid(),type:'drink',min:3,items:['r04']});savePlan();render(true)},
