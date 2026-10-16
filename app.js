@@ -768,7 +768,7 @@ function vKids(){
   <p class="small muted">Klepni na dítě a odškrtni, co už zvládá. Podle počtu dovedností aplikace navrhne úroveň: do 4 Orlíci, 5–9 Orli, od 10 Orliska.</p>
   <div class="dl">${FOCUS.map(f=>`<div class="sumline"><span>${CATS[f]}</span><span class="small muted">${pc[f]} %</span></div><div class="pbar"><i style="width:${pc[f]}%"></i></div>`).join('')}</div>
   ${w?`<div class="row"><span class="small">Nejslabší oblast: <b>${CATS[w]}</b></span><button class="btn ghost sm" data-a="kidfocus" data-v="${w}">Zaměřit příští trénink</button></div>`:''}</section>
- <section class="card"><h2>Děti · ${ps.length}</h2>${ps.length?`<div class="lib-list">${ps.map(p=>{const n=skOf(p).length,sg=lvlFor(n);return `<button class="item" data-a="kid" data-v="${esc(p.num)}"><h3>${noNum(p.num)?'':esc(p.num)+' · '}${esc(p.name)}</h3><span class="kb ${p.lvl?'game':'routine'}">${LVL[p.lvl]||'bez úrovně'}</span><span class="meta"><span class="pbar"><i style="width:${Math.round(100*n/SK.length)}%"></i></span>${n} z ${SK.length} dovedností${n&&p.lvl!==sg?' · návrh: '+LVL[sg]:''}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná. Děti přidáš ve Scorekeeperu.</p>'}</section>`}
+ <section class="card"><h2>Děti · ${ps.length}</h2>${ps.length?`<div class="lib-list">${ps.map(p=>{const n=skOf(p).length,sg=lvlFor(n);return `<button class="item" data-a="kid" data-v="${esc(p.num)}"><h3>${noNum(p.num)?'':esc(p.num)+' · '}${esc(p.name)}</h3><span class="kb ${p.lvl?'game':'routine'}">${LVL[p.lvl]||'bez úrovně'}</span><span class="meta"><span class="pbar"><i style="width:${Math.round(100*n/SK.length)}%"></i></span>${n} z ${SK.length} dovedností${n&&p.lvl!==sg?' · návrh: '+LVL[sg]:''}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná. Děti přidáš v záložce Tým.</p>'}</section>`}
 function openKid(num){const p=players().find(x=>x.num===num);if(!p)return;const has=skOf(p),sg=lvlFor(has.length),sh=$('#sheet');
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="${esc(p.name)}"><div class="sumline"><span class="kb ${p.lvl?'game':'routine'}">${LVL[p.lvl]||'bez úrovně'}</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <h2>${esc(p.name)}${noNum(p.num)?'':' · '+esc(p.num)}</h2><p class="small muted">${has.length} z ${SK.length} dovedností · návrh úrovně: <b>${LVL[sg]}</b></p>
@@ -822,8 +822,8 @@ function vParents(){return `<section class="card"><div class="sumline"><h2>Pro r
  <textarea id="parentsTxt" rows="9">${esc(parentsText(S.plan))}</textarea></section>`}
 
 /* ===== Vykreslení ===== */
-const MENU=[['Trénink',['plan','train','field']],['Tým',['kids','hist']],['Knihovna',['lib']],['Nastavení',['set']]];
-const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['kids','Děti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
+const MENU=[['Trénink',['plan','train','field']],['Tým',['team','kids','hist']],['Knihovna',['lib']],['Nastavení',['set']]];
+const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['team','Tým'],['kids','Děti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
 let pend=false;
 function render(force){
  if(!W.role){renderLogin();return}
@@ -836,7 +836,7 @@ function render(force){
  $('#teamSel').innerHTML=ts.length?ts.map(([id,t])=>`<option value="${esc(id)}" ${id===S.teamId?'selected':''}>${esc(t.name||'Tým')}</option>`).join(''):'<option>Žádný tým</option>';
  $('#teamSel').disabled=!ts.length;$('#teamSel').hidden=ts.length<2;
  RS=rateStats();
- const v={plan:vPlan,train:vTrain,field:vField,kids:vKids,lib:vLib,set:vSet,hist:vHist}[S.tab]||vPlan;
+ const v={plan:vPlan,train:vTrain,field:vField,team:vTeam,kids:vKids,lib:vLib,set:vSet,hist:vHist}[S.tab]||vPlan;
  $('#view').innerHTML=v();mountAnims($('#view'));
  if(S.tab==='lib')renderLibList();
  if(S.tab==='hist')renderHistList();
@@ -844,7 +844,7 @@ function render(force){
 }
 document.addEventListener('focusout',()=>setTimeout(()=>{if(pend)render()},0));
 
-function noTeam(){return `<section class="card empty"><h2>Zatím žádný tým</h2><p class="muted">${S.ready?'Týmy a soupisky zakládá správce ve Scorekeeperu. Jakmile tam budou, objeví se tady.':'Načítám sestavu…'}</p></section>`}
+function noTeam(){return `<section class="card empty"><h2>Zatím žádný tým</h2><p class="muted">${S.ready?'Týmy zakládá správce ve Scorekeeperu. Jakmile tam budou, objeví se tady.':'Načítám sestavu…'}</p></section>`}
 
 function vPlan(){
  if(!team())return noTeam();
@@ -873,7 +873,7 @@ function vPlan(){
    ${mt&&nC>1?`<label class="row small"><input type="checkbox" id="mix" data-c="mix" ${d.mix!==false?'checked':''}> Promíchat týmy ve skupinách (jinak má každý tým své skupiny)</label>`:''}</div>
   <div class="field"><div class="sumline"><span class="label">Docházka · přítomno ${pr.length} z ${nAll}</span><span class="row"><button class="btn ghost sm" data-a="all">Všichni</button><button class="btn ghost sm" data-a="none">Nikdo</button></span></div>
    ${st.map(tid=>{const ps=plOf(tid),po=presentOf(tid);return `${mt?`<div class="sumline"><h3>${esc(tName(tid))} · ${po.length} z ${ps.length}</h3><span class="row"><button class="btn ghost sm" data-a="all" data-v="${esc(tid)}">Všichni</button><button class="btn ghost sm" data-a="none" data-v="${esc(tid)}">Nikdo</button></span></div>`:''}
-   ${ps.length?`<div class="kids">${ps.map(p=>{const on=po.includes(p.num);return `<button class="chip kid ${on?'on':'off'}" data-a="att" data-v="${esc(K(tid,p.num))}" aria-pressed="${on}"><b>${esc(numShort(p.num))}</b>${esc(p.name)}${LVL[p.lvl]?`<span class="lvl">${LVL[p.lvl]}</span>`:''}</button>`}).join('')}</div>`:`<p class="muted small">Soupiska ${esc(tName(tid))} je prázdná. Děti přidáš ve Scorekeeperu.</p>`}`}).join('')}
+   ${ps.length?`<div class="kids">${ps.map(p=>{const on=po.includes(p.num);return `<button class="chip kid ${on?'on':'off'}" data-a="att" data-v="${esc(K(tid,p.num))}" aria-pressed="${on}"><b>${esc(numShort(p.num))}</b>${esc(p.name)}${LVL[p.lvl]?`<span class="lvl">${LVL[p.lvl]}</span>`:''}</button>`}).join('')}</div>`:`<p class="muted small">Soupiska ${esc(tName(tid))} je prázdná. Děti přidáš v záložce Tým.</p>`}`}).join('')}
   </div>
   <div class="row"><button class="btn" data-a="gen">${S.plan?'Sestavit znovu':'Sestavit trénink'}</button></div>
  </section>`;
@@ -1223,7 +1223,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.run.run
    ================================================================================= */
 const FB_CONFIG={apiKey:"AIzaSyDqwd6A6eaeHlczoLhGvaxQlzdp9od-0Pg",authDomain:"eagles-scorekeeper.firebaseapp.com",databaseURL:"https://eagles-scorekeeper-default-rtdb.europe-west1.firebasedatabase.app",projectId:"eagles-scorekeeper",storageBucket:"eagles-scorekeeper.firebasestorage.app",messagingSenderId:"691498301504",appId:"1:691498301504:web:ec05dfb8a51095ec1e87a5"};
 const WKEY='u7w-auth',CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',COLS=['plans','custom','tpls'];
-const W={role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{}}};
+const W={rdel:null,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{}}};
 const J=v=>JSON.stringify(v);
 const PJ=v=>{try{return v&&typeof v.json==='string'?JSON.parse(v.json):null}catch(e){return null}};
 const normCode=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^(.{4})(.+)$/,'$1-$2');
@@ -1337,28 +1337,56 @@ async function runImport(){const b=W.imp;if(!b)return;const {map,miss}=planImpor
 document.addEventListener('change',e=>{if(e.target.id!=='wimpfile')return;const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
  r.onload=()=>{try{const b=JSON.parse(r.result);if(!b||b.app!=='u7-planovac')throw 0;W.imp=b;W.impMsg=''}catch(x){W.imp=null;W.impMsg='Tohle není záloha tréninkového plánovače.'}render(true)};r.readAsText(f)});
 
+
+/* ---------- záložka Tým: soupiska společná se Scorekeeperem ---------- */
+function rosterEdit(tid,fn){const R=clone(W.raw.roster[tid]||{name:tName(tid),players:[]});if(!Array.isArray(R.players))R.players=[];
+ if(fn(R)===false)return;W.raw.roster[tid]=R;Web.compose();render(true);Web.write('teams/'+tid+'/roster',{ts:Date.now(),dev:'planovac',json:J(R)})}
+function vTeam(){
+ const t=team();if(!t)return noTeam();const ps=players(),adm=W.role==='admin';
+ return `<section class="card"><div class="sumline"><h2>Tým</h2><span class="small muted">společné se Scorekeeperem</span></div>
+  ${adm?`<div class="field"><span class="label">Název týmu</span><input type="text" id="wt_name" data-c="wtname" value="${esc(t.name)}"></div>`:`<p><b>${esc(t.name)}</b></p>`}
+  <span class="label">Soupiska · ${ps.length} ${ps.length===1?'dítě':ps.length>1&&ps.length<5?'děti':'dětí'}</span>
+  ${ps.length?`<div class="dl">${ps.map(p=>`<div class="rrow">
+   <b class="rnum">${noNum(p.num)?'–':esc(p.num)}</b>
+   <input type="text" id="wr_${esc(p.num)}" data-c="wrname" data-v="${esc(p.num)}" value="${esc(p.name)}" aria-label="Jméno, číslo ${noNum(p.num)?'bez čísla':esc(p.num)}">
+   <button class="chip" data-a="lvl" data-v="${esc(p.num)}" title="Úroveň">${LVL[p.lvl]||'úroveň'}</button>
+   ${W.rdel===p.num?`<span class="row" style="grid-column:1/-1;justify-content:flex-end"><span class="warnnote">Odebrat ${esc(p.name)} ze soupisky?</span><button class="btn danger sm" data-a="wrdelgo" data-v="${esc(p.num)}">Odebrat</button><button class="btn ghost sm" data-a="wrdelno">Ne</button></span>`:`<button class="ib" data-a="wrdel" data-v="${esc(p.num)}" aria-label="Odebrat ${esc(p.name)}">✕</button>`}
+  </div>`).join('')}</div>`:'<p class="muted">Soupiska je prázdná. Přidej první dítě.</p>'}
+  <form id="wAddP" class="rrow"><input type="text" inputmode="numeric" maxlength="3" id="wn_num" placeholder="Č." aria-label="Číslo dresu (nepovinné)"><input type="text" id="wn_name" placeholder="Jméno dítěte" aria-label="Jméno"><button class="btn sm" type="submit" style="grid-column:span 2">Přidat</button></form>
+  ${W.rmsg?`<p class="warnnote">${esc(W.rmsg)}</p>`:''}
+  <p class="small muted">Číslo dresu není povinné. Zadáním stejného čísla změníš jméno. Číslo u stávajícího dítěte měň ve Scorekeeperu, přepíše se tam i v zápisech zápasů. Úroveň přepínáš klepnutím: Orlíci → Orli → Orliska.</p></section>
+  <section class="card"><div class="row"><button class="btn ghost sm" data-a="tab" data-v="kids">Dovednosti dětí</button><button class="btn ghost sm" data-a="tab" data-v="plan">Naplánovat trénink</button></div></section>`}
+document.addEventListener('submit',e=>{if(e.target.id!=='wAddP')return;e.preventDefault();const tid=S.teamId;
+ const raw=$('#wn_num').value.trim().replace(/^0+(?=\d)/,''),name=$('#wn_name').value.trim();
+ if(!name){W.rmsg='Napiš jméno dítěte.';return render(true)}if(raw&&!/^\d{1,3}$/.test(raw)){W.rmsg='Číslo dresu má 1–3 číslice.';return render(true)}W.rmsg='';
+ rosterEdit(tid,R=>{const ex=raw&&R.players.find(p=>String(p.num)===raw);if(ex){ex.name=name;toast('Jméno u čísla '+raw+' změněno.');return}
+  if(!raw&&R.players.some(p=>noNum(p.num)&&(p.name||'').toLowerCase()===name.toLowerCase())){W.rmsg=name+' už v soupisce je.';render(true);return false}
+  const num=raw||'~'+uid().slice(-6);R.players.push({num,name});if(S.draft.present[tid]){S.draft.present[tid].push(num);saveDraft()}});
+ setTimeout(()=>{const f=$('#wn_num');if(f&&f.focus)f.focus()},30)});
+document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.dataset.c;
+ if(c==='wrname'){const v=el.value.trim();if(!v){render(true);return}rosterEdit(S.teamId,R=>{const p=R.players.find(x=>String(x.num)===el.dataset.v);if(!p||p.name===v)return false;p.name=v})}
+ else if(c==='wtname'&&W.role==='admin'){const v=el.value.trim();if(!v){render(true);return}const tid=S.teamId;rosterEdit(tid,R=>{R.name=v});W.raw.teamlist[tid]=Object.assign({},W.raw.teamlist[tid],{name:v});Web.compose();render(true);Web.write('teamlist/'+tid+'/name',v)}});
+
 /* ---------- Nastavení (web) ---------- */
 function vSet(){
- const t=team(),ps=players(),adm=W.role==='admin';
+ const t=team(),adm=W.role==='admin';
  let h=`<section class="card"><div class="sumline"><h2>Účet</h2><button class="btn ghost sm" data-a="wlogout">Odhlásit</button></div>
   <p class="small">Přihlášen jako <b>${ROLE_NAME[W.role]||''}</b>${W.code?` · kód ${esc(W.code.slice(0,4))}-••••`:''} · ${W.online?'online':'offline, změny se uloží po připojení'}</p></section>`;
  if(adm){const cc=coachCodes();if(W.pins===null){W.pins=undefined;loadPins()}
   h+=`<section class="card"><h2>Kód pro trenéry</h2>
-  <p class="small muted">Jeden společný kód pro všechny trenéry. Trenéři plánují tréninky, vidí soupisky všech týmů a upravují úrovně, dovednosti a seznam trenérů. Týmy a soupisky dál spravuješ ve Scorekeeperu.</p>
+  <p class="small muted">Jeden společný kód pro všechny trenéry. Trenéři plánují tréninky, upravují soupisky v záložce Tým, úrovně, dovednosti a seznam trenérů. Nové týmy zakládáš ve Scorekeeperu.</p>
   ${W.pins===undefined?'<p class="small muted">Načítám…</p>':cc.length?`<div class="row">${cc.map(c=>`<code class="code">${esc(c)}</code>`).join(' ')}</div>`:'<p class="small">Zatím žádný kód.</p>'}
   <div class="row"><button class="btn sm" data-a="wpinnew">${cc.length?'Vyměnit kód':'Vytvořit kód'}</button>${cc.length?'<button class="btn ghost sm" data-a="wpindrop">Zrušit kód</button>':''}<button class="btn ghost sm" data-a="wcopy" data-v="${esc(baseUrl())}">Kopírovat odkaz na plánovač</button></div>
   ${W.pinMsg?`<p class="small"><b>${esc(W.pinMsg)}</b></p>`:''}<p class="small muted">„Vyměnit kód“ zruší starý kód a kdo s ním byl přihlášený, bude se muset přihlásit novým.</p></section>`}
  h+=`<section class="card"><div class="sumline"><h2>Týmy</h2></div>
   ${Object.keys(S.teams).length?`<div class="row">${Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'')).map(([id,x])=>`<button class="chip ${id===S.teamId?'on':''}" data-a="team" data-v="${esc(id)}">${esc(x.name)} · ${(x.players||[]).length}</button>`).join('')}</div>`:`<p class="muted">${S.ready?'Ve Scorekeeperu zatím není žádný tým.':'Načítám týmy…'}</p>`}
-  <p class="small muted">Týmy a soupisky (jména a čísla dresů) se berou ze Scorekeeperu, tam je i upravuješ.</p></section>`;
+  <p class="small muted">Týmy jsou společné se Scorekeeperem. Soupisku upravíš v záložce Tým, nový tým založíš ve Scorekeeperu.</p></section>`;
  if(t){const cs=coachesOf(t);
   h+=`<section class="card"><div class="sumline"><h2>Trenéři · ${cs.length}</h2></div>
   <p class="small muted">Uložení trenéři se nabídnou na začátku každého tréninku. Tam jen označíš, kdo přišel.</p>
   ${cs.length?`<div class="dl">${cs.map(c=>`<div class="pl" style="grid-template-columns:1fr auto"><input type="text" id="co_${esc(c.id)}" data-c="cname" data-v="${esc(c.id)}" value="${esc(c.name)}" aria-label="Jméno trenéra"><button class="ib" data-a="cdel" data-v="${esc(c.id)}" aria-label="Odebrat ${esc(c.name)}">✕</button></div>`).join('')}</div>`:''}
   <form id="addC" class="pl" style="grid-template-columns:1fr auto"><input type="text" id="nc_name" placeholder="Jméno trenéra" aria-label="Jméno trenéra"><button class="ib" type="submit" aria-label="Přidat trenéra">+</button></form></section>
-  <section class="card"><div class="sumline"><h2>Soupiska · ${ps.length}</h2></div>
-  <p class="small muted">Úroveň pomáhá vyvážit skupiny, klepnutím ji přepínáš: bez označení → Orlíci (začátečníci) → Orli → Orliska (nejzkušenější). Dovednosti odškrtáváš v kartě Děti.</p>
-  ${ps.length?`<div class="dl">${ps.map(p=>`<div class="sumline"><span><b>${noNum(p.num)?'–':esc(p.num)}</b> ${esc(p.name)}</span><button class="chip" data-a="lvl" data-v="${esc(p.num)}">${LVL[p.lvl]||'úroveň'}</button></div>`).join('')}</div>`:'<p class="muted">Soupiska je prázdná. Děti přidáš ve Scorekeeperu.</p>'}</section>`}
+`}
  if(adm)h+=`<section class="card"><h2>Převzít data z verze v Claude</h2>
   <p class="small muted">Jednorázově nahraj soubor zálohy (planovac-zaloha.json). Týmy se spárují podle názvu, převezmou se trenéři, úrovně, dovednosti, uložené tréninky, šablony a vlastní hry.</p>
   <input type="file" id="wimpfile" accept=".json,application/json" aria-label="Soubor zálohy">
@@ -1375,6 +1403,8 @@ Object.assign(actions,{
  wlogout:()=>Web.logout(''),
  wpinnew:()=>newCoachPin(),wpindrop:()=>dropCoachPins(),
  wcopy:async v=>{try{await navigator.clipboard.writeText(v);toast('Odkaz zkopírován.')}catch(e){toast(v)}},
+ wrdel:v=>{W.rdel=v;render(true)},wrdelno:()=>{W.rdel=null;render(true)},
+ wrdelgo:v=>{W.rdel=null;rosterEdit(S.teamId,R=>{R.players=R.players.filter(p=>String(p.num)!==v)});toast('Odebráno ze soupisky.')},
  wimpgo:()=>runImport(),wimpno:()=>{W.imp=null;W.impMsg='';render(true)}
 });
 
