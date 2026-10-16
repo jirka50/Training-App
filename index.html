@@ -17,12 +17,14 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="pbar">
-      <h1 class="brand">Tréninky U7<small id="sync">Připojuji…</small></h1>
-      <select class="teamsel" id="teamSel" aria-label="Tým"></select>
-      <button class="sun" id="sunBtn" data-a="sun" aria-label="Režim na slunce" title="Režim na slunce">☀</button>
+    <div class="hbar">
+      <h1 class="brand">Tréninkový plánovač<small id="sync">Připojuji…</small></h1>
+      <div class="hctl">
+        <select class="teamsel" id="teamSel" aria-label="Tým"></select>
+        <button class="sun" id="sunBtn" data-a="sun" aria-label="Režim na slunce" title="Režim na slunce">☀</button>
+        <nav class="menu" id="tabs" aria-label="Sekce"></nav>
+      </div>
     </div>
-    <nav class="tabs" id="tabs" aria-label="Sekce"></nav>
   </header>
   <main id="view"></main>
 </div>

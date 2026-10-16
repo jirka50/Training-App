@@ -822,6 +822,7 @@ function vParents(){return `<section class="card"><div class="sumline"><h2>Pro r
  <textarea id="parentsTxt" rows="9">${esc(parentsText(S.plan))}</textarea></section>`}
 
 /* ===== Vykreslení ===== */
+const MENU=[['Trénink',['plan','train','field']],['Tým',['kids','hist']],['Knihovna',['lib']],['Nastavení',['set']]];
 const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['kids','Děti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
 let pend=false;
 function render(force){
@@ -829,10 +830,11 @@ function render(force){
  const ae=document.activeElement;
  if(!force&&ae&&ae.closest&&ae.closest('#view')&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&!['checkbox','button','file'].includes(ae.type)){pend=true;return}
  pend=false;
- $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-a="tab" data-v="${k}" class="${S.tab===k?'on':''}" ${S.tab===k?'aria-current="page"':''}>${l}</button>`).join('');
+ const TN=Object.fromEntries(TABS);
+ $('#tabs').innerHTML=`<button class="menu-btn" data-a="menu" aria-haspopup="true" aria-expanded="${S.menu?'true':'false'}"><span class="burger" aria-hidden="true"></span><span class="cur">${TN[S.tab]||'Menu'}</span><span class="caret" aria-hidden="true">${S.menu?'▴':'▾'}</span></button>${S.menu?`<div class="menu-list" role="menu">${MENU.map(([h,ks])=>`<div class="menu-h">${h}</div>${ks.map(k=>`<button role="menuitem" class="${S.tab===k?'on':''}" data-a="tab" data-v="${k}" ${S.tab===k?'aria-current="page"':''}>${TN[k]}</button>`).join('')}`).join('')}</div>`:''}`;
  const ts=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||''));
  $('#teamSel').innerHTML=ts.length?ts.map(([id,t])=>`<option value="${esc(id)}" ${id===S.teamId?'selected':''}>${esc(t.name||'Tým')}</option>`).join(''):'<option>Žádný tým</option>';
- $('#teamSel').disabled=!ts.length;
+ $('#teamSel').disabled=!ts.length;$('#teamSel').hidden=ts.length<2;
  RS=rateStats();
  const v={plan:vPlan,train:vTrain,field:vField,kids:vKids,lib:vLib,set:vSet,hist:vHist}[S.tab]||vPlan;
  $('#view').innerHTML=v();mountAnims($('#view'));
@@ -902,7 +904,7 @@ function vPlanOut(){
   return `<div class="blk"><div class="clock">${start}′<small>${BT[b.type]||b.type}</small></div><div class="bbody">${seg}${body}${ctr}</div></div>`
  }).join('');
  let h=`<section class="card" id="planCard">
-  <div class="sumline"><h2>${esc(planTitle(p))}</h2><span class="total ${total!==p.minutes?'bad':''}">${total} / ${p.minutes} min</span></div>
+  <div class="sumline"><h2 style="flex:1 1 100%">${esc(planTitle(p))}</h2><span class="total ${total!==p.minutes?'bad':''}">${total} / ${p.minutes} min</span></div>
   <div class="field"><span class="label">Název</span><input type="text" id="plan_name" data-c="planname" value="${esc(p.name||'')}" placeholder="${esc('Trénink '+fmtDate(p.date))}"></div>
   <p class="small muted">${fmtDate(p.date)} · ${planTeams(p).length>1?planTeams(p).map(t=>esc(tName(t))).join(' + ')+' · ':''}${p.present.length} dětí · ${p.coaches.length} ${p.coaches.length===1?'trenér':p.coaches.length<5?'trenéři':'trenérů'} · ${p.venue==='hala'?'hala':'venku'} · ${p.focus.map(f=>CATS[f]).join(', ')}</p>
   <div class="tl">${blocks}</div>
@@ -1091,7 +1093,8 @@ function renderHistList(){
 
 /* ===== Události ===== */
 const actions={
- tab:v=>{S.tab=v;ls.set('u7-tab',v);S.sel=null;render(true);window.scrollTo(0,0)},
+ menu:()=>{S.menu=!S.menu;render(true)},
+ tab:v=>{S.menu=false;S.tab=v;ls.set('u7-tab',v);S.sel=null;render(true);window.scrollTo(0,0)},
  venue:v=>{S.draft.venue=v;saveDraft();render(true)},
  min:v=>{S.draft.minutes=+v;S.draft.tpl='';saveDraft();render(true)},
  focus:v=>{const f=S.draft.focus;const i=f.indexOf(v);if(i>=0)f.splice(i,1);else f.push(v);saveDraft();render(true)},
@@ -1170,8 +1173,8 @@ const actions={
  delplan:async v=>{S.confirm=null;await Store.del('plans',v);render(true)}
 };
 function gotoStep(i){const st=steps();if(i<0||i>=st.length)return;S.run.i=i;const s=st[i];beeped=false;if(S.run.running){S.run.endAt=Date.now()+s.min*60000;S.run.left=null;announce()}else S.run.left=null;saveRun();render(true)}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b){if(e.target.id==='sheet')closeSheet();return}if(b.disabled)return;const f=actions[b.dataset.a];if(f){e.preventDefault();f(b.dataset.v,b)}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)closeSheet()});
+document.addEventListener('click',e=>{if(S.menu&&!e.target.closest('.menu')){S.menu=false;render(true)}const b=e.target.closest('[data-a]');if(!b){if(e.target.id==='sheet')closeSheet();return}if(b.disabled)return;const f=actions[b.dataset.a];if(f){e.preventDefault();f(b.dataset.v,b)}});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(S.menu){S.menu=false;render(true)}else if(!$('#sheet').hidden)closeSheet()});
 $('#teamSel').addEventListener('change',e=>actions.team(e.target.value));
 document.addEventListener('input',e=>{const el=e.target,c=el.dataset.c;if(!c)return;
  if(c==='libq'){S.lib.q=el.value;renderLibList()}
@@ -1292,7 +1295,7 @@ const Web={
 
 /* ---------- přihlášení ---------- */
 function renderLogin(){
- $('#tabs').innerHTML='';const ts=$('#teamSel');ts.innerHTML='';ts.disabled=true;
+ $('#tabs').innerHTML='';const ts=$('#teamSel');ts.innerHTML='';ts.disabled=true;ts.hidden=true;
  $('#view').innerHTML=`<section class="card login"><h2>Přihlášení</h2>
   <p class="small muted">Zadej kód, který ti dal správce. Trenéři mají jeden společný kód, správce se přihlašuje svým kódem ze Scorekeeperu.</p>
   <form id="wLogin" class="dl"><div class="field"><span class="label">Kód</span><input type="text" id="w_code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="např. K4PX-7QMR"></div>
