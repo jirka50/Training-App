@@ -765,7 +765,7 @@ const SK=[
  {id:'c1',c:'chytani',n:'Chytí kutálený míč krokodýlí tlamou'},{id:'c2',c:'chytani',n:'Chytí měkký míček do rukavice'},{id:'c3',c:'chytani',n:'Postaví se pod vysoký míč'},
  {id:'o1',c:'odpal',n:'Správný postoj a úchop pálky'},{id:'o2',c:'odpal',n:'Trefí míček z tee'},{id:'o3',c:'odpal',n:'Po odpalu bezpečně odloží pálku'},
  {id:'m1',c:'mety',n:'Zná pořadí met'},{id:'m2',c:'mety',n:'Probíhá první metu'},{id:'m3',c:'mety',n:'Zastaví se na druhé a třetí metě'},
- {id:'a1',c:'hra',n:'Reaguje na povely trenéra'},{id:'a2',c:'hra',n:'Ví, kam hodit, když běžec běží na první'}];
+ {id:'a1',c:'hra',n:'Reaguje na povely trenéra'},{id:'a2',c:'hra',n:'Ví, kam hodit, když běžec běží na první'},{id:'a3',c:'hra',n:'Neruší při tréninku ostatní'}];
 const skOf=p=>Array.isArray(p&&p.sk)?p.sk.filter(x=>SK.some(s=>s.id===x)):[];
 const lvlFor=n=>n<5?'n':n<10?'m':'j';
 function catPct(tids){const ps=tids.flatMap(plOf),out={};FOCUS.forEach(f=>{const ids=SK.filter(s=>s.c===f).map(s=>s.id),tot=ps.length*ids.length;out[f]=tot?Math.round(100*ps.reduce((s,p)=>s+skOf(p).filter(x=>ids.includes(x)).length,0)/tot):0});return out}
