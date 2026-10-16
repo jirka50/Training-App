@@ -294,6 +294,9 @@ const A=[
  kid:'„Hlava nahoře, ruce běží s námi!“'}
 
 ];
+/* Věková kategorie: návrh pro každou položku. Jen U7 = složitější pravidla, přesnější hod nebo chytání, hra s tagováním. Ostatní se hodí pro U6 i U7. Trenéři to můžou v Knihovně přepsat (kolekce „ages“). */
+const AGES=['U6','U7'],U7_ONLY=['g03','g06','g14','g18','g20','g28','g29','g30','d08','d14','d16','s01','s03','s04','s07'];
+A.forEach(a=>{a.ag=U7_ONLY.includes(a.id)?['U7']:['U6','U7']});
 
 /* ===== Animace: hřiště shora (děti = tečky), technika = postava z boku ===== */
 const TAU=Math.PI*2;
@@ -594,7 +597,7 @@ const S={
  hist:{fav:false,focus:'all',q:''},
  tpls:{},tplForm:false,openRate:false,
  pref:Object.assign({theme:'',wake:true,voice:true},ls.get('u7-pref',{})),mv:null,
- plan:ls.get('u7-plan',null),sel:null,lib:{kind:'all',cat:'all',q:''},gear:{},
+ plan:ls.get('u7-plan',null),sel:null,lib:{kind:'all',cat:'all',age:'all',q:''},ages:{},gear:{},
  run:Object.assign({i:0,left:null,endAt:null,running:false,auto:true},ls.get('u7-run',{})),
  confirm:null,imp:null
 };
@@ -609,6 +612,9 @@ let ACT={};
 function rebuildActs(){ACT={};A.forEach(a=>ACT[a.id]=a);Object.entries(S.custom).forEach(([id,c])=>{ACT['c_'+id]=Object.assign({},c,{id:'c_'+id,custom:id})})}
 rebuildActs();
 const acts=()=>Object.values(ACT);
+const agDef=a=>a.ag||['U6','U7'];
+const agOf=a=>{const o=S.ages&&S.ages[a.id];return o&&Array.isArray(o.ag)&&o.ag.length?o.ag:agDef(a)};
+const agTxt=a=>agOf(a).join(' · ');
 const actName=id=>{const a=ACT[id];return a?a.n:'(smazaná položka)'};
 
 /* ===== Úložiště: sdílená databáze, jinak prohlížeč ===== */
@@ -1018,15 +1024,16 @@ function vLib(){
   <div class="sumline"><h2>Hry a cviky</h2><button class="btn ghost sm" data-a="newact">+ Vlastní</button></div>
   <input type="search" id="libq" data-c="libq" placeholder="Hledat hru, cvik nebo pomůcku" value="${esc(L.q)}" aria-label="Hledat">
   <div class="row">${[['all','Vše'],['game','Hry'],['drill','Cviky'],['seq','Rutiny'],['routine','Organizace']].map(([k,l])=>`<button class="chip ${L.kind===k?'on':''}" data-a="lk" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="row">${[['all','Každý věk'],['U6','Pro U6'],['U7','Pro U7']].map(([k,l])=>`<button class="chip ${L.age===k?'on':''}" data-a="la" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="row">${[['all','Všechny oblasti']].concat(Object.entries(CATS)).filter(([k])=>k!=='rutina').map(([k,l])=>`<button class="chip ${L.cat===k?'on':''}" data-a="lc" data-v="${k}">${l}</button>`).join('')}</div>
  </section><div class="lib-list" id="libList"></div>`
 }
 function renderLibList(){
  const L=S.lib,q=L.q.trim().toLowerCase();
- const list=acts().filter(a=>(L.kind==='all'||a.k===L.kind)&&(L.cat==='all'||a.c===L.cat||(a.t||[]).includes(L.cat))&&(!q||(a.n+' '+(a.v||'')+' '+gearText(a)+' '+(a.gn||'')+' '+(a.dev||'')).toLowerCase().includes(q)))
+ const list=acts().filter(a=>(L.kind==='all'||a.k===L.kind)&&(L.age==='all'||agOf(a).includes(L.age))&&(L.cat==='all'||a.c===L.cat||(a.t||[]).includes(L.cat))&&(!q||(a.n+' '+(a.v||'')+' '+gearText(a)+' '+(a.gn||'')+' '+(a.dev||'')).toLowerCase().includes(q)))
   .sort((a,b)=>a.k.localeCompare(b.k)||a.n.localeCompare(b.n,'cs'));
  const el=$('#libList');if(!el)return;
- el.innerHTML=list.length?`<p class="small muted">${list.length} položek</p>`+list.map(a=>`<button class="item" data-a="open" data-v="${a.id}"><h3>${esc(a.n)}${a.v?` <span class="muted" style="font-weight:500">/ ${esc(a.v)}</span>`:''}</h3><span class="kb ${a.k}">${KINDS[a.k]}</span><span class="meta">${CATS[a.c]||''} · ${a.min} min${a.kids>1?' · od '+a.kids+' dětí':''}${a.st?' · na stanoviště':''}${a.custom?' · vlastní':''}${rateBadge(a.id)}<br>${esc(gearText(a))}</span></button>`).join(''):'<p class="muted">Nic nenalezeno.</p>'
+ el.innerHTML=list.length?`<p class="small muted">${list.length} položek</p>`+list.map(a=>`<button class="item" data-a="open" data-v="${a.id}"><h3>${esc(a.n)}${a.v?` <span class="muted" style="font-weight:500">/ ${esc(a.v)}</span>`:''}</h3><span class="kb ${a.k}">${KINDS[a.k]}</span><span class="meta"><b class="ag">${agTxt(a)}</b> · ${CATS[a.c]||''} · ${a.min} min${a.kids>1?' · od '+a.kids+' dětí':''}${a.st?' · na stanoviště':''}${a.custom?' · vlastní':''}${rateBadge(a.id)}<br>${esc(gearText(a))}</span></button>`).join(''):'<p class="muted">Nic nenalezeno.</p>'
 }
 function openAct(id){const a=ACT[id];if(!a)return;
  const sh=$('#sheet');
@@ -1041,6 +1048,7 @@ function openAct(id){const a=ACT[id];if(!a)return;
    ${a.kid?`<div><span class="label">Řekni dětem</span><p>${esc(a.kid)}</p></div>`:''}
    <div><span class="label">Rozvíjí</span><p>${esc(a.dev||'')}</p></div>
    <div><span class="label">Pomůcky</span>${gearOf(a).length?`<div class="row" style="gap:6px">${gearOf(a).map(g=>`<span class="chip">${esc(g)}</span>`).join('')}</div>`:'<p>bez pomůcek</p>'}${a.gn?`<p class="small muted">${esc(a.gn)}</p>`:''}</div>
+   <div><span class="label">Vhodné pro</span><div class="row" style="gap:6px">${AGES.map(g=>`<button class="chip ${agOf(a).includes(g)?'on':''}" data-a="agetog" data-v="${g}" aria-pressed="${agOf(a).includes(g)}">${g}</button>`).join('')}${S.ages[a.id]?`<button class="btn ghost sm" data-a="agereset">Vrátit návrh (${agDef(a).join(' · ')})</button>`:''}</div><p class="small muted">${S.ages[a.id]?'Upraveno trenérem.':'Návrh aplikace.'} Klepnutím změníš, platí pro všechny trenéry.</p></div>
    <div><span class="label">Parametry</span><p>${a.min} min · od ${a.kids||1} ${(a.kids||1)===1?'dítěte':'dětí'}${a.co>1?' · aspoň '+a.co+' trenéři':''}${a.st?' · hodí se na stanoviště':''}${a.out?' · jen venku':''}${rateBadge(a.id)}</p></div>
    ${a.link?`<div><span class="label">Video a návod</span><p><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.lt||'Odkaz')}</a></p></div>`:''}
   </div>
@@ -1162,7 +1170,10 @@ const actions={
   else{const ms=remaining();S.run.endAt=Date.now()+ms;S.run.running=true;S.run.left=null;beeped=ms<=0;lock(true);if(ms>=curStep().min*60000-1000)announce()}saveRun();render(true)},
  plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();tick()},
  next:()=>gotoStep(S.run.i+1),prev:()=>gotoStep(S.run.i-1),goto:v=>gotoStep(+v),
- lk:v=>{S.lib.kind=v;render(true)},lc:v=>{S.lib.cat=v;render(true)},
+ lk:v=>{S.lib.kind=v;render(true)},la:v=>{S.lib.age=v;render(true)},
+ agetog:async v=>{const id=$('#sheet').dataset.id,a=ACT[id];if(!a)return;const cur=agOf(a),nx=cur.includes(v)?cur.filter(x=>x!==v):AGES.filter(x=>x===v||cur.includes(x));if(!nx.length){toast('Aspoň jedna kategorie musí zůstat.');return}
+  if(nx.join()===agDef(a).join())await Store.del('ages',id);else await Store.put('ages',id,{ag:nx});openAct(id);renderLibList()},
+ agereset:async()=>{const id=$('#sheet').dataset.id;await Store.del('ages',id);openAct(id);renderLibList()},lc:v=>{S.lib.cat=v;render(true)},
  newact:()=>actForm(null),editact:v=>actForm(v),askdel:()=>{S.confirm='act';openAct($('#sheet').dataset.id)},
  delact:async v=>{await Store.del('custom',v);closeSheet();toast('Smazáno.')},
  noconf:()=>{const was=S.confirm;S.confirm=null;if(was==='act')openAct($('#sheet').dataset.id);else render(true)},
@@ -1241,7 +1252,7 @@ try{const hv=document.getElementById('hver');if(hv)hv.textContent=verTxt()}catch
    Obsah ukládáme jako JSON text {ts,json}, aby se zachovaly prázdné hodnoty a pole.
    ================================================================================= */
 const FB_CONFIG={apiKey:"AIzaSyDqwd6A6eaeHlczoLhGvaxQlzdp9od-0Pg",authDomain:"eagles-scorekeeper.firebaseapp.com",databaseURL:"https://eagles-scorekeeper-default-rtdb.europe-west1.firebasedatabase.app",projectId:"eagles-scorekeeper",storageBucket:"eagles-scorekeeper.firebasestorage.app",messagingSenderId:"691498301504",appId:"1:691498301504:web:ec05dfb8a51095ec1e87a5"};
-const WKEY='u7w-auth',CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',COLS=['plans','custom','tpls'];
+const WKEY='u7w-auth',CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',COLS=['plans','custom','tpls','ages'];
 const W={sdel:null,phMsg:'',phDel:null,assign:null,rmove:null,rNoNum:false,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],denied:{},seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{},photos:{},staff:null}};
 const J=v=>JSON.stringify(v);
 const PJ=v=>{try{return v&&typeof v.json==='string'?JSON.parse(v.json):null}catch(e){return null}};
@@ -1278,7 +1289,7 @@ const Store={db:null,
 const Web={
  boot(){
   W.raw.photos=ls.get('u7w-photos',{})||{};
-  ['teams','plans','custom','tpls'].forEach(c=>S[c]=ls.get('u7w-'+c,{}));rebuildActs();fixTeam();
+  ['teams','plans','custom','tpls','ages'].forEach(c=>S[c]=ls.get('u7w-'+c,{}));rebuildActs();fixTeam();
   const a=ls.get(WKEY,null);if(a&&a.role&&a.code){W.role=a.role;W.code=a.code}
   render();syncLine();
   const f=fbInit();if(!f){render();return}
