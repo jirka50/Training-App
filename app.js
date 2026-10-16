@@ -822,8 +822,8 @@ function vParents(){return `<section class="card"><div class="sumline"><h2>Pro r
  <textarea id="parentsTxt" rows="9">${esc(parentsText(S.plan))}</textarea></section>`}
 
 /* ===== Vykreslení ===== */
-const MENU=[['Trénink',['plan','train','field']],['Tým',['team','kids','hist']],['Knihovna',['lib']],['Nastavení',['set']]];
-const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['team','Tým'],['kids','Děti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
+const MENU=[['Trénink',['plan','train','field']],['Tým',['team','who','kids','hist']],['Knihovna',['lib']],['Nastavení',['set']]];
+const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['team','Tým'],['who','Kdo je kdo'],['kids','Děti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
 let pend=false;
 function render(force){
  if(!W.role){renderLogin();return}
@@ -836,7 +836,7 @@ function render(force){
  $('#teamSel').innerHTML=ts.length?ts.map(([id,t])=>`<option value="${esc(id)}" ${id===S.teamId?'selected':''}>${esc(t.name||'Tým')}</option>`).join(''):'<option>Žádný tým</option>';
  $('#teamSel').disabled=!ts.length;$('#teamSel').hidden=ts.length<2;
  RS=rateStats();
- const v={plan:vPlan,train:vTrain,field:vField,team:vTeam,kids:vKids,lib:vLib,set:vSet,hist:vHist}[S.tab]||vPlan;
+ const v={plan:vPlan,train:vTrain,field:vField,team:vTeam,who:vWho,kids:vKids,lib:vLib,set:vSet,hist:vHist}[S.tab]||vPlan;
  $('#view').innerHTML=v();mountAnims($('#view'));
  if(S.tab==='lib')renderLibList();
  if(S.tab==='hist')renderHistList();
@@ -1223,7 +1223,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.run.run
    ================================================================================= */
 const FB_CONFIG={apiKey:"AIzaSyDqwd6A6eaeHlczoLhGvaxQlzdp9od-0Pg",authDomain:"eagles-scorekeeper.firebaseapp.com",databaseURL:"https://eagles-scorekeeper-default-rtdb.europe-west1.firebasedatabase.app",projectId:"eagles-scorekeeper",storageBucket:"eagles-scorekeeper.firebasestorage.app",messagingSenderId:"691498301504",appId:"1:691498301504:web:ec05dfb8a51095ec1e87a5"};
 const WKEY='u7w-auth',CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',COLS=['plans','custom','tpls'];
-const W={assign:null,rmove:null,rNoNum:false,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{}}};
+const W={phMsg:'',phDel:null,assign:null,rmove:null,rNoNum:false,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{},photos:{}}};
 const J=v=>JSON.stringify(v);
 const PJ=v=>{try{return v&&typeof v.json==='string'?JSON.parse(v.json):null}catch(e){return null}};
 const normCode=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^(.{4})(.+)$/,'$1-$2');
@@ -1258,6 +1258,7 @@ const Store={db:null,
 };
 const Web={
  boot(){
+  W.raw.photos=ls.get('u7w-photos',{})||{};
   ['teams','plans','custom','tpls'].forEach(c=>S[c]=ls.get('u7w-'+c,{}));rebuildActs();fixTeam();
   const a=ls.get(WKEY,null);if(a&&a.role&&a.code){W.role=a.role;W.code=a.code}
   render();syncLine();
@@ -1284,7 +1285,8 @@ const Web={
   Web.on('teamlist',s=>{W.raw.teamlist=s.val()||{};W.loaded.tl=1;Object.keys(W.raw.teamlist).forEach(tid=>{if(W.seen[tid])return;W.seen[tid]=1;
    Web.on('teams/'+tid+'/roster',x=>{W.raw.roster[tid]=PJ(x.val())||{};Web.compose();render()});
    Web.on('training/coaches/'+tid,x=>{W.raw.coaches[tid]=PJ(x.val())||[];Web.compose();render()});
-   Web.on('training/kids/'+tid,x=>{W.raw.kids[tid]=PJ(x.val())||{};Web.compose();render()})});
+   Web.on('training/kids/'+tid,x=>{W.raw.kids[tid]=PJ(x.val())||{};Web.compose();render()});
+   Web.on('photos/'+tid,x=>{W.raw.photos[tid]=x.val()||{};phCache();if(S.tab==='who'||!$('#sheet').hidden)render()})});
    Web.compose();Web.ready();render()});
   COLS.forEach(col=>Web.on('training/'+col,s=>{const v=s.val()||{},m={};Object.keys(v).forEach(id=>{const d=PJ(v[id]);if(d)m[id]=d});S[col]=m;ls.set('u7w-'+col,m);W.loaded[col]=1;if(col==='custom')rebuildActs();Web.ready();render()}))},
  ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c]))S.ready=true},
@@ -1370,6 +1372,7 @@ function assignNumberW(old,raw){const tid=S.teamId,num=jersey(raw),R=rosterOf(ti
  if(!num){W.rmsg='Zadej číslo dresu.';return render(true)}if(R.players.some(x=>String(x.num)===num)){W.rmsg='Číslo #'+num+' už má někdo jiný.';return render(true)}
  p.num=num;p.was=old;rosterSave(tid,R); /* Scorekeeper podle „was“ přepíše číslo i v zápasech */
  const k=Object.assign({},W.raw.kids[tid]||{});if(k[old]){k[num]=k[old];delete k[old];kidsSave(tid,k)}
+ const ph=(W.raw.photos[tid]||{})[phKey(old)];if(ph){photoSet(tid,num,ph);photoSet(tid,old,null)}
  const ok=K(tid,old),nk=K(tid,num),sw=a=>Array.isArray(a)?a.map(x=>normKey(x,{team:tid})===ok?nk:x):a;
  if(S.draft.present[tid]){S.draft.present[tid]=S.draft.present[tid].map(x=>x===old?num:x);saveDraft()}
  if(S.plan){S.plan.present=sw(S.plan.present);S.plan.groups=(S.plan.groups||[]).map(sw);savePlan()}
@@ -1380,12 +1383,52 @@ function movePlayerW(copy){const tid=S.teamId,num=W.rmove,R=rosterOf(tid),p=R.pl
  if(clash){W.rmsg=noNum(num)?p.name+' už v týmu '+tName(to)+' je.':'V týmu '+tName(to)+' už má #'+num+' '+(clash.name||'jiný hráč')+'. Nejdřív jednomu z nich změň číslo.';return render(true)}
  T.players.push(Object.assign({},p));rosterSave(to,T);
  const kf=(W.raw.kids[tid]||{})[num];if(kf){const kt=Object.assign({},W.raw.kids[to]||{});kt[num]=kf;kidsSave(to,kt)}
+ const pf=(W.raw.photos[tid]||{})[phKey(num)];if(pf){photoSet(to,num,pf);if(!copy)photoSet(tid,num,null)}
  if(!copy){R.players=R.players.filter(x=>String(x.num)!==num);rosterSave(tid,R)}
  W.rmove=null;W.rmsg=(p.name||numTxt(num))+(copy?' je teď i v týmu ':' přesunut do týmu ')+tName(to)+'.'+(copy?'':' Odehrané zápasy a statistiky zůstávají tady.');render(true)}
 document.addEventListener('submit',e=>{const id=e.target.id;if(id==='wAddP'){e.preventDefault();addRosterW()}else if(id==='wAss'){e.preventDefault();assignNumberW(W.assign,$('#w_assnum').value)}});
 document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.dataset.c;
  if(c==='wnonum'){W.rNoNum=el.checked;render(true);const f=$(el.checked?'#wn_name':'#wn_num');if(f&&f.focus)f.focus()}
  else if(c==='wtname'){const v=el.value.trim(),tid=S.teamId,R=rosterOf(tid);R.name=v;rosterSave(tid,R);if(v&&W.role==='admin'){W.raw.teamlist[tid]=Object.assign({},W.raw.teamlist[tid],{name:v});Web.compose();Web.write('teamlist/'+tid+'/name',v)}render(true)}});
+
+
+/* ---------- Kdo je kdo: fotky dětí (photos/<tid>/<číslo> = {img,name,ts}) ---------- */
+let phT=null;const phCache=()=>{clearTimeout(phT);phT=setTimeout(()=>ls.set('u7w-photos',W.raw.photos),800)};
+const phKey=n=>String(n).replace(/[.#$[\]/]/g,'_');
+function photoOf(tid,p){const m=W.raw.photos[tid]||{},d=m[phKey(p.num)];if(d&&d.img)return d.img;const f=Object.values(m).find(x=>x&&x.name&&x.name===p.name&&x.img);return f?f.img:''}
+const WHO=Object.assign({teams:[],size:'m',sort:'num'},ls.get('u7w-who',{}));const whoSave=()=>ls.set('u7w-who',WHO);
+const initials=n=>String(n||'?').trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+function whoTeams(){let t=(WHO.teams||[]).filter(x=>S.teams[x]);if(!t.length&&S.teams[S.teamId])t=[S.teamId];return t}
+function vWho(){
+ if(!team())return noTeam();const sel=whoTeams(),all=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs'));
+ const sortP=ps=>WHO.sort==='name'?ps.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','cs')):ps;
+ const n=sel.reduce((s,t)=>s+(S.teams[t].players||[]).length,0),nf=sel.reduce((s,t)=>s+(S.teams[t].players||[]).filter(p=>photoOf(t,p)).length,0);
+ return `<section class="card"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>
+  ${all.length>1?`<div class="row">${all.map(([id,x])=>{const on=sel.includes(id);return `<button class="chip ${on?'on':''}" data-a="whot" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join('')}</div>`:''}
+  <div class="row"><div class="seg" role="group" aria-label="Velikost">${[['s','Malé'],['m','Střední'],['l','Velké']].map(([k,l])=>`<button data-a="whosz" data-v="${k}" class="${WHO.size===k?'on':''}">${l}</button>`).join('')}</div>
+   <div class="seg" role="group" aria-label="Řazení">${[['num','Číslo'],['name','Jméno']].map(([k,l])=>`<button data-a="whoso" data-v="${k}" class="${WHO.sort===k?'on':''}">${l}</button>`).join('')}</div></div>
+  <p class="small muted">Klepnutím na dítě přidáš nebo vyměníš fotku. Fotky vidí jen přihlášení trenéři a správce.</p></section>
+ ${sel.map(tid=>{const ps=sortP(S.teams[tid].players||[]);return `${sel.length>1?`<h3 class="who-h">${esc(tName(tid))} · ${ps.length}</h3>`:''}
+  ${ps.length?`<div class="who-grid ${WHO.size}">${ps.map(p=>{const img=photoOf(tid,p);return `<button class="who" data-a="whoopen" data-v="${esc(K(tid,p.num))}" aria-label="${esc(p.name)}${noNum(p.num)?'':', číslo '+esc(p.num)}">
+   <span class="ph">${img?`<img src="${img}" alt="" loading="lazy">`:`<span class="ini">${esc(initials(p.name))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}</span><span class="wname">${esc(p.name)}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná.</p>'}`}).join('')}`}
+function openWho(key){const x=kid(key),tid=x.tid,p=(S.teams[tid]&&S.teams[tid].players||[]).find(q=>q.num===x.num);if(!p)return;const img=photoOf(tid,p),sh=$('#sheet');
+ sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="${esc(p.name)}"><div class="sumline"><span class="kb game">${esc(tName(tid))}</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
+  <div class="who-big">${img?`<img src="${img}" alt="Fotka: ${esc(p.name)}">`:`<span class="ini">${esc(initials(p.name))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}</div>
+  <h2>${esc(p.name)}${noNum(p.num)?' <span class="lvl">bez čísla</span>':''}</h2>${LVL[p.lvl]?`<p class="small">Úroveň: <b>${LVL[p.lvl]}</b></p>`:''}
+  <div class="row"><label class="btn sm" for="who_file">${img?'Vyměnit fotku':'Vyfotit nebo nahrát fotku'}</label><input type="file" id="who_file" accept="image/*" data-k="${esc(key)}" hidden>
+   ${img?(W.phDel===key?`<button class="btn danger sm" data-a="whodelgo" data-v="${esc(key)}">Opravdu odebrat</button><button class="btn ghost sm" data-a="whodelno" data-v="${esc(key)}">Ne</button>`:`<button class="btn ghost sm" data-a="whodel" data-v="${esc(key)}">Odebrat fotku</button>`):''}
+   <button class="btn ghost sm" data-a="whokid" data-v="${esc(key)}">Dovednosti</button></div>
+  ${W.phMsg?`<p class="small"><b>${esc(W.phMsg)}</b></p>`:''}<p class="small muted">Fotka se zmenší na čtverec 256 × 256 px a uloží se jen pro trenéry a správce.</p></div>`;
+ sh.hidden=false;sh.dataset.id=''}
+function shrinkPhoto(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),im=new Image();
+ im.onload=()=>{try{const S2=256,c=document.createElement('canvas');c.width=S2;c.height=S2;const g=c.getContext('2d'),w=im.naturalWidth,h=im.naturalHeight,m=Math.min(w,h);
+  g.drawImage(im,(w-m)/2,(h-m)/2.6,m,m,0,0,S2,S2);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.78))}catch(e){rej(e)}};
+ im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('img'))};im.src=url})}
+function photoSet(tid,num,val){const m=Object.assign({},W.raw.photos[tid]||{});if(val)m[phKey(num)]=val;else delete m[phKey(num)];W.raw.photos[tid]=m;phCache();Web.write('photos/'+tid+'/'+phKey(num),val||null)}
+document.addEventListener('change',async e=>{if(e.target.id!=='who_file')return;const f=e.target.files&&e.target.files[0],key=e.target.dataset.k;if(!f||!key)return;
+ const x=kid(key),p=(S.teams[x.tid].players||[]).find(q=>q.num===x.num);W.phMsg='Ukládám fotku…';openWho(key);
+ try{const img=await shrinkPhoto(f);photoSet(x.tid,x.num,{img,name:p?p.name:'',ts:Date.now()});W.phMsg='';toast('Fotka uložena.')}catch(err){W.phMsg='Tuhle fotku se nepodařilo načíst. Zkus jinou.'}
+ openWho(key);if(S.tab==='who')render(true)});
 
 /* ---------- Nastavení (web) ---------- */
 function vSet(){
@@ -1426,6 +1469,11 @@ Object.assign(actions,{
  wrdel:v=>{const tid=S.teamId,R=rosterOf(tid);R.players=R.players.filter(p=>String(p.num)!==v);rosterSave(tid,R);W.rmsg='';render(true)},
  wrass:v=>{W.assign=v;W.rmove=null;W.rmsg='';render(true);const f=$('#w_assnum');if(f&&f.focus)f.focus()},wrassno:()=>{W.assign=null;render(true)},
  wrmv:v=>{W.rmove=v;W.assign=null;W.rmsg='';render(true)},wrmvno:()=>{W.rmove=null;render(true)},wrmvgo:v=>movePlayerW(v==='1'),
+ whot:v=>{let t=whoTeams().slice();const i=t.indexOf(v);if(i>=0){if(t.length>1)t.splice(i,1)}else t.push(v);WHO.teams=t;whoSave();render(true)},
+ whosz:v=>{WHO.size=v;whoSave();render(true)},whoso:v=>{WHO.sort=v;whoSave();render(true)},
+ whoopen:v=>{W.phMsg='';W.phDel=null;openWho(v)},whodel:v=>{W.phDel=v;openWho(v)},whodelno:v=>{W.phDel=null;openWho(v)},
+ whodelgo:v=>{const x=kid(v);W.phDel=null;photoSet(x.tid,x.num,null);openWho(v);if(S.tab==='who')render(true);toast('Fotka odebrána.')},
+ whokid:v=>{const x=kid(v);if(S.teamId!==x.tid){S.teamId=x.tid;ls.set('u7-team',x.tid)}openKid(x.num)},
  wimpgo:()=>runImport(),wimpno:()=>{W.imp=null;W.impMsg='';render(true)}
 });
 
