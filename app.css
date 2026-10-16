@@ -73,6 +73,8 @@ p{margin:0}
 .faces{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px;max-width:120px}
 .faces .kph{width:22px;height:22px;margin:0}
 .kph.ini{display:inline-grid;place-items:center;font:700 12px var(--f-disp);color:var(--muted);border:1px solid var(--line)}
+.sea{margin:0;line-height:1.5}
+.sea .btn{margin:4px 0 0;display:inline-block}
 .bdg{font-size:16px;letter-spacing:1px;margin-left:4px}
 .chip.badge.on{font-weight:700}
 .chip.badge.off{opacity:.55}
@@ -122,7 +124,7 @@ p{margin:0}
 .ib.down{background:var(--warn);border-color:var(--warn)}
 #parentsTxt{min-height:200px;font-size:15px}
 .ib:disabled{opacity:.35;cursor:default}
-input[type=text],input[type=date],input[type=number],input[type=search],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;min-width:0;width:100%}
+input[type=text],input[type=date],input[type=time],input[type=number],input[type=search],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;min-width:0;width:100%}
 textarea{min-height:84px;resize:vertical}
 .kids{display:flex;flex-wrap:wrap;gap:6px}
 .sumline{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
