@@ -1396,19 +1396,16 @@ document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.datase
 let phT=null;const phCache=()=>{clearTimeout(phT);phT=setTimeout(()=>ls.set('u7w-photos',W.raw.photos),800)};
 const phKey=n=>String(n).replace(/[.#$[\]/]/g,'_');
 function photoOf(tid,p){const m=W.raw.photos[tid]||{},d=m[phKey(p.num)];if(d&&d.img)return d.img;const f=Object.values(m).find(x=>x&&x.name&&x.name===p.name&&x.img);return f?f.img:''}
-const WHO=Object.assign({teams:[],size:'m',sort:'num'},ls.get('u7w-who',{}));const whoSave=()=>ls.set('u7w-who',WHO);
+const WHO=Object.assign({teams:[],size:'m'},ls.get('u7w-who',{}));const whoSave=()=>ls.set('u7w-who',WHO);
 const initials=n=>String(n||'?').trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
 function whoTeams(){let t=(WHO.teams||[]).filter(x=>S.teams[x]);if(!t.length&&S.teams[S.teamId])t=[S.teamId];return t}
 function vWho(){
  if(!team())return noTeam();const sel=whoTeams(),all=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs'));
- const sortP=ps=>WHO.sort==='name'?ps.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','cs')):ps;
  const n=sel.reduce((s,t)=>s+(S.teams[t].players||[]).length,0),nf=sel.reduce((s,t)=>s+(S.teams[t].players||[]).filter(p=>photoOf(t,p)).length,0);
- return `<section class="card"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>
-  ${all.length>1?`<div class="row">${all.map(([id,x])=>{const on=sel.includes(id);return `<button class="chip ${on?'on':''}" data-a="whot" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join('')}</div>`:''}
-  <div class="row"><div class="seg" role="group" aria-label="Velikost">${[['s','Malé'],['m','Střední'],['l','Velké']].map(([k,l])=>`<button data-a="whosz" data-v="${k}" class="${WHO.size===k?'on':''}">${l}</button>`).join('')}</div>
-   <div class="seg" role="group" aria-label="Řazení">${[['num','Číslo'],['name','Jméno']].map(([k,l])=>`<button data-a="whoso" data-v="${k}" class="${WHO.sort===k?'on':''}">${l}</button>`).join('')}</div></div>
-  <p class="small muted">Klepnutím na dítě přidáš nebo vyměníš fotku. Fotky vidí jen přihlášení trenéři a správce.</p></section>
- ${sel.map(tid=>{const ps=sortP(S.teams[tid].players||[]);return `${sel.length>1?`<h3 class="who-h">${esc(tName(tid))} · ${ps.length}</h3>`:''}
+ return `<section class="card who-f"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>
+  <div class="row" style="gap:6px">${all.length>1?all.map(([id,x])=>{const on=sel.includes(id);return `<button class="chip sm ${on?'on':''}" data-a="whot" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join(''):''}
+   <div class="seg sm" role="group" aria-label="Velikost fotek" style="margin-left:auto">${[['s','S','Malé'],['m','M','Střední'],['l','L','Velké']].map(([k,l,t])=>`<button data-a="whosz" data-v="${k}" class="${WHO.size===k?'on':''}" title="${t}" aria-label="${t}">${l}</button>`).join('')}</div></div></section>
+ ${sel.map(tid=>{const ps=S.teams[tid].players||[];return `${sel.length>1?`<h3 class="who-h">${esc(tName(tid))} · ${ps.length}</h3>`:''}
   ${ps.length?`<div class="who-grid ${WHO.size}">${ps.map(p=>{const img=photoOf(tid,p);return `<button class="who" data-a="whoopen" data-v="${esc(K(tid,p.num))}" aria-label="${esc(p.name)}${noNum(p.num)?'':', číslo '+esc(p.num)}">
    <span class="ph">${img?`<img src="${img}" alt="" loading="lazy">`:`<span class="ini">${esc(initials(p.name))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}</span><span class="wname">${esc(p.name)}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná.</p>'}`}).join('')}`}
 function openWho(key){const x=kid(key),tid=x.tid,p=(S.teams[tid]&&S.teams[tid].players||[]).find(q=>q.num===x.num);if(!p)return;const img=photoOf(tid,p),sh=$('#sheet');
@@ -1418,7 +1415,7 @@ function openWho(key){const x=kid(key),tid=x.tid,p=(S.teams[tid]&&S.teams[tid].p
   <div class="row"><label class="btn sm" for="who_file">${img?'Vyměnit fotku':'Vyfotit nebo nahrát fotku'}</label><input type="file" id="who_file" accept="image/*" data-k="${esc(key)}" hidden>
    ${img?(W.phDel===key?`<button class="btn danger sm" data-a="whodelgo" data-v="${esc(key)}">Opravdu odebrat</button><button class="btn ghost sm" data-a="whodelno" data-v="${esc(key)}">Ne</button>`:`<button class="btn ghost sm" data-a="whodel" data-v="${esc(key)}">Odebrat fotku</button>`):''}
    <button class="btn ghost sm" data-a="whokid" data-v="${esc(key)}">Dovednosti</button></div>
-  ${W.phMsg?`<p class="small"><b>${esc(W.phMsg)}</b></p>`:''}<p class="small muted">Fotka se zmenší na čtverec 256 × 256 px a uloží se jen pro trenéry a správce.</p></div>`;
+  ${W.phMsg?`<p class="small"><b>${esc(W.phMsg)}</b></p>`:''}<p class="small muted">Fotka se zmenší na čtverec 256 × 256 px. Vidí ji jen přihlášení trenéři a správce.</p></div>`;
  sh.hidden=false;sh.dataset.id=''}
 function shrinkPhoto(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),im=new Image();
  im.onload=()=>{try{const S2=256,c=document.createElement('canvas');c.width=S2;c.height=S2;const g=c.getContext('2d'),w=im.naturalWidth,h=im.naturalHeight,m=Math.min(w,h);
@@ -1470,7 +1467,7 @@ Object.assign(actions,{
  wrass:v=>{W.assign=v;W.rmove=null;W.rmsg='';render(true);const f=$('#w_assnum');if(f&&f.focus)f.focus()},wrassno:()=>{W.assign=null;render(true)},
  wrmv:v=>{W.rmove=v;W.assign=null;W.rmsg='';render(true)},wrmvno:()=>{W.rmove=null;render(true)},wrmvgo:v=>movePlayerW(v==='1'),
  whot:v=>{let t=whoTeams().slice();const i=t.indexOf(v);if(i>=0){if(t.length>1)t.splice(i,1)}else t.push(v);WHO.teams=t;whoSave();render(true)},
- whosz:v=>{WHO.size=v;whoSave();render(true)},whoso:v=>{WHO.sort=v;whoSave();render(true)},
+ whosz:v=>{WHO.size=v;whoSave();render(true)},
  whoopen:v=>{W.phMsg='';W.phDel=null;openWho(v)},whodel:v=>{W.phDel=v;openWho(v)},whodelno:v=>{W.phDel=null;openWho(v)},
  whodelgo:v=>{const x=kid(v);W.phDel=null;photoSet(x.tid,x.num,null);openWho(v);if(S.tab==='who')render(true);toast('Fotka odebrána.')},
  whokid:v=>{const x=kid(v);if(S.teamId!==x.tid){S.teamId=x.tid;ls.set('u7-team',x.tid)}openKid(x.num)},
