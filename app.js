@@ -115,7 +115,7 @@ const A=[
  d:'Hráči si chodí po hřišti a vyhazují míče. Trenér zakřičí povel a děti ho co nejrychleji splní, míč vždy položí na zem: „zadek na míč“, „břicho na míč“, „koleno na míč“, „ucho na míč“, „loket na míč“…',
  va:'Na magnety: na píšťalku trenér zavolá třeba „Magnet na kolena!“ a děti se bleskově přilepí ke kamarádovi koleny. Kdo zbude, udělá 3 dřepy.'},
 /* --- CVIKY --- */
-{id:'d01',k:'drill',n:'Úchop „céčko“',c:'hazeni',e:1,min:5,kids:1,st:1,gear:['Měkké míčky'],gn:'míček pro každé dítě',
+{id:'d01',k:'drill',n:'Držení míče',c:'hazeni',e:1,min:5,kids:1,st:1,gear:['Měkké míčky'],gn:'míček pro každé dítě',
  dev:'správný úchop míče, příprava na hod',
  d:'Dítě drží míč dvěma prsty nahoře (ukazovák a prostředník) a palcem dole, z boku je vidět písmeno C. Míč se nedrží v dlani. Trenér řekne „ukaž céčko“ a děti zvednou míč. Pak hledají šev a pokládají prsty přes něj.',
  kid:'„Míček držíme jako vajíčko, dva prstíky nahoře, palec dole. Ukaž mi céčko!“'},
@@ -752,7 +752,7 @@ async function savePlanToHistory(quiet){const p=clone(S.plan);p.teams=planTeams(
 
 /* ===== Dovednosti dětí ===== */
 const SK=[
- {id:'h1',c:'hazeni',n:'Drží míček „céčkem“'},{id:'h2',c:'hazeni',n:'Při hodu kročí opačnou nohou'},{id:'h3',c:'hazeni',n:'Trefí kamaráda na 6 m'},
+ {id:'h1',c:'hazeni',n:'Správně drží míč'},{id:'h2',c:'hazeni',n:'Při hodu kročí opačnou nohou'},{id:'h3',c:'hazeni',n:'Trefí kamaráda na 6 m'},
  {id:'c1',c:'chytani',n:'Chytí kutálený míč krokodýlí tlamou'},{id:'c2',c:'chytani',n:'Chytí měkký míček do rukavice'},{id:'c3',c:'chytani',n:'Postaví se pod vysoký míč'},
  {id:'o1',c:'odpal',n:'Správný postoj a úchop pálky'},{id:'o2',c:'odpal',n:'Trefí míček z tee'},{id:'o3',c:'odpal',n:'Po odpalu bezpečně odloží pálku'},
  {id:'m1',c:'mety',n:'Zná pořadí met'},{id:'m2',c:'mety',n:'Probíhá první metu'},{id:'m3',c:'mety',n:'Zastaví se na druhé a třetí metě'},
@@ -779,7 +779,7 @@ function openKid(num){const p=players().find(x=>x.num===num);if(!p)return;const 
 /* ===== Sezónní plán: 10 týdnů ===== */
 const SEASON=[
  {n:'Hřiště a mety',f:['mety','hra'],must:['s07','g15'],tip:'Děti poznají mety a pravidla pohybu po hřišti. Hodně běhu a her na povely.'},
- {n:'Úchop a hod',f:['hazeni'],must:['s01','d01'],tip:'Úchop céčkem a hod s krokem. Házecí progrese od teď na každém tréninku.'},
+ {n:'Úchop a hod',f:['hazeni'],must:['s01','d01'],tip:'Držení míče a hod s krokem. Házecí progrese od teď na každém tréninku.'},
  {n:'Kutálené míče',f:['chytani'],must:['s03','g07'],tip:'Krokodýlí tlama a postavit se míči do cesty.'},
  {n:'Odpal z tee',f:['odpal'],must:['s06','g10'],tip:'Postoj, úchop a rovný švih. Pálka jen u trenéra, ostatní za čarou.'},
  {n:'Hod a chytání ve dvojici',f:['hazeni','chytani'],must:['s02','d08'],tip:'Spojit hod a chytání, rychlé přendání do házecí ruky.'},
