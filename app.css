@@ -73,6 +73,37 @@ p{margin:0}
 .faces{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px;max-width:120px}
 .faces .kph{width:22px;height:22px;margin:0}
 .kph.ini{display:inline-grid;place-items:center;font:700 12px var(--f-disp);color:var(--muted);border:1px solid var(--line)}
+.bdg{font-size:16px;letter-spacing:1px;margin-left:4px}
+.chip.badge.on{font-weight:700}
+.chip.badge.off{opacity:.55}
+.wx{display:grid;gap:6px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--sunk)}
+.wx b.big{font-size:22px}
+#print{display:none}
+@media print{
+ @page{size:A4 landscape;margin:8mm}
+ body.printing>*:not(#print){display:none!important}
+ body.printing{background:#fff!important;padding:0!important}
+ body.printing #print{display:block}
+ .dip{break-after:page;page-break-after:always;height:192mm;box-sizing:border-box;padding:4mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:var(--f-body),sans-serif;color:#17251c}
+ .dip:last-child{break-after:auto;page-break-after:auto}
+ .dip-in{height:100%;box-sizing:border-box;border:3mm double #1F5A36;border-radius:6mm;padding:9mm 14mm;display:grid;grid-template-rows:auto auto 1fr auto;gap:5mm;background:#fbfdf9}
+ .dip-top{display:flex;align-items:center;gap:8mm}
+ .dip-logo{height:24mm;width:auto}
+ .dip-ball{font-size:20mm}
+ .dip-t{font:700 22mm/1 var(--f-disp),sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#1F5A36}
+ .dip-s{font-size:5mm;color:#4a5a50}
+ .dip-mid{display:flex;align-items:center;gap:9mm}
+ .dip-ph{width:42mm;height:42mm;border-radius:50%;object-fit:cover;border:1.5mm solid #1F5A36}
+ .dip-n{font:700 15mm/1.05 var(--f-disp),sans-serif}
+ .dip-b{display:flex;flex-wrap:wrap;gap:3mm 6mm;margin-top:3mm;font-size:5mm;font-weight:700}
+ .dip-b i{font-style:normal;font-size:8mm;margin-right:1.5mm;vertical-align:middle}
+ .dip-k{font-size:4.6mm}
+ .dip-k ul{list-style:none;margin:2mm 0 0;padding:0;columns:2;column-gap:10mm}
+ .dip-k li{margin:0 0 1.5mm;break-inside:avoid}
+ .dip-f{display:flex;justify-content:space-between;gap:10mm;font-size:4.6mm}
+ .dip-f span{border-top:.4mm solid #17251c;padding-top:1.5mm;min-width:70mm}
+ .dip-f small{color:#4a5a50}
+}
 .kid.sel{outline:3px solid var(--ball);outline-offset:1px}
 .lvl{font:700 11px var(--f-disp);letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 4px;background:var(--sunk);color:var(--muted)}
 .chip.on .lvl{background:rgba(255,255,255,.2);color:inherit}

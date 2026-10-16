@@ -769,6 +769,26 @@ const skOf=p=>Array.isArray(p&&p.sk)?p.sk.filter(x=>SK.some(s=>s.id===x)):[];
 const lvlFor=n=>n<5?'n':n<10?'m':'j';
 function catPct(tids){const ps=tids.flatMap(plOf),out={};FOCUS.forEach(f=>{const ids=SK.filter(s=>s.c===f).map(s=>s.id),tot=ps.length*ids.length;out[f]=tot?Math.round(100*ps.reduce((s,p)=>s+skOf(p).filter(x=>ids.includes(x)).length,0)/tot):0});return out}
 function weakest(tids){if(!tids.flatMap(plOf).some(p=>skOf(p).length))return null;const pc=catPct(tids);return FOCUS.slice().sort((a,b)=>pc[a]-pc[b])[0]}
+/* ===== Odznaky a diplomy ===== */
+const BADGE={hazeni:['🎯','Házeč'],chytani:['🧤','Chytač'],odpal:['💥','Pálkař'],mety:['🏃','Běžec'],hra:['🧠','Chytrý hráč']};
+const badgesOf=p=>{const h=skOf(p),b=FOCUS.filter(f=>SK.filter(s=>s.c===f).every(s=>h.includes(s.id)));if(h.length===SK.length)b.push('all');return b};
+const bIcon=b=>b==='all'?'⭐':BADGE[b][0],bName=b=>b==='all'?'Hvězda týmu':BADGE[b][1];
+const bHint=(p,f)=>{const n=SK.filter(s=>s.c===f&&!skOf(p).includes(s.id)).length;return n?'chybí '+n:''};
+/* webová verze dodá logo a fotku; tady jen prázdné */
+let dipLogo='',kidImg=()=>'',weatherBox=()=>'';
+function dipHtml(p,tid){const t=S.teams[tid]||{},h=skOf(p),bs=badgesOf(p),img=kidImg({tid,num:p.num,name:p.name}),yr=new Date().getFullYear(),co=(t.coaches||[]).map(c=>c.name).filter(Boolean);
+ return `<section class="dip"><div class="dip-in">
+  <div class="dip-top">${dipLogo?`<img class="dip-logo" src="${dipLogo}" alt="">`:'<span class="dip-ball">⚾</span>'}<div><div class="dip-t">Diplom</div><div class="dip-s">${esc(t.name||'')} · sezóna ${yr}</div></div></div>
+  <div class="dip-mid">${img?`<img class="dip-ph" src="${img}" alt="">`:''}<div><div class="dip-n">${esc(p.name||'')}</div><div class="dip-s">${[noNum(p.num)?'':'#'+esc(p.num),LVL[p.lvl]?'úroveň '+LVL[p.lvl]:''].filter(Boolean).join(' · ')}</div>
+   ${bs.length?`<div class="dip-b">${bs.map(b=>`<span><i>${bIcon(b)}</i>${bName(b)}</span>`).join('')}</div>`:''}</div></div>
+  <div class="dip-k"><b>Zvládnuté dovednosti</b><ul>${(h.length?SK.filter(x=>h.includes(x.id)):[]).map(x=>`<li>✓ ${esc(x.n)}</li>`).join('')||'<li>Začínám a bavím se baseballem!</li>'}</ul></div>
+  <div class="dip-f"><span>${co.length?esc(co.join(', ')):'&nbsp;'}<br><small>trenéři</small></span><span>${fmtDate(today())}<br><small>datum</small></span></div>
+ </div></section>`}
+function printDip(nums){const tid=S.teamId,ps=players().filter(p=>nums.includes(p.num));if(!ps.length){toast('V týmu nejsou žádné děti.');return}
+ let el=document.getElementById('print');if(!el){el=document.createElement('div');el.id='print';document.body.appendChild(el)}
+ el.innerHTML=ps.map(p=>dipHtml(p,tid)).join('');document.body.classList.add('printing');
+ const done=()=>{document.body.classList.remove('printing');el.innerHTML='';window.removeEventListener('afterprint',done)};window.addEventListener('afterprint',done);
+ setTimeout(()=>{try{window.print()}catch(e){done()}},300)}
 function vKids(){
  if(!team())return noTeam();
  const ps=players(),pc=catPct([S.teamId]),w=weakest([S.teamId]);
@@ -776,11 +796,15 @@ function vKids(){
   <p class="small muted">Klepni na dítě a odškrtni, co už zvládá. Podle počtu dovedností aplikace navrhne úroveň: do 4 Orlíci, 5–9 Orli, od 10 Orliska.</p>
   <div class="dl">${FOCUS.map(f=>`<div class="sumline"><span>${CATS[f]}</span><span class="small muted">${pc[f]} %</span></div><div class="pbar"><i style="width:${pc[f]}%"></i></div>`).join('')}</div>
   ${w?`<div class="row"><span class="small">Nejslabší oblast: <b>${CATS[w]}</b></span><button class="btn ghost sm" data-a="kidfocus" data-v="${w}">Zaměřit příští trénink</button></div>`:''}</section>
- <section class="card"><h2>Děti · ${ps.length}</h2>${ps.length?`<div class="lib-list">${ps.map(p=>{const n=skOf(p).length,sg=lvlFor(n);return `<button class="item" data-a="kid" data-v="${esc(p.num)}"><h3>${noNum(p.num)?'':esc(p.num)+' · '}${esc(p.name)}</h3><span class="kb ${p.lvl?'game':'routine'}">${LVL[p.lvl]||'bez úrovně'}</span><span class="meta"><span class="pbar"><i style="width:${Math.round(100*n/SK.length)}%"></i></span>${n} z ${SK.length} dovedností${n&&p.lvl!==sg?' · návrh: '+LVL[sg]:''}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná. Děti přidáš v záložce Tým.</p>'}</section>`}
+ <section class="card"><h2>Děti · ${ps.length}</h2>${ps.length?`<div class="lib-list">${ps.map(p=>{const n=skOf(p).length,sg=lvlFor(n);return `<button class="item" data-a="kid" data-v="${esc(p.num)}"><h3>${noNum(p.num)?'':esc(p.num)+' · '}${esc(p.name)}${badgesOf(p).length?` <span class="bdg" title="${esc(badgesOf(p).map(bName).join(', '))}">${badgesOf(p).map(bIcon).join('')}</span>`:''}</h3><span class="kb ${p.lvl?'game':'routine'}">${LVL[p.lvl]||'bez úrovně'}</span><span class="meta"><span class="pbar"><i style="width:${Math.round(100*n/SK.length)}%"></i></span>${n} z ${SK.length} dovedností${n&&p.lvl!==sg?' · návrh: '+LVL[sg]:''}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná. Děti přidáš v záložce Tým.</p>'}</section>
+ ${ps.length?`<section class="card"><h2>Diplomy</h2><p class="small muted">Diplom pro každé dítě: jméno, fotka, odznaky a co už umí. Vytiskne se na A4 na šířku, v dialogu tisku jde uložit i jako PDF.</p><button class="btn" data-a="dipall">🖨 Diplomy pro celý tým (${ps.length})</button>
+  <p class="small muted">Odznaky: ${FOCUS.map(f=>BADGE[f][0]+' '+BADGE[f][1]+' – všechny dovednosti v oblasti '+CATS[f].toLowerCase()).join(' · ')} · ⭐ Hvězda týmu – všech ${SK.length} dovedností.</p></section>`:''}`}
 function openKid(num){const p=players().find(x=>x.num===num);if(!p)return;const has=skOf(p),sg=lvlFor(has.length),sh=$('#sheet');
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="${esc(p.name)}"><div class="sumline"><span class="kb ${p.lvl?'game':'routine'}">${LVL[p.lvl]||'bez úrovně'}</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <h2>${esc(p.name)}${noNum(p.num)?'':' · '+esc(p.num)}</h2><p class="small muted">${has.length} z ${SK.length} dovedností · návrh úrovně: <b>${LVL[sg]}</b></p>
   ${p.lvl!==sg?`<div class="row"><button class="btn sm" data-a="kidlvl" data-v="${esc(p.num)}">Nastavit úroveň ${LVL[sg]}</button></div>`:''}
+  <div class="field"><span class="label">Odznaky</span><div class="row" style="gap:6px">${FOCUS.map(f=>{const on=badgesOf(p).includes(f);return `<span class="chip badge ${on?'on':'off'}">${BADGE[f][0]} ${BADGE[f][1]}${on?'':' · '+bHint(p,f)}</span>`}).join('')}${badgesOf(p).includes('all')?'<span class="chip badge on">⭐ Hvězda týmu</span>':''}</div></div>
+  <div class="row"><button class="btn ghost sm" data-a="dipone" data-v="${esc(p.num)}">🖨 Diplom</button></div>
   ${FOCUS.map(f=>`<div class="field"><span class="label">${CATS[f]}</span><ul class="gear">${SK.filter(s=>s.c===f).map(s=>`<li><label><input type="checkbox" id="sk_${s.id}" data-c="skill" data-v="${s.id}" data-p="${esc(p.num)}" ${has.includes(s.id)?'checked':''}><span>${esc(s.n)}</span></label></li>`).join('')}</ul></div>`).join('')}</div>`;
  sh.hidden=false;sh.dataset.kid=num}
 
@@ -879,6 +903,7 @@ function vPlan(){
    <div class="field"><span class="label">Datum</span><input type="date" id="pdate" data-c="date" value="${esc(d.date)}"></div>
    <div class="field"><span class="label">Prostor</span><div class="seg">${[['venku','Venku'],['hala','Hala']].map(([k,l])=>`<button data-a="venue" data-v="${k}" class="${d.venue===k?'on':''}">${l}</button>`).join('')}</div></div>
   </div>
+  ${weatherBox()}
   <div class="field"><span class="label">Věková kategorie</span><div class="seg">${AGES.map(g=>`<button data-a="age" data-v="${g}" class="${draftAge()===g?'on':''}">${g}</button>`).join('')}</div><span class="small muted">Do tréninku se vyberou jen hry a cviky vhodné pro ${draftAge()}${AGES.includes(d.age)?'':autoAge()==='U6'?' (podle názvu týmu)':' (výchozí)'}. Označení se mění v Knihovně.</span></div>
   ${vSeason()}
   <div class="field"><span class="label">Délka tréninku</span><div class="seg">${Object.keys(TPL).map(m=>`<button data-a="min" data-v="${m}" class="${!d.tpl&&+m===d.minutes?'on':''}">${m} min</button>`).join('')}</div></div>
@@ -1179,6 +1204,7 @@ const actions={
  rateopen:()=>{S.openRate=true;actions.tab('train');setTimeout(()=>{const e=$('#rateCard');if(e&&e.scrollIntoView)e.scrollIntoView({behavior:'smooth'})},80)},
  copypar:async()=>{const t=$('#parentsTxt');if(!t)return;try{await navigator.clipboard.writeText(t.value);toast('Zkopírováno. Vlož do skupiny rodičů.')}catch(e){t.focus();t.select();toast('Text je označený, zkopíruj ho.')}},
  kid:v=>openKid(v),
+ dipall:()=>printDip(players().map(p=>p.num)),dipone:v=>{closeSheet();printDip([v])},
  kidlvl:async v=>{const t=clone(team()),p=t.players.find(x=>x.num===v);if(!p)return;p.lvl=lvlFor(skOf(p).length);await saveTeam(t);openKid(v)},
  kidfocus:v=>{S.draft.focus=[v];saveDraft();actions.tab('plan');toast('Zaměření nastaveno: '+CATS[v])},
  week:v=>{const w=+v;S.draft.week=w;if(w){S.draft.focus=SEASON[w-1].f.slice()}saveDraft();render(true)},
@@ -1241,6 +1267,7 @@ document.addEventListener('change',async e=>{const el=e.target,c=el.dataset.c;if
  else if(c==='cname'){const t=clone(team());const cs=coachesOf(t);const x=cs.find(c=>c.id===el.dataset.v);const nv=el.value.trim();if(x&&nv){x.name=nv;t.coaches=cs;await saveTeam(t)}else render(true)}
  else if(c==='theme'){S.pref.theme=el.value;savePref();applyTheme()}
  else if(c==='mix'){S.draft.mix=el.checked;saveDraft()}
+ else if(c==='wxh'){S.pref.wx=Object.assign({},S.pref.wx,{h:+el.value});savePref();render(true)}
  else if(c==='wake'){S.pref.wake=el.checked;savePref();if(!el.checked)lock(false)}
  else if(c==='pname'){const t=clone(team());const p=t.players.find(p=>p.num===el.dataset.v);if(p){p.name=el.value.trim();await saveTeam(t)}}
  else if(c==='pnum'){const t=clone(team()),old=el.dataset.v;let nv=el.value.trim().replace(/^0+(?=\d)/,'');
@@ -1475,6 +1502,31 @@ function shrinkPhoto(file){return new Promise((res,rej)=>{const url=URL.createOb
   g.drawImage(im,(w-m)/2,(h-m)/3,m,m,0,0,S2,S2);URL.revokeObjectURL(url);let q=.82,d=c.toDataURL('image/jpeg',q);while(d.length>45000&&q>.4){q-=.12;d=c.toDataURL('image/jpeg',q)}res(d)}catch(e){rej(e)}};
  im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('img'))};im.src=url})}
 kidPh=x=>{const img=x&&x.tid?photoOf(x.tid,{num:x.num,name:x.name}):'';return img?`<img class="kph" src="${img}" alt="" loading="lazy">`:''};
+dipLogo='logo.png';kidImg=x=>x&&x.tid?photoOf(x.tid,{num:x.num,name:x.name}):'';
+/* ---------- Počasí na den tréninku (Open-Meteo, bez klíče) ---------- */
+const WX_DEF={lat:50.08,lon:14.42,name:'Praha',h:17};
+const wxPref=()=>Object.assign({},WX_DEF,S.pref.wx||{});
+const WX={data:null,key:'',at:0,busy:false,err:false};
+function wxLoad(){const P=wxPref(),key=P.lat.toFixed(2)+','+P.lon.toFixed(2);
+ if(!WX.data&&!WX.key){const c=ls.get('u7w-wx',null);if(c&&c.key){WX.data=c.data;WX.key=c.key;WX.at=c.at}}
+ if(WX.busy||(WX.key===key&&Date.now()-WX.at<3600e3)||typeof fetch!=='function')return;WX.busy=true;
+ fetch('https://api.open-meteo.com/v1/forecast?latitude='+P.lat+'&longitude='+P.lon+'&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m&timezone=Europe%2FPrague&forecast_days=16')
+  .then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{WX.data=j.hourly;WX.key=key;WX.at=Date.now();WX.err=false;ls.set('u7w-wx',{data:WX.data,key,at:WX.at})})
+  .catch(()=>{WX.err=true}).finally(()=>{WX.busy=false;if(S.tab==='plan')render(true)})}
+const WMO=c=>c>=95?['⛈','bouřka']:c>=85?['🌨','sněhové přeháňky']:c>=80?['🌧','přeháňky']:c>=71?['🌨','sněžení']:c>=61?['🌧','déšť']:c>=51?['🌦','mrholení']:c>=45?['🌫','mlha']:c>=3?['☁️','zataženo']:c>=1?['🌤','polojasno']:['☀️','jasno'];
+function wxFor(date){const d=WX.data,P=wxPref();if(!d||!d.time)return null;const hs=[P.h,P.h+1].map(h=>date+'T'+String(h).padStart(2,'0')+':00').map(t=>d.time.indexOf(t)).filter(i=>i>=0);if(!hs.length)return null;
+ const g=k=>hs.map(i=>d[k][i]).filter(v=>v!=null);const T=g('temperature_2m'),pp=g('precipitation_probability'),pr=g('precipitation'),cd=g('weather_code'),wd=g('wind_speed_10m');
+ return{tmin:Math.round(Math.min(...T)),tmax:Math.round(Math.max(...T)),prob:pp.length?Math.max(...pp):0,mm:pr.reduce((a,b)=>a+b,0),code:cd.length?Math.max(...cd):0,wind:wd.length?Math.round(Math.max(...wd)):0}}
+weatherBox=()=>{const d=S.draft,date=d.date||today(),P=wxPref(),days=Math.round((new Date(date)-new Date(today()))/864e5);if(days<0)return'';
+ if(days>15)return `<div class="wx small muted">🌦 Předpověď počasí pro ${P.name} bude k dispozici asi 15 dní před tréninkem.</div>`;
+ wxLoad();const w=wxFor(date);if(!w)return `<div class="wx small muted">${WX.err?'Počasí se teď nepodařilo načíst.':'Načítám počasí…'}</div>`;
+ const [ic,tx]=WMO(w.code),wet=w.prob>=60||w.mm>=1||w.code>=95,cold=w.tmax<4,rec=wet||cold?'hala':'venku';
+ const why=w.code>=95?'hrozí bouřka':wet?'pravděpodobně bude pršet':cold?'bude zima':w.prob>=30?'může sprchnout, vezměte bundy':'hrát se dá venku';
+ return `<div class="wx"><div class="sumline"><span><b class="big">${ic} ${w.tmin===w.tmax?w.tmax:w.tmin+'–'+w.tmax} °C</b> ${tx}</span><span class="small muted">${esc(P.name)} · ${P.h}–${P.h+2} h</span></div>
+  <span class="small">Srážky ${w.prob} %${w.mm>=.1?' · '+w.mm.toFixed(1).replace('.',',')+' mm':''} · vítr ${w.wind} km/h${w.wind>=40?' – silný vítr':''}</span>
+  <span class="small">Doporučení: <b>${rec==='hala'?'hala':'venku'}</b> – ${why}.</span>${rec!==d.venue?`<div class="row"><button class="btn ghost sm" data-a="venue" data-v="${rec}">Přepnout na ${rec==='hala'?'halu':'venku'}</button></div>`:''}</div>`};
+function wxSet(){const P=wxPref();return `<div class="field"><span class="label">Počasí: místo tréninku</span><div class="row"><span><b>${esc(P.name)}</b></span><button class="btn ghost sm" data-a="wxgeo">📍 Použít polohu telefonu</button>${S.pref.wx&&S.pref.wx.lat!=null?'<button class="btn ghost sm" data-a="wxreset">Praha</button>':''}</div></div>
+  <div class="field"><span class="label">Obvyklý začátek tréninku</span><select id="pf_wxh" data-c="wxh">${[14,15,16,17,18,19].map(h=>`<option value="${h}" ${P.h===h?'selected':''}>${h}:00</option>`).join('')}</select></div>`}
 function legacyDel(tid,keys){const m=Object.assign({},W.raw.photos[tid]||{});keys.forEach(k=>{if(m[k]){delete m[k];Web.write('photos/'+tid+'/'+k,null)}});W.raw.photos[tid]=m;phCache()}
 function photoSet(tid,num,img){const R=rosterOf(tid),p=R.players.find(x=>String(x.num)===String(num));if(!p)return;if(img)p.photo=img;else delete p.photo;rosterSave(tid,R);legacyDel(tid,[phKey(num)])}
 function migratePhotos(tid){if(!W.loaded['r_'+tid]||!W.loaded['p_'+tid]||!W.raw.roster[tid])return;const m=W.raw.photos[tid]||{},keys=Object.keys(m);if(!keys.length)return;
@@ -1538,10 +1590,13 @@ function vSet(){
   <div class="field"><span class="label">Vzhled</span><select id="pf_theme" data-c="theme">${[['','podle telefonu'],['light','světlý'],['dark','tmavý'],['sun','na slunce (vysoký kontrast)']].map(([v,l])=>`<option value="${v}" ${(S.pref.theme||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>
   <label class="row"><input type="checkbox" id="pf_wake" data-c="wake" ${S.pref.wake!==false?'checked':''}> Během tréninku na hřišti nenechat obrazovku zhasnout</label>
   ${voiceSet()}
+  ${wxSet()}
   <p class="small muted">Aplikaci si můžeš přidat na plochu telefonu (v prohlížeči Sdílet → Přidat na plochu). Tlačítko ☀ nahoře zapne režim na slunce.</p></section>`;
  h+=`<p class="small muted ver">Tréninkový plánovač U7 · ${verTxt()} · ${new Date(APP_DATE).toLocaleDateString('cs-CZ')}</p>`;
  return h}
 Object.assign(actions,{
+ wxgeo:()=>{if(!navigator.geolocation){toast('Telefon polohu nepodporuje.');return}navigator.geolocation.getCurrentPosition(pos=>{S.pref.wx=Object.assign({},S.pref.wx,{lat:+pos.coords.latitude.toFixed(3),lon:+pos.coords.longitude.toFixed(3),name:'u tebe (poloha telefonu)'});savePref();WX.at=0;toast('Poloha uložena.');render(true)},()=>toast('Polohu se nepodařilo zjistit.'),{timeout:10000})},
+ wxreset:()=>{const h=wxPref().h;S.pref.wx={h};savePref();WX.at=0;render(true)},
  wlogout:()=>Web.logout(''),
  wpinnew:()=>newCoachPin(),wpindrop:()=>dropCoachPins(),
  wcopy:async v=>{try{await navigator.clipboard.writeText(v);toast('Odkaz zkopírován.')}catch(e){toast(v)}},
