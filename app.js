@@ -1223,7 +1223,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.run.run
    ================================================================================= */
 const FB_CONFIG={apiKey:"AIzaSyDqwd6A6eaeHlczoLhGvaxQlzdp9od-0Pg",authDomain:"eagles-scorekeeper.firebaseapp.com",databaseURL:"https://eagles-scorekeeper-default-rtdb.europe-west1.firebasedatabase.app",projectId:"eagles-scorekeeper",storageBucket:"eagles-scorekeeper.firebasestorage.app",messagingSenderId:"691498301504",appId:"1:691498301504:web:ec05dfb8a51095ec1e87a5"};
 const WKEY='u7w-auth',CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',COLS=['plans','custom','tpls'];
-const W={rdel:null,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{}}};
+const W={assign:null,rmove:null,rNoNum:false,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{}}};
 const J=v=>JSON.stringify(v);
 const PJ=v=>{try{return v&&typeof v.json==='string'?JSON.parse(v.json):null}catch(e){return null}};
 const normCode=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^(.{4})(.+)$/,'$1-$2');
@@ -1276,7 +1276,7 @@ const Web={
   Web.write('training/kids/'+tid,{ts,json:J(kids)});Web.write('training/coaches/'+tid,{ts,json:J(coaches)})},
  compose(){const tl=W.raw.teamlist||{},out={};
   Object.keys(tl).forEach(tid=>{const R=W.raw.roster[tid]||{},kids=W.raw.kids[tid]||{},kv=Object.values(kids);
-   out[tid]={name:(tl[tid]&&tl[tid].name)||R.name||'Tým',coaches:W.raw.coaches[tid]||[],
+   out[tid]={name:R.name||(tl[tid]&&tl[tid].name)||'Tým',coaches:W.raw.coaches[tid]||[],
     players:(Array.isArray(R.players)?R.players:[]).filter(p=>p&&p.num!=null).map(p=>{const num=String(p.num),k=kids[num]||kv.find(x=>x.name&&x.name===p.name)||{};return{num,name:p.name||'',lvl:k.lvl||'',sk:Array.isArray(k.sk)?k.sk:[]}})}});
   S.teams=out;ls.set('u7w-teams',out);fixTeam()},
  on(path,cb){const r=W.fb.db.ref(path);const h=r.on('value',cb,e=>{if(isPerm(e)){S.mode='err';syncLine()}});W.subs.push(()=>r.off('value',h))},
@@ -1338,34 +1338,54 @@ document.addEventListener('change',e=>{if(e.target.id!=='wimpfile')return;const 
  r.onload=()=>{try{const b=JSON.parse(r.result);if(!b||b.app!=='u7-planovac')throw 0;W.imp=b;W.impMsg=''}catch(x){W.imp=null;W.impMsg='Tohle není záloha tréninkového plánovače.'}render(true)};r.readAsText(f)});
 
 
-/* ---------- záložka Tým: soupiska společná se Scorekeeperem ---------- */
-function rosterEdit(tid,fn){const R=clone(W.raw.roster[tid]||{name:tName(tid),players:[]});if(!Array.isArray(R.players))R.players=[];
- if(fn(R)===false)return;W.raw.roster[tid]=R;Web.compose();render(true);Web.write('teams/'+tid+'/roster',{ts:Date.now(),dev:'planovac',json:J(R)})}
+/* ---------- záložka Tým: stejné funkce jako karta Tým ve Scorekeeperu ---------- */
+const jersey=raw=>{const v=String(raw||'').trim().replace(/^0+(?=\d)/,'');return /^\d{1,3}$/.test(v)?v:null};
+const numTxt=n=>noNum(n)?'bez č.':'#'+n;
+function rosterOf(tid){const R=clone(W.raw.roster[tid]||{name:tName(tid),players:[]});if(!Array.isArray(R.players))R.players=[];return R}
+function rosterSave(tid,R){W.raw.roster[tid]=R;Web.compose();Web.write('teams/'+tid+'/roster',{ts:Date.now(),dev:'planovac',json:J(R)})}
+function kidsSave(tid,k){W.raw.kids[tid]=k;Web.compose();Web.write('training/kids/'+tid,{ts:Date.now(),json:J(k)})}
 function vTeam(){
- const t=team();if(!t)return noTeam();const ps=players(),adm=W.role==='admin';
- return `<section class="card"><div class="sumline"><h2>Tým</h2><span class="small muted">společné se Scorekeeperem</span></div>
-  ${adm?`<div class="field"><span class="label">Název týmu</span><input type="text" id="wt_name" data-c="wtname" value="${esc(t.name)}"></div>`:`<p><b>${esc(t.name)}</b></p>`}
-  <span class="label">Soupiska · ${ps.length} ${ps.length===1?'dítě':ps.length>1&&ps.length<5?'děti':'dětí'}</span>
+ const t=team(),tid=S.teamId;if(!t)return noTeam();const ps=players(),adm=W.role==='admin',others=Object.keys(S.teams).filter(x=>x!==tid);
+ return `<section class="card"><div class="field"><span class="label">Název našeho týmu</span><input type="text" id="wt_name" data-c="wtname" value="${esc(t.name)}"></div>
+  <span class="label">Soupiska · ${ps.length} hráčů</span>
   ${ps.length?`<div class="dl">${ps.map(p=>`<div class="rrow">
-   <b class="rnum">${noNum(p.num)?'–':esc(p.num)}</b>
-   <input type="text" id="wr_${esc(p.num)}" data-c="wrname" data-v="${esc(p.num)}" value="${esc(p.name)}" aria-label="Jméno, číslo ${noNum(p.num)?'bez čísla':esc(p.num)}">
+   <b class="rnum">${noNum(p.num)?'–':'#'+esc(p.num)}</b>
+   <span class="rname"><button class="aname" data-a="kid" data-v="${esc(p.num)}">${esc(p.name||'Hráč')}</button>${noNum(p.num)?' <span class="lvl">bez čísla</span>':''}</span>
    <button class="chip" data-a="lvl" data-v="${esc(p.num)}" title="Úroveň">${LVL[p.lvl]||'úroveň'}</button>
-   ${W.rdel===p.num?`<span class="row" style="grid-column:1/-1;justify-content:flex-end"><span class="warnnote">Odebrat ${esc(p.name)} ze soupisky?</span><button class="btn danger sm" data-a="wrdelgo" data-v="${esc(p.num)}">Odebrat</button><button class="btn ghost sm" data-a="wrdelno">Ne</button></span>`:`<button class="ib" data-a="wrdel" data-v="${esc(p.num)}" aria-label="Odebrat ${esc(p.name)}">✕</button>`}
-  </div>`).join('')}</div>`:'<p class="muted">Soupiska je prázdná. Přidej první dítě.</p>'}
-  <form id="wAddP" class="rrow"><input type="text" inputmode="numeric" maxlength="3" id="wn_num" placeholder="Č." aria-label="Číslo dresu (nepovinné)"><input type="text" id="wn_name" placeholder="Jméno dítěte" aria-label="Jméno"><button class="btn sm" type="submit" style="grid-column:span 2">Přidat</button></form>
-  ${W.rmsg?`<p class="warnnote">${esc(W.rmsg)}</p>`:''}
-  <p class="small muted">Číslo dresu není povinné. Zadáním stejného čísla změníš jméno. Číslo u stávajícího dítěte měň ve Scorekeeperu, přepíše se tam i v zápisech zápasů. Úroveň přepínáš klepnutím: Orlíci → Orli → Orliska.</p></section>
-  <section class="card"><div class="row"><button class="btn ghost sm" data-a="tab" data-v="kids">Dovednosti dětí</button><button class="btn ghost sm" data-a="tab" data-v="plan">Naplánovat trénink</button></div></section>`}
-document.addEventListener('submit',e=>{if(e.target.id!=='wAddP')return;e.preventDefault();const tid=S.teamId;
- const raw=$('#wn_num').value.trim().replace(/^0+(?=\d)/,''),name=$('#wn_name').value.trim();
- if(!name){W.rmsg='Napiš jméno dítěte.';return render(true)}if(raw&&!/^\d{1,3}$/.test(raw)){W.rmsg='Číslo dresu má 1–3 číslice.';return render(true)}W.rmsg='';
- rosterEdit(tid,R=>{const ex=raw&&R.players.find(p=>String(p.num)===raw);if(ex){ex.name=name;toast('Jméno u čísla '+raw+' změněno.');return}
-  if(!raw&&R.players.some(p=>noNum(p.num)&&(p.name||'').toLowerCase()===name.toLowerCase())){W.rmsg=name+' už v soupisce je.';render(true);return false}
-  const num=raw||'~'+uid().slice(-6);R.players.push({num,name});if(S.draft.present[tid]){S.draft.present[tid].push(num);saveDraft()}});
- setTimeout(()=>{const f=$('#wn_num');if(f&&f.focus)f.focus()},30)});
+   <span class="row" style="gap:4px;flex-wrap:nowrap">${noNum(p.num)?`<button class="btn ghost sm" data-a="wrass" data-v="${esc(p.num)}">Přidělit číslo</button>`:''}${adm&&others.length?`<button class="ib" data-a="wrmv" data-v="${esc(p.num)}" aria-label="Přesunout do jiného týmu" title="Přesunout do jiného týmu">⇄</button>`:''}<button class="ib" data-a="wrdel" data-v="${esc(p.num)}" aria-label="Odebrat ze soupisky">✕</button></span>
+   ${W.assign===p.num?`<form id="wAss" class="row" style="grid-column:1/-1"><input type="text" inputmode="numeric" maxlength="3" id="w_assnum" placeholder="Číslo pro ${esc(p.name)}" aria-label="Číslo dresu" style="flex:1 1 140px;width:auto"><button class="btn sm" type="submit">Uložit</button><button class="btn ghost sm" type="button" data-a="wrassno">Zrušit</button></form>`:''}
+   ${W.rmove===p.num?`<div class="row" style="grid-column:1/-1"><select id="w_mvt" aria-label="Cílový tým" style="flex:1 1 160px;width:auto">${others.map(x=>`<option value="${esc(x)}">${esc(tName(x))}</option>`).join('')}</select><button class="btn sm" data-a="wrmvgo" data-v="0">Přesunout</button><button class="btn ghost sm" data-a="wrmvgo" data-v="1" title="Hráč zůstane i tady">Přidat i tam</button><button class="btn ghost sm" data-a="wrmvno">Zrušit</button></div>`:''}
+  </div>`).join('')}</div>`:'<p class="muted">Soupiska je zatím prázdná. Přidej první hráče.</p>'}
+  <form id="wAddP" class="row"><input type="text" inputmode="numeric" maxlength="3" id="wn_num" placeholder="Č." aria-label="Číslo dresu" style="flex:0 0 76px;width:76px" ${W.rNoNum?'disabled':''}><input type="text" id="wn_name" placeholder="Jméno" aria-label="Jméno hráče" style="flex:1 1 140px;width:auto"><button class="btn sm" type="submit">Přidat</button></form>
+  <label class="row small"><input type="checkbox" id="wn_nonum" data-c="wnonum" ${W.rNoNum?'checked':''}> zatím bez čísla (číslo přidělíš později)</label>
+  ${W.rmsg?`<p class="small"><b>${esc(W.rmsg)}</b></p>`:''}
+  <p class="small muted">Zadáním stejného čísla změníš jméno. Soupiska je společná se Scorekeeperem. Klepnutím na jméno otevřeš dovednosti dítěte, tlačítkem vedle přepneš úroveň.</p></section>`}
+function addRosterW(){const tid=S.teamId,name=($('#wn_name').value||'').trim(),R=rosterOf(tid);
+ if(W.rNoNum){if(!name){W.rmsg='Hráče bez čísla zadej aspoň jménem.';return render(true)}if(R.players.some(p=>noNum(p.num)&&(p.name||'').toLowerCase()===name.toLowerCase())){W.rmsg=name+' už na soupisce je.';return render(true)}
+  const num='~'+uid().slice(-6);R.players.push({num,name});rosterSave(tid,R);if(S.draft.present[tid]){S.draft.present[tid].push(num);saveDraft()}W.rmsg='';render(true);const f=$('#wn_name');if(f&&f.focus)f.focus();return}
+ const num=jersey($('#wn_num').value);if(!num){W.rmsg='Zadej číslo dresu, nebo zaškrtni „zatím bez čísla“.';return render(true)}
+ const ex=R.players.find(p=>String(p.num)===num);if(ex)ex.name=name;else{R.players.push({num,name});if(S.draft.present[tid]){S.draft.present[tid].push(num);saveDraft()}}
+ rosterSave(tid,R);W.rmsg=ex?'Jméno u #'+num+' změněno.':'';render(true);const f=$('#wn_num');if(f&&f.focus)f.focus()}
+function assignNumberW(old,raw){const tid=S.teamId,num=jersey(raw),R=rosterOf(tid),p=R.players.find(x=>String(x.num)===old);if(!p)return;
+ if(!num){W.rmsg='Zadej číslo dresu.';return render(true)}if(R.players.some(x=>String(x.num)===num)){W.rmsg='Číslo #'+num+' už má někdo jiný.';return render(true)}
+ p.num=num;p.was=old;rosterSave(tid,R); /* Scorekeeper podle „was“ přepíše číslo i v zápasech */
+ const k=Object.assign({},W.raw.kids[tid]||{});if(k[old]){k[num]=k[old];delete k[old];kidsSave(tid,k)}
+ const ok=K(tid,old),nk=K(tid,num),sw=a=>Array.isArray(a)?a.map(x=>normKey(x,{team:tid})===ok?nk:x):a;
+ if(S.draft.present[tid]){S.draft.present[tid]=S.draft.present[tid].map(x=>x===old?num:x);saveDraft()}
+ if(S.plan){S.plan.present=sw(S.plan.present);S.plan.groups=(S.plan.groups||[]).map(sw);savePlan()}
+ Object.entries(S.plans).forEach(([id,pl])=>{if(!planTeams(pl).includes(tid))return;const before=J([pl.present,pl.groups]),q=clone(pl);q.present=sw(q.present);q.groups=(q.groups||[]).map(sw);if(J([q.present,q.groups])!==before)Store.put('plans',id,q)});
+ W.assign=null;W.rmsg=p.name+' má teď číslo #'+num+'. Změna se propsala i do zápasů.';render(true)}
+function movePlayerW(copy){const tid=S.teamId,num=W.rmove,R=rosterOf(tid),p=R.players.find(x=>String(x.num)===num),sel=$('#w_mvt'),to=sel&&sel.value;if(!p||!to||to===tid||!S.teams[to])return;
+ const T=rosterOf(to),clash=noNum(num)?T.players.find(x=>noNum(x.num)&&(x.name||'').toLowerCase()===(p.name||'').toLowerCase()):T.players.find(x=>String(x.num)===num);
+ if(clash){W.rmsg=noNum(num)?p.name+' už v týmu '+tName(to)+' je.':'V týmu '+tName(to)+' už má #'+num+' '+(clash.name||'jiný hráč')+'. Nejdřív jednomu z nich změň číslo.';return render(true)}
+ T.players.push(Object.assign({},p));rosterSave(to,T);
+ const kf=(W.raw.kids[tid]||{})[num];if(kf){const kt=Object.assign({},W.raw.kids[to]||{});kt[num]=kf;kidsSave(to,kt)}
+ if(!copy){R.players=R.players.filter(x=>String(x.num)!==num);rosterSave(tid,R)}
+ W.rmove=null;W.rmsg=(p.name||numTxt(num))+(copy?' je teď i v týmu ':' přesunut do týmu ')+tName(to)+'.'+(copy?'':' Odehrané zápasy a statistiky zůstávají tady.');render(true)}
+document.addEventListener('submit',e=>{const id=e.target.id;if(id==='wAddP'){e.preventDefault();addRosterW()}else if(id==='wAss'){e.preventDefault();assignNumberW(W.assign,$('#w_assnum').value)}});
 document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.dataset.c;
- if(c==='wrname'){const v=el.value.trim();if(!v){render(true);return}rosterEdit(S.teamId,R=>{const p=R.players.find(x=>String(x.num)===el.dataset.v);if(!p||p.name===v)return false;p.name=v})}
- else if(c==='wtname'&&W.role==='admin'){const v=el.value.trim();if(!v){render(true);return}const tid=S.teamId;rosterEdit(tid,R=>{R.name=v});W.raw.teamlist[tid]=Object.assign({},W.raw.teamlist[tid],{name:v});Web.compose();render(true);Web.write('teamlist/'+tid+'/name',v)}});
+ if(c==='wnonum'){W.rNoNum=el.checked;render(true);const f=$(el.checked?'#wn_name':'#wn_num');if(f&&f.focus)f.focus()}
+ else if(c==='wtname'){const v=el.value.trim(),tid=S.teamId,R=rosterOf(tid);R.name=v;rosterSave(tid,R);if(v&&W.role==='admin'){W.raw.teamlist[tid]=Object.assign({},W.raw.teamlist[tid],{name:v});Web.compose();Web.write('teamlist/'+tid+'/name',v)}render(true)}});
 
 /* ---------- Nastavení (web) ---------- */
 function vSet(){
@@ -1403,8 +1423,9 @@ Object.assign(actions,{
  wlogout:()=>Web.logout(''),
  wpinnew:()=>newCoachPin(),wpindrop:()=>dropCoachPins(),
  wcopy:async v=>{try{await navigator.clipboard.writeText(v);toast('Odkaz zkopírován.')}catch(e){toast(v)}},
- wrdel:v=>{W.rdel=v;render(true)},wrdelno:()=>{W.rdel=null;render(true)},
- wrdelgo:v=>{W.rdel=null;rosterEdit(S.teamId,R=>{R.players=R.players.filter(p=>String(p.num)!==v)});toast('Odebráno ze soupisky.')},
+ wrdel:v=>{const tid=S.teamId,R=rosterOf(tid);R.players=R.players.filter(p=>String(p.num)!==v);rosterSave(tid,R);W.rmsg='';render(true)},
+ wrass:v=>{W.assign=v;W.rmove=null;W.rmsg='';render(true);const f=$('#w_assnum');if(f&&f.focus)f.focus()},wrassno:()=>{W.assign=null;render(true)},
+ wrmv:v=>{W.rmove=v;W.assign=null;W.rmsg='';render(true)},wrmvno:()=>{W.rmove=null;render(true)},wrmvgo:v=>movePlayerW(v==='1'),
  wimpgo:()=>runImport(),wimpno:()=>{W.imp=null;W.impMsg='';render(true)}
 });
 
