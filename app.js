@@ -1218,12 +1218,12 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.run.run
    WEBOVÁ VERZE · Firebase Realtime Database sdílená se Scorekeeperem
    Role: správce (kód správce ze Scorekeeperu) · trenér (společný kód, zakládá správce)
    Čte:  teamlist/<tid> · teams/<tid>/roster  (spravuje Scorekeeper)
-   Píše: training/coaches/<tid> · training/kids/<tid> · training/{plans,custom,tpls}/<id>
+   Píše: training/staff (trenéři a jejich týmy) · training/kids/<tid> · training/{plans,custom,tpls}/<id>
    Obsah ukládáme jako JSON text {ts,json}, aby se zachovaly prázdné hodnoty a pole.
    ================================================================================= */
 const FB_CONFIG={apiKey:"AIzaSyDqwd6A6eaeHlczoLhGvaxQlzdp9od-0Pg",authDomain:"eagles-scorekeeper.firebaseapp.com",databaseURL:"https://eagles-scorekeeper-default-rtdb.europe-west1.firebasedatabase.app",projectId:"eagles-scorekeeper",storageBucket:"eagles-scorekeeper.firebasestorage.app",messagingSenderId:"691498301504",appId:"1:691498301504:web:ec05dfb8a51095ec1e87a5"};
 const WKEY='u7w-auth',CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',COLS=['plans','custom','tpls'];
-const W={phMsg:'',phDel:null,assign:null,rmove:null,rNoNum:false,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{},photos:{}}};
+const W={sdel:null,phMsg:'',phDel:null,assign:null,rmove:null,rNoNum:false,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{},photos:{},staff:null}};
 const J=v=>JSON.stringify(v);
 const PJ=v=>{try{return v&&typeof v.json==='string'?JSON.parse(v.json):null}catch(e){return null}};
 const normCode=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^(.{4})(.+)$/,'$1-$2');
@@ -1272,22 +1272,21 @@ const Web={
   const r=W.fb.db.ref(path),p=val===null?r.remove():r.set(val);
   p.catch(e=>{toast(isPerm(e)?'Na tuhle změnu nemáš oprávnění.':'Uložení se nepovedlo. Zkus to znovu.')})},
  putTeam(tid,t){const kids={};(t.players||[]).forEach(p=>{if(p.lvl||(p.sk&&p.sk.length))kids[p.num]={lvl:p.lvl||'',sk:p.sk||[],name:p.name||''}});
-  const coaches=(t.coaches||[]).map((c,i)=>typeof c==='string'?{id:'s'+i+'_'+c,name:c}:c);
-  W.raw.kids[tid]=kids;W.raw.coaches[tid]=coaches;Web.compose();render();const ts=Date.now();
-  Web.write('training/kids/'+tid,{ts,json:J(kids)});Web.write('training/coaches/'+tid,{ts,json:J(coaches)})},
+  W.raw.kids[tid]=kids;Web.compose();render();Web.write('training/kids/'+tid,{ts:Date.now(),json:J(kids)})},
  compose(){const tl=W.raw.teamlist||{},out={};
   Object.keys(tl).forEach(tid=>{const R=W.raw.roster[tid]||{},kids=W.raw.kids[tid]||{},kv=Object.values(kids);
-   out[tid]={name:R.name||(tl[tid]&&tl[tid].name)||'Tým',coaches:W.raw.coaches[tid]||[],
+   out[tid]={name:R.name||(tl[tid]&&tl[tid].name)||'Tým',coaches:Array.isArray(W.raw.staff)?W.raw.staff.filter(c=>(c.teams||[]).includes(tid)).map(c=>({id:c.id,name:c.name})):(W.raw.coaches[tid]||[]),
     players:(Array.isArray(R.players)?R.players:[]).filter(p=>p&&p.num!=null).map(p=>{const num=String(p.num),k=kids[num]||kv.find(x=>x.name&&x.name===p.name)||{};return{num,name:p.name||'',lvl:k.lvl||'',sk:Array.isArray(k.sk)?k.sk:[]}})}});
   S.teams=out;ls.set('u7w-teams',out);fixTeam()},
  on(path,cb){const r=W.fb.db.ref(path);const h=r.on('value',cb,e=>{if(isPerm(e)){S.mode='err';syncLine()}});W.subs.push(()=>r.off('value',h))},
  subscribe(){if(W.subs.length)return;S.mode='web';syncLine();
   Web.on('teamlist',s=>{W.raw.teamlist=s.val()||{};W.loaded.tl=1;Object.keys(W.raw.teamlist).forEach(tid=>{if(W.seen[tid])return;W.seen[tid]=1;
    Web.on('teams/'+tid+'/roster',x=>{W.raw.roster[tid]=PJ(x.val())||{};Web.compose();render()});
-   Web.on('training/coaches/'+tid,x=>{W.raw.coaches[tid]=PJ(x.val())||[];Web.compose();render()});
+   Web.on('training/coaches/'+tid,x=>{W.raw.coaches[tid]=PJ(x.val())||[];W.loaded['c_'+tid]=1;staffMigrate();Web.compose();render()});
    Web.on('training/kids/'+tid,x=>{W.raw.kids[tid]=PJ(x.val())||{};Web.compose();render()});
    Web.on('photos/'+tid,x=>{W.raw.photos[tid]=x.val()||{};phCache();if(S.tab==='who'||!$('#sheet').hidden)render()})});
    Web.compose();Web.ready();render()});
+  Web.on('training/staff',x=>{const v=PJ(x.val());W.raw.staff=Array.isArray(v)?v:null;W.loaded.staff=1;staffMigrate();Web.compose();render()});
   COLS.forEach(col=>Web.on('training/'+col,s=>{const v=s.val()||{},m={};Object.keys(v).forEach(id=>{const d=PJ(v[id]);if(d)m[id]=d});S[col]=m;ls.set('u7w-'+col,m);W.loaded[col]=1;if(col==='custom')rebuildActs();Web.ready();render()}))},
  ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c]))S.ready=true},
  logout(msg){try{if(W.fb&&W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(e){}
@@ -1322,12 +1321,12 @@ async function dropCoachPins(){if(!W.fb||W.role!=='admin')return;const u={};coac
 const nameKey=s=>String(s||'').trim().toLowerCase();
 function planImport(b){const tl=W.raw.teamlist||{},byName={};Object.keys(tl).forEach(id=>{byName[nameKey(tl[id]&&tl[id].name)]=id});
  const map={},miss=[];Object.entries(b.teams||{}).forEach(([old,t])=>{const nid=byName[nameKey(t.name)];if(nid)map[old]=nid;else if((t.players||[]).length||(t.coaches||[]).length)miss.push(t.name)});return{map,miss}}
-async function runImport(){const b=W.imp;if(!b)return;const {map,miss}=planImport(b),db=W.fb.db,ts=Date.now(),u={};
+async function runImport(){const b=W.imp;if(!b)return;const {map,miss}=planImport(b),db=W.fb.db,ts=Date.now(),u={},st=clone(staffList());
  Object.entries(map).forEach(([old,nid])=>{const t=b.teams[old],R=W.raw.roster[nid]||{},ps=Array.isArray(R.players)?R.players:[],kids=Object.assign({},W.raw.kids[nid]||{});
   (t.players||[]).forEach(p=>{if(!p.lvl&&!(p.sk&&p.sk.length))return;const m=ps.find(x=>String(x.num)===String(p.num))||ps.find(x=>x.name===p.name);if(m)kids[String(m.num)]={lvl:p.lvl||'',sk:p.sk||[],name:m.name||p.name}});
   u['training/kids/'+nid]={ts,json:J(kids)};
-  const have=(W.raw.coaches[nid]||[]).map(c=>nameKey(c.name||c)),add=(t.coaches||[]).filter(c=>!have.includes(nameKey(c.name||c)));
-  u['training/coaches/'+nid]={ts,json:J((W.raw.coaches[nid]||[]).concat(add))}});
+  (t.coaches||[]).forEach(c=>{const nm=String(c.name||c).trim();if(!nm)return;let x=st.find(y=>nameKey(y.name)===nameKey(nm));if(!x){x={id:'c'+uid(),name:nm,teams:[]};st.push(x)}if(!x.teams.includes(nid))x.teams.push(nid)})});
+ u['training/staff']={ts,json:J(st)};
  const remapKey=k=>{k=String(k);const i=k.indexOf('|');return i<0?k:(map[k.slice(0,i)]||k.slice(0,i))+k.slice(i)};
  Object.entries(b.plans||{}).forEach(([id,p])=>{p=clone(p);p.team=map[p.team]||p.team;if(Array.isArray(p.teams))p.teams=p.teams.map(t=>map[t]||t);
   if(Array.isArray(p.present))p.present=p.present.map(k=>String(k).includes('|')?remapKey(k):(map[p.team]?p.team+'|'+k:k));
@@ -1427,6 +1426,32 @@ document.addEventListener('change',async e=>{if(e.target.id!=='who_file')return;
  try{const img=await shrinkPhoto(f);photoSet(x.tid,x.num,{img,name:p?p.name:'',ts:Date.now()});W.phMsg='';toast('Fotka uložena.')}catch(err){W.phMsg='Tuhle fotku se nepodařilo načíst. Zkus jinou.'}
  openWho(key);if(S.tab==='who')render(true)});
 
+
+/* ---------- trenéři: jeden seznam, u každého týmy, kde trénuje (training/staff) ---------- */
+function staffList(){if(Array.isArray(W.raw.staff))return W.raw.staff;const m=[];Object.entries(W.raw.coaches||{}).forEach(([tid,cs])=>(cs||[]).forEach((c,i)=>{const nm=String(c&&c.name||c||'').trim();if(!nm)return;let x=m.find(y=>nameKey(y.name)===nameKey(nm));if(!x){x={id:c.id||('c'+tid+i),name:nm,teams:[]};m.push(x)}if(!x.teams.includes(tid))x.teams.push(tid)}));return m}
+function staffSave(list){W.raw.staff=list;Web.compose();render(true);Web.write('training/staff',{ts:Date.now(),json:J(list)})}
+let staffDone=false;
+function staffMigrate(){/* jednorázově: staré seznamy trenérů po týmech -> společný seznam */
+ if(staffDone||!W.loaded.staff||!W.loaded.tl||Array.isArray(W.raw.staff))return;if(!Object.keys(W.raw.teamlist).every(t=>W.loaded['c_'+t]))return;
+ staffDone=true;const m=staffList();if(m.length)Web.write('training/staff',{ts:Date.now(),json:J(m)})}
+function vStaff(){const list=staffList(),teams=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs'));
+ return `<section class="card"><div class="sumline"><h2>Trenéři · ${list.length}</h2></div>
+  <p class="small muted">U každého trenéra zaškrtni týmy, kde trénuje. Na začátku tréninku se nabídnou trenéři vybraných týmů.</p>
+  ${list.length?`<div class="stafflist">${list.map(c=>`<div class="staff">
+   <div class="pl" style="grid-template-columns:1fr auto"><input type="text" id="st_${esc(c.id)}" data-c="stname" data-v="${esc(c.id)}" value="${esc(c.name)}" aria-label="Jméno trenéra">
+   ${W.sdel===c.id?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn danger sm" data-a="stdelgo" data-v="${esc(c.id)}">Odebrat</button><button class="btn ghost sm" data-a="stdelno">Ne</button></span>`:`<button class="ib" data-a="stdel" data-v="${esc(c.id)}" aria-label="Odebrat ${esc(c.name)}">✕</button>`}</div>
+   <div class="row" style="gap:6px">${teams.map(([id,x])=>{const on=(c.teams||[]).includes(id);return `<button class="chip sm ${on?'on':''}" data-a="stteam" data-v="${esc(c.id)}" data-t="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join('')}${(c.teams||[]).filter(id=>S.teams[id]).length?'':'<span class="small warnnote">Bez týmu, v tréninku se nenabídne.</span>'}</div>
+  </div>`).join('')}</div>`:'<p class="muted">Zatím žádný trenér.</p>'}
+  <form id="wAddC" class="pl" style="grid-template-columns:1fr auto"><input type="text" id="wc_name" placeholder="Jméno nového trenéra" aria-label="Jméno trenéra"><button class="btn sm" type="submit">Přidat</button></form>
+  <p class="small muted">Nový trenér se přidá k týmu ${esc(team()?team().name:'')}, další týmy zaškrtneš.</p></section>`}
+document.addEventListener('submit',e=>{if(e.target.id!=='wAddC')return;e.preventDefault();const nm=($('#wc_name').value||'').trim();if(!nm)return toast('Napiš jméno trenéra.');
+ const list=clone(staffList());if(list.some(c=>nameKey(c.name)===nameKey(nm)))return toast(nm+' už v seznamu je.');
+ const id='c'+uid();list.push({id,name:nm,teams:S.teamId?[S.teamId]:[]});staffSave(list);
+ Object.keys(S.draft.coachSel).forEach(k=>{if(k.split('+').includes(S.teamId))S.draft.coachSel[k].push(K(S.teamId,id))});saveDraft();
+ setTimeout(()=>{const f=$('#wc_name');if(f&&f.focus)f.focus()},30)});
+document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||el.dataset.c!=='stname')return;const v=el.value.trim();if(!v){render(true);return}
+ const list=clone(staffList()),c=list.find(x=>x.id===el.dataset.v);if(!c||c.name===v)return;c.name=v;staffSave(list)});
+
 /* ---------- Nastavení (web) ---------- */
 function vSet(){
  const t=team(),adm=W.role==='admin';
@@ -1441,12 +1466,7 @@ function vSet(){
  h+=`<section class="card"><div class="sumline"><h2>Týmy</h2></div>
   ${Object.keys(S.teams).length?`<div class="row">${Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'')).map(([id,x])=>`<button class="chip ${id===S.teamId?'on':''}" data-a="team" data-v="${esc(id)}">${esc(x.name)} · ${(x.players||[]).length}</button>`).join('')}</div>`:`<p class="muted">${S.ready?'Ve Scorekeeperu zatím není žádný tým.':'Načítám týmy…'}</p>`}
   <p class="small muted">Týmy jsou společné se Scorekeeperem. Soupisku upravíš v záložce Tým, nový tým založíš ve Scorekeeperu.</p></section>`;
- if(t){const cs=coachesOf(t);
-  h+=`<section class="card"><div class="sumline"><h2>Trenéři · ${cs.length}</h2></div>
-  <p class="small muted">Uložení trenéři se nabídnou na začátku každého tréninku. Tam jen označíš, kdo přišel.</p>
-  ${cs.length?`<div class="dl">${cs.map(c=>`<div class="pl" style="grid-template-columns:1fr auto"><input type="text" id="co_${esc(c.id)}" data-c="cname" data-v="${esc(c.id)}" value="${esc(c.name)}" aria-label="Jméno trenéra"><button class="ib" data-a="cdel" data-v="${esc(c.id)}" aria-label="Odebrat ${esc(c.name)}">✕</button></div>`).join('')}</div>`:''}
-  <form id="addC" class="pl" style="grid-template-columns:1fr auto"><input type="text" id="nc_name" placeholder="Jméno trenéra" aria-label="Jméno trenéra"><button class="ib" type="submit" aria-label="Přidat trenéra">+</button></form></section>
-`}
+ if(t)h+=vStaff();
  if(adm)h+=`<section class="card"><h2>Převzít data z verze v Claude</h2>
   <p class="small muted">Jednorázově nahraj soubor zálohy (planovac-zaloha.json). Týmy se spárují podle názvu, převezmou se trenéři, úrovně, dovednosti, uložené tréninky, šablony a vlastní hry.</p>
   <input type="file" id="wimpfile" accept=".json,application/json" aria-label="Soubor zálohy">
@@ -1471,6 +1491,8 @@ Object.assign(actions,{
  whoopen:v=>{W.phMsg='';W.phDel=null;openWho(v)},whodel:v=>{W.phDel=v;openWho(v)},whodelno:v=>{W.phDel=null;openWho(v)},
  whodelgo:v=>{const x=kid(v);W.phDel=null;photoSet(x.tid,x.num,null);openWho(v);if(S.tab==='who')render(true);toast('Fotka odebrána.')},
  whokid:v=>{const x=kid(v);if(S.teamId!==x.tid){S.teamId=x.tid;ls.set('u7-team',x.tid)}openKid(x.num)},
+ stteam:(v,el)=>{const list=clone(staffList()),c=list.find(x=>x.id===v),t=el.dataset.t;if(!c)return;c.teams=c.teams||[];const i=c.teams.indexOf(t);if(i>=0)c.teams.splice(i,1);else c.teams.push(t);staffSave(list)},
+ stdel:v=>{W.sdel=v;render(true)},stdelno:()=>{W.sdel=null;render(true)},stdelgo:v=>{W.sdel=null;staffSave(clone(staffList()).filter(c=>c.id!==v));toast('Trenér odebrán.')},
  wimpgo:()=>runImport(),wimpno:()=>{W.imp=null;W.impMsg='';render(true)}
 });
 
