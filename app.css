@@ -199,4 +199,3 @@ label.row input{flex:0 0 auto;margin-top:3px}
 .login{max-width:440px;margin:24px auto 0}
 #w_code{font:700 22px/1.2 var(--f-disp);letter-spacing:.12em;text-transform:uppercase}
 .code{font:700 18px var(--f-disp);letter-spacing:.1em;background:var(--sunk);border-radius:6px;padding:4px 8px}
-.kb.match{background:var(--warn);color:var(--surface)}
