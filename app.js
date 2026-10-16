@@ -1377,9 +1377,9 @@ const Web={
  on(path,cb){const r=W.fb.db.ref(path);const h=r.on('value',cb,e=>{if(!isPerm(e))return;const k=deniedKey(path);W.denied[k]=1;console.warn('Firebase: chybí oprávnění ke čtení',path);if(k!=='photos')S.mode='err';syncLine();render()});W.subs.push(()=>r.off('value',h))},
  subscribe(){if(W.subs.length)return;S.mode='web';syncLine();
   Web.on('teamlist',s=>{W.raw.teamlist=s.val()||{};W.loaded.tl=1;Object.keys(W.raw.teamlist).forEach(tid=>{if(W.seen[tid])return;W.seen[tid]=1;
-   Web.on('teams/'+tid+'/roster',x=>{W.raw.roster[tid]=PJ(x.val())||{};W.loaded['r_'+tid]=1;migratePhotos(tid);Web.compose();render()});
+   Web.on('teams/'+tid+'/roster',x=>{W.raw.roster[tid]=PJ(x.val())||{};W.loaded['r_'+tid]=1;migratePhotos(tid);kidsCarry();Web.compose();render()});
    Web.on('training/coaches/'+tid,x=>{W.raw.coaches[tid]=PJ(x.val())||[];W.loaded['c_'+tid]=1;staffMigrate();Web.compose();render()});
-   Web.on('training/kids/'+tid,x=>{W.raw.kids[tid]=PJ(x.val())||{};Web.compose();render()});
+   Web.on('training/kids/'+tid,x=>{W.raw.kids[tid]=PJ(x.val())||{};W.loaded['k_'+tid]=1;kidsCarry();Web.compose();render()});
    Web.on('photos/'+tid,x=>{W.raw.photos[tid]=x.val()||{};W.loaded['p_'+tid]=1;phCache();migratePhotos(tid);if(S.tab==='who'||!$('#sheet').hidden)render()})});
    Web.compose();Web.ready();render()});
   Web.on('training/season',x=>{S.season=PJ(x.val())||{};ls.set('u7w-season',S.season);render()});
@@ -1441,6 +1441,17 @@ const jersey=raw=>{const v=String(raw||'').trim().replace(/^0+(?=\d)/,'');return
 const numTxt=n=>noNum(n)?'bez č.':'#'+n;
 function rosterOf(tid){const R=clone(W.raw.roster[tid]||{name:tName(tid),players:[]});if(!Array.isArray(R.players))R.players=[];return R}
 function rosterSave(tid,R){W.raw.roster[tid]=R;Web.compose();Web.write('teams/'+tid+'/roster',{ts:Date.now(),dev:'planovac',json:J(R)})}
+/* Dovednosti a úroveň jsou v training/kids/<tým>/<číslo>. Když hráče přesune nebo zkopíruje
+   Scorekeeper (nebo se změní číslo), převezmou se z jiného týmu podle jména (a čísla). */
+function kidsCarry(){const tids=Object.keys(W.raw.teamlist||{});if(!tids.length||!tids.every(t=>W.loaded['k_'+t]&&W.loaded['r_'+t]))return;
+ tids.forEach(tid=>{const R=W.raw.roster[tid],kids=W.raw.kids[tid]||{};if(!R||!Array.isArray(R.players))return;let add=null;
+  R.players.forEach(p=>{if(!p||p.num==null||!p.name)return;const num=String(p.num);if(kids[num]&&kids[num].name===p.name)return;
+   const nm=nameKey(p.name);if(Object.values(kids).some(k=>k&&k.name&&nameKey(k.name)===nm))return; /* už je tu pod jiným číslem */
+   if(kids[num]&&kids[num].name&&nameKey(kids[num].name)!==nm)return; /* číslo patří jinému dítěti – nepřepisovat */
+   const src=[];tids.filter(t=>t!==tid).forEach(t=>Object.entries(W.raw.kids[t]||{}).forEach(([n,k])=>{if(k&&k.name&&nameKey(k.name)===nm)src.push({t,n,k})}));
+   const hit=src.find(x=>x.n===num)||(src.length===1?src[0]:null);if(!hit||(!hit.k.lvl&&!(hit.k.sk||[]).length))return;
+   add=add||Object.assign({},kids);add[num]={lvl:hit.k.lvl||'',sk:(hit.k.sk||[]).slice(),name:p.name}});
+  if(add)kidsSave(tid,add)})}
 function kidsSave(tid,k){W.raw.kids[tid]=k;Web.compose();Web.write('training/kids/'+tid,{ts:Date.now(),json:J(k)})}
 function vTeam(){
  const t=team(),tid=S.teamId;if(!t)return noTeam();const ps=players(),adm=W.role==='admin',others=Object.keys(S.teams).filter(x=>x!==tid);
@@ -1477,7 +1488,7 @@ function movePlayerW(copy){const tid=S.teamId,num=W.rmove,R=rosterOf(tid),p=R.pl
  const T=rosterOf(to),clash=noNum(num)?T.players.find(x=>noNum(x.num)&&(x.name||'').toLowerCase()===(p.name||'').toLowerCase()):T.players.find(x=>String(x.num)===num);
  if(clash){W.rmsg=noNum(num)?p.name+' už v týmu '+tName(to)+' je.':'V týmu '+tName(to)+' už má #'+num+' '+(clash.name||'jiný hráč')+'. Nejdřív jednomu z nich změň číslo.';return render(true)}
  T.players.push(Object.assign({},p));rosterSave(to,T);
- const kf=(W.raw.kids[tid]||{})[num];if(kf){const kt=Object.assign({},W.raw.kids[to]||{});kt[num]=kf;kidsSave(to,kt)}
+ const kf=(W.raw.kids[tid]||{})[num];if(kf){const kt=Object.assign({},W.raw.kids[to]||{});kt[num]=Object.assign({},kf,{name:p.name||kf.name||''});kidsSave(to,kt);if(!copy){const ks=Object.assign({},W.raw.kids[tid]||{});delete ks[num];kidsSave(tid,ks)}}
  if(!copy){R.players=R.players.filter(x=>String(x.num)!==num);rosterSave(tid,R)}
  W.rmove=null;W.rmsg=(p.name||numTxt(num))+(copy?' je teď i v týmu ':' přesunut do týmu ')+tName(to)+'.'+(copy?'':' Odehrané zápasy a statistiky zůstávají tady.');render(true)}
 document.addEventListener('submit',e=>{const id=e.target.id;if(id==='wAddP'){e.preventDefault();addRosterW()}else if(id==='wAss'){e.preventDefault();assignNumberW(W.assign,$('#w_assnum').value)}});
