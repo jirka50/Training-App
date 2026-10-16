@@ -936,6 +936,9 @@ function vPlanOut(){
   ${S.tplForm?`<form id="tplForm" class="row"><input type="text" id="tpl_name" placeholder="Název šablony, např. Hala 60 min" aria-label="Název šablony" style="flex:1 1 200px;width:auto" value="${esc(p.name||'')}"><button class="btn sm" type="submit">Uložit šablonu</button><button class="btn ghost sm" type="button" data-a="tplno">Zrušit</button></form><p class="small muted">Šablona si zapamatuje bloky, jejich délku a volbu Všichni / Stanoviště. Hry se při sestavení vyberou znovu.</p>`:''}</section>`;
  return h
 }
+/* malá fotka dítěte ve skupinách; webová verze ji dodá ze soupisky */
+let kidPh=()=>'';
+const faces=(g,p)=>{const ks=g.map(n=>kid(n,p)),ph=ks.map(x=>kidPh(x));if(!ph.some(Boolean))return'';return `<span class="faces">${ks.map((x,i)=>ph[i]||`<span class="kph ini" title="${esc(x.name)}">${esc((x.name||'?').trim().charAt(0).toUpperCase())}</span>`).join('')}</span>`};
 function vGroups(){
  const p=S.plan,cc=coachCount(),stb=p.blocks.filter(b=>b.mode==='st');
  const changed=JSON.stringify(p.present.map(k=>normKey(k,p)).sort())!==JSON.stringify(presentKeys().slice().sort())||nG(p)!==(cc>=2?cc:1);const mt=planTeams(p).length>1;
@@ -944,7 +947,7 @@ function vGroups(){
   ${changed?'<p class="warnnote">Docházka nebo trenéři se od sestavení změnili. Klepni na Zamíchat a přepočítat.</p>':''}
   <p class="small muted">Každá skupina má svého trenéra. Klepni na dítě a pak na „Sem“ u jiné skupiny.${stb.length?' U bloků „Stanoviště“ začíná skupina u stanoviště se stejným číslem.':''}</p>
   <div class="groups">${p.groups.map((g,gi)=>`<div class="grp"><div class="grp-h"><h3>Skupina ${GL[gi]} · ${esc(p.coaches[gi]||'')} · ${g.length}</h3>${S.sel&&!g.includes(S.sel)?`<button class="btn ball sm" data-a="moveto" data-v="${gi}">Sem</button>`:''}</div>
-   <div class="kids">${g.map(n=>{const x=kid(n,p);return `<button class="chip kid ${S.sel===n?'sel':''}" data-a="pick" data-v="${esc(n)}"><b>${esc(numShort(x.num))}</b>${esc(x.name||'?')}${mt?`<span class="lvl">${esc(tShort(x.tid))}</span>`:''}</button>`}).join('')||'<span class="muted small">prázdná</span>'}</div></div>`).join('')}</div>
+   <div class="kids">${g.map(n=>{const x=kid(n,p);return `<button class="chip kid ${S.sel===n?'sel':''}" data-a="pick" data-v="${esc(n)}">${kidPh(x)}<b>${esc(numShort(x.num))}</b>${esc(x.name||'?')}${mt?`<span class="lvl">${esc(tShort(x.tid))}</span>`:''}</button>`}).join('')||'<span class="muted small">prázdná</span>'}</div></div>`).join('')}</div>
   ${mx}</section>`
 }
 /* pomůcky: z volného textu jednotné položky bez duplicit */
@@ -980,7 +983,7 @@ function vField(){
  const s=st[S.run.i];if(!s)return `<section class="card empty"><h2>Plán je prázdný</h2></section>`;
  const b=S.plan.blocks[s.bi];let at=0;for(let i=0;i<S.run.i;i++)at+=st[i].min;
  let mid='';
- if(s.r!=null){mid=`<div class="mx-wrap" style="width:100%"><table class="mx"><thead><tr><th>Skupina</th><th>Stanoviště</th><th>Trenér</th></tr></thead><tbody>${S.plan.groups.map((g,gi)=>{const si=(gi+s.r)%b.items.length;return `<tr><th>${GL[gi]} · ${g.length}</th><td><button class="aname" style="font-size:17px" data-a="open" data-v="${b.items[si]}">${esc(actName(b.items[si]))}</button></td><td>${esc(S.plan.coaches[si]||'')}</td></tr>`}).join('')}</tbody></table></div>
+ if(s.r!=null){mid=`<div class="mx-wrap" style="width:100%"><table class="mx"><thead><tr><th>Skupina</th><th>Stanoviště</th><th>Trenér</th></tr></thead><tbody>${S.plan.groups.map((g,gi)=>{const si=(gi+s.r)%b.items.length;return `<tr><th>${GL[gi]} · ${g.length}${faces(g,S.plan)}</th><td><button class="aname" style="font-size:17px" data-a="open" data-v="${b.items[si]}">${esc(actName(b.items[si]))}</button></td><td>${esc(S.plan.coaches[si]||'')}</td></tr>`}).join('')}</tbody></table></div>
   <p class="small muted">${s.r===0?'Skupiny začínají u stanoviště se svým číslem.':'Na písknutí vláček na další stanoviště, trenéři zůstávají.'}</p>`}
  else{const a=ACT[b.items[s.item]],G=nG(S.plan);mid=`${G>1&&MODEABLE.includes(b.type)?`<p class="small">Všechny skupiny dělají totéž: ${S.plan.groups.map((g,gi)=>GL[gi]+' – '+esc(S.plan.coaches[gi]||'')).join(', ')}</p>`:''}<button class="aname" data-a="open" data-v="${a?a.id:''}">${esc(a?a.n:'')}</button>${a&&AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}${a&&a.kid?`<div class="cue"><span class="label">Řekni dětem</span><br>${esc(a.kid)}</div>`:''}${a&&a.steps?`<div class="cue"><span class="label">Kroky</span>${stepsHtml(a)}</div>`:''}${a?`<div class="cue small">${esc(a.d)}</div>`:''}`}
  const nx=st[S.run.i+1];
@@ -1453,6 +1456,7 @@ function shrinkPhoto(file){return new Promise((res,rej)=>{const url=URL.createOb
  im.onload=()=>{try{const S2=256,c=document.createElement('canvas');c.width=S2;c.height=S2;const g=c.getContext('2d'),w=im.naturalWidth,h=im.naturalHeight,m=Math.min(w,h);
   g.drawImage(im,(w-m)/2,(h-m)/3,m,m,0,0,S2,S2);URL.revokeObjectURL(url);let q=.82,d=c.toDataURL('image/jpeg',q);while(d.length>45000&&q>.4){q-=.12;d=c.toDataURL('image/jpeg',q)}res(d)}catch(e){rej(e)}};
  im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('img'))};im.src=url})}
+kidPh=x=>{const img=x&&x.tid?photoOf(x.tid,{num:x.num,name:x.name}):'';return img?`<img class="kph" src="${img}" alt="" loading="lazy">`:''};
 function legacyDel(tid,keys){const m=Object.assign({},W.raw.photos[tid]||{});keys.forEach(k=>{if(m[k]){delete m[k];Web.write('photos/'+tid+'/'+k,null)}});W.raw.photos[tid]=m;phCache()}
 function photoSet(tid,num,img){const R=rosterOf(tid),p=R.players.find(x=>String(x.num)===String(num));if(!p)return;if(img)p.photo=img;else delete p.photo;rosterSave(tid,R);legacyDel(tid,[phKey(num)])}
 function migratePhotos(tid){if(!W.loaded['r_'+tid]||!W.loaded['p_'+tid]||!W.raw.roster[tid])return;const m=W.raw.photos[tid]||{},keys=Object.keys(m);if(!keys.length)return;

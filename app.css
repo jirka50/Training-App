@@ -69,6 +69,10 @@ p{margin:0}
 .kid{display:inline-flex;align-items:center;gap:6px}
 .kid b{font:700 15px var(--f-disp);font-variant-numeric:tabular-nums}
 .kid.off{opacity:.55;text-decoration:line-through}
+.kph{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none;margin:-4px 0 -4px -6px;background:var(--sunk)}
+.faces{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px;max-width:120px}
+.faces .kph{width:22px;height:22px;margin:0}
+.kph.ini{display:inline-grid;place-items:center;font:700 12px var(--f-disp);color:var(--muted);border:1px solid var(--line)}
 .kid.sel{outline:3px solid var(--ball);outline-offset:1px}
 .lvl{font:700 11px var(--f-disp);letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 4px;background:var(--sunk);color:var(--muted)}
 .chip.on .lvl{background:rgba(255,255,255,.2);color:inherit}
