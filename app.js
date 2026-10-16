@@ -41,14 +41,14 @@ const A=[
 {id:'g09',k:'game',n:'Žonglér',c:'chytani',e:1,min:5,kids:1,st:1,
  gear:['Měkké míčky', 'Rukavice'],gn:'pro každé dítě',dev:'koordinace oko–ruka, chytání do rukavice, zakrytí míče',
  d:'Každé dítě si samo vyhazuje měkký míček nad hlavu a chytá ho do rukavice, pak míč přikryje druhou rukou. Počítá se, kolikrát za sebou se to podaří bez upuštění. Pro pokročilé: vyhodit výš, tlesknout před chycením nebo chytit v podřepu.'},
-{id:'g10',k:'game',n:'Odpal do zón',c:'odpal',e:1,min:10,kids:2,st:1,
+{id:'g10',k:'game',n:'Odpal do zón',c:'odpal',e:1,min:10,kids:2,st:1,match:1,
  gear:['Tee (stojánek)', 'Pálky', 'Helmy', 'Měkké míčky', 'Kužely'],gn:'barevné kužely na zóny',dev:'švih pálkou, kontakt s míčem, směrování odpalu',
  d:'Pole před domácí metou se kužely rozdělí na 3–4 barevné zóny s různými body (blízko 1, daleko 3, „zlatá zóna“ uprostřed 5). Děti se střídají u tee a každé má 3 odpaly. Body se sčítají za družstvo. Trenér u tee hlídá postoj, úchop pálky a vodorovný švih.',
  link:'https://littleleague.org/?p=11408',lt:'Little League – Tee Hitting'},
 {id:'g11',k:'game',n:'Nudle a balónek',c:'odpal',e:2,min:7,kids:1,st:1,
  gear:['Pěnové nudle', 'Nafukovací balónky'],dev:'postoj pálkaře, načasování švihu, sledování míče očima',
  d:'Každé dítě má bazénovou nudli místo pálky a zaujme postoj pálkaře. Trenér nebo spoluhráč mu jemně nahodí nafukovací balónek a dítě ho odpálí. Balónek letí pomalu, takže dítě má čas sledovat ho očima až do kontaktu. Hra je bezpečná i pro větší skupinu najednou.'},
-{id:'g12',k:'game',n:'Odpal a běž',c:'odpal',t:['mety'],e:2,min:10,kids:4,st:1,
+{id:'g12',k:'game',n:'Odpal a běž',c:'odpal',t:['mety'],e:2,min:10,kids:4,st:1,match:1,
  gear:['Tee (stojánek)', 'Pálky', 'Helmy', 'Měkké míčky', 'Obruče', 'Mety'],dev:'odpal, okamžitý start po odpalu, bezpečnost s pálkou',
  d:'Dítě odpálí míček z tee, odloží pálku do vyznačené obruče vedle mety a běží na první metu. Za správně odloženou pálku (ne odhozenou za sebe) dostane bod navíc. Polaři mezitím míč seberou a hodí ho na první metu.'},
 {id:'g13',k:'game',n:'Závody kolem met',c:'mety',e:3,min:6,kids:2,st:1,
@@ -518,8 +518,10 @@ function drawStatic(g,s){
   else if(k==='grid'){for(let i=0;i<=3;i++){sv('line',{x1:a+i*c/3,y1:b,x2:a+i*c/3,y2:b+c,stroke:'var(--line-strong)','stroke-width':.5},g);sv('line',{x1:a,y1:b+i*c/3,x2:a+c,y2:b+i*c/3,stroke:'var(--line-strong)','stroke-width':.5},g)}}
   else if(k==='txt'||k==='big'){const t=sv('text',{x:a,y:b,'text-anchor':'middle','font-size':k==='big'?16:3,fill:'var(--muted)','font-weight':700,'font-family':'var(--f-disp)'},g);t.textContent=c}
  })}
+/* animace vestavěné (AN) nebo uložená u položky v databázi (an) */
+function animSpec(id){if(AN[id])return AN[id];const a=typeof ACT!=='undefined'&&ACT[id];return a&&a.an&&typeof a.an.d==='number'&&Array.isArray(a.an.a)?a.an:null}
 function animate(box,id){
- const sp=AN[id];if(!sp)return false;
+ const sp=animSpec(id);if(!sp)return false;
  box.innerHTML='';const svg=sv('svg',{viewBox:'0 0 100 62',class:'anim',role:'img','aria-label':'Animace průběhu'});box.appendChild(svg);
  sv('rect',{x:0,y:0,width:100,height:62,rx:3,fill:'var(--sunk)'},svg);
  const gs=sv('g',{},svg);drawStatic(gs,sp.s);
@@ -572,6 +574,9 @@ const TPL={
  75:[['start',3],['warm',7],['skillr',9],['skill',24],['drink',3],['game',9],['match',14],['end',6]],
  90:[['start',3],['warm',8],['skillr',10],['skill',28],['drink',3],['game',10],['game',8],['match',14],['end',6]]
 };
+/* Zápasy: při prvním přihlášení se jednou zapíšou do databáze (training/custom), pak je trenéři upravují v aplikaci */
+const SEED_MATCH={"zap01":{"k":"game","match":1,"n":"T-ball zápas","c":"odpal","t":["mety","chytani"],"e":2,"min":15,"kids":6,"ag":["U6","U7"],"gear":["Tee (stojánek)","Pálky","Helmy","Mety","Měkké míčky","Rukavice"],"gn":"pálku a helmu stačí jednu pro pálkaře, rukavice pro polaře","d":"Dva týmy: jeden pálí, druhý stojí v poli. Každý pálkař odpaluje z tee, položí pálku a běží na první metu. Polaři míč seberou a hodí na první metu nebo trenérovi. Neexistují auty ani strikeouty – každé dítě doběhne a zůstává na metě, další pálkař ho svým odpalem posune dál. Směna končí, když odpálí celý tým, pak se týmy vymění. Skóre se nepočítá.","va":"Pro starší nebo šikovnější: polař, který chytí míč ze vzduchu, dostane potlesk celého týmu. Pro U6 může trenér běžet s dítětem ruku v ruce.","kid":"Odpal, pálku na zem, a utíkej na první!","dev":"odpal z tee, běh na první metu, sebrání přízemního míče, hod na metu, pochopení průběhu hry","an":{"d":7,"s":[["diamond"],["tee",50,51],["txt",16,44,"na řadě"]],"cap":[[0,"Odpal z tee, pálku na zem, běž na první"],[0.35,"Polaři seberou a hodí na první"],[0.7,"Bez autů – na pálku jde další"]],"a":[{"t":"k","p":[[0,47,56,0],[0.14,47,56,0],[0.2,47,56,0],[0.45,72,34,0],[1,72,34,0]]},{"t":"swing","x":48,"y":56,"at":[[0.06,0.14],[0.82,0.9]]},{"t":"k","p":[[0,22,50,0],[0.55,22,50,0],[0.72,47,56,0],[1,47,56,0]]},{"t":"k","p":[[0,16,50,0],[0.55,16,50,0],[0.72,22,50,0],[1,22,50,0]]},{"t":"k","p":[[0,10,50,0],[0.55,10,50,0],[0.72,16,50,0],[1,16,50,0]]},{"t":"k2","p":[[0,60,26,0],[0.14,60,26,0],[0.3,58,33,0],[1,60,26,0]]},{"t":"k2","p":[[0,40,26,0]]},{"t":"k2","p":[[0,75,30,0],[0.4,74,32,0],[1,75,30,0]]},{"t":"b","p":[[0,74,32,0],[0.12,50,51,0],[0.143,51,48.75,2.625],[0.165,52,46.5,4.5],[0.188,53,44.25,5.625],[0.21,54,42,6],[0.232,55,39.75,5.625],[0.255,56,37.5,4.5],[0.277,57,35.25,2.625],[0.3,58,33,0],[0.38,58,33,0],[0.395,60,32.875,2.188],[0.41,62,32.75,3.75],[0.425,64,32.625,4.688],[0.44,66,32.5,5],[0.455,68,32.375,4.688],[0.47,70,32.25,3.75],[0.485,72,32.125,2.188],[0.5,74,32,0],[1,74,32,0]],"lin":1},{"t":"b","p":[[0,38,30,0],[0.88,50,51,0],[0.895,48.5,48.375,3.938],[0.91,47,45.75,6.75],[0.925,45.5,43.125,8.438],[0.94,44,40.5,9],[0.955,42.5,37.875,8.438],[0.97,41,35.25,6.75],[0.985,39.5,32.625,3.938],[1,38,30,0]],"lin":1,"show":0.88}]}},"zap02":{"k":"game","match":1,"n":"Coach pitch","v":"Trenér nadhazuje","c":"odpal","t":["mety","chytani"],"e":2,"min":15,"kids":6,"co":2,"ag":["U7"],"gear":["Pálky","Helmy","Měkké míčky","Mety","Tee (stojánek)","Rukavice"],"gn":"kbelík míčků pro nadhazujícího trenéra; tee připravené u domácí mety jako záloha","d":"Trenér nadhazuje ze vzdálenosti 4–6 m měkce a pomalu, spodem nebo lehce vrchem, vždy do stejného místa. Pálkař má pět pokusů; když netrefí, nastoupí tee a odpálí z něj. Po odpalu běží na první metu, polaři míč seberou a hodí na první. Bez autů, po odpálení celého týmu se týmy vymění. Druhý trenér hlídá řadu pálkařů a pomáhá polařům.","va":"Snadnější: nadhazovat z kolene, ať míč letí rovně ve výšce pasu. Těžší: pálkař si řekne, kam chce míč odpálit.","kid":"Koukej na míček, až do pálky!","dev":"odpal letícího míče, sledování míče očima, načasování švihu, běh na první metu, hra v poli","an":{"d":8,"s":[["diamond"],["tee",30,50],["txt",30,58,"záloha"]],"cap":[[0,"Trenér nadhazuje zblízka a měkce"],[0.4,"Trefa! Běž na první"],[0.75,"Po 5 švizích nastoupí tee"]],"a":[{"t":"c","p":[[0,50,40,0]]},{"t":"k","p":[[0,46,56,0],[0.42,46,56,0],[0.7,72,34,0],[1,72,34,0]]},{"t":"swing","x":47,"y":56,"at":[[0.13,0.2],[0.33,0.4]]},{"t":"k2","p":[[0,60,24,0],[0.42,60,24,0],[0.55,66,16,0],[1,60,24,0]]},{"t":"k2","p":[[0,38,26,0]]},{"t":"k2","p":[[0,75,31,0],[0.6,73,33,0],[1,75,31,0]]},{"t":"b","p":[[0,48,62,0],[0.05,50,40,0],[0.066,49.875,41.875,0.875],[0.083,49.75,43.75,1.5],[0.099,49.625,45.625,1.875],[0.115,49.5,47.5,2],[0.131,49.375,49.375,1.875],[0.148,49.25,51.25,1.5],[0.164,49.125,53.125,0.875],[0.18,49,55,0],[0.18,49,55,0],[0.19,48.875,55.875,0],[0.2,48.75,56.75,0],[0.21,48.625,57.625,0],[0.22,48.5,58.5,0],[0.23,48.375,59.375,0],[0.24,48.25,60.25,0],[0.25,48.125,61.125,0],[0.26,48,62,0],[1,48,62,0]],"lin":1},{"t":"b","p":[[0,73,33,0],[0.26,50,40,0],[0.275,49.875,41.875,0.875],[0.29,49.75,43.75,1.5],[0.305,49.625,45.625,1.875],[0.32,49.5,47.5,2],[0.335,49.375,49.375,1.875],[0.35,49.25,51.25,1.5],[0.365,49.125,53.125,0.875],[0.38,49,55,0],[0.38,49,55,0],[0.401,51.125,50.125,5.25],[0.423,53.25,45.25,9],[0.444,55.375,40.375,11.25],[0.465,57.5,35.5,12],[0.486,59.625,30.625,11.25],[0.508,61.75,25.75,9],[0.529,63.875,20.875,5.25],[0.55,66,16,0],[0.6,66,16,0],[0.615,66.875,18.125,3.5],[0.63,67.75,20.25,6],[0.645,68.625,22.375,7.5],[0.66,69.5,24.5,8],[0.675,70.375,26.625,7.5],[0.69,71.25,28.75,6],[0.705,72.125,30.875,3.5],[0.72,73,33,0],[1,73,33,0]],"lin":1,"show":0.26}]}},"zap03":{"k":"game","match":1,"n":"Mini zápas 3 na 3","c":"hra","t":["odpal","mety","chytani"],"e":3,"min":12,"kids":6,"ag":["U6","U7"],"gear":["Tee (stojánek)","Pálky","Helmy","Mety","Měkké míčky","Kužely"],"gn":"malé hřiště z kuželů, jen domácí meta a dvě mety; při více dětech dvě hřiště vedle sebe","d":"Malé hřiště ve tvaru trojúhelníku: domácí meta a dvě mety asi 8 m od sebe. Hrají tři proti třem. Pálkař odpálí z tee a oběhne mety, polaři míč seberou a všichni tři ho musí podat jeden druhému a nakonec položit na domácí metu. Doběhne-li pálkař dřív, má tým bod. Po třech odpalech se týmy vymění. Každé dítě se dotkne míče v každé směně.","va":"Jednodušší: stačí, aby polaři míč přinesli do obruče u domácí mety. Těžší: míč musí projít rukama všech tří polařů.","kid":"Odpal a utíkej, nebo seber míček a podej ho kamarádovi!","dev":"odpal, běh po metách, spolupráce polařů, podání míče, rychlé rozhodování","an":{"d":7,"s":[["zone",18,6,64,54],["home",50,54],["base",70,30],["base",30,30],["line",50,54,70,30],["line",70,30,30,30],["line",30,30,50,54],["tee",50,50]],"cap":[[0,"Malé hřiště, tři proti třem"],[0.25,"Polaři si míček podají až na domácí metu"],[0.75,"Po třech odpalech se týmy vymění"]],"a":[{"t":"k","p":[[0,47,55,0],[0.1,47,55,0],[0.28,70,30,0],[0.46,30,30,0],[0.62,50,54,0],[1,50,58,0]]},{"t":"swing","x":48,"y":55,"at":[[0.04,0.1]]},{"t":"k","p":[[0,40,58,0]]},{"t":"k","p":[[0,60,58,0]]},{"t":"k2","p":[[0,62,16,0],[0.12,62,16,0],[0.2,58,22,0],[1,58,22,0]]},{"t":"k2","p":[[0,40,16,0],[0.3,40,16,0],[0.36,40,22,0],[1,40,22,0]]},{"t":"k2","p":[[0,50,40,0],[0.4,50,40,0],[0.5,50,49,0],[1,50,49,0]]},{"t":"b","p":[[0,50,50,0],[0.08,50,50,0],[0.095,51,46.5,3.5],[0.11,52,43,6],[0.125,53,39.5,7.5],[0.14,54,36,8],[0.155,55,32.5,7.5],[0.17,56,29,6],[0.185,57,25.5,3.5],[0.2,58,22,0],[0.26,58,22,0],[0.27,55.75,22,1.75],[0.28,53.5,22,3],[0.29,51.25,22,3.75],[0.3,49,22,4],[0.31,46.75,22,3.75],[0.32,44.5,22,3],[0.33,42.25,22,1.75],[0.34,40,22,0],[0.4,40,22,0],[0.415,41.25,25.5,1.75],[0.43,42.5,29,3],[0.445,43.75,32.5,3.75],[0.46,45,36,4],[0.475,46.25,39.5,3.75],[0.49,47.5,43,3],[0.505,48.75,46.5,1.75],[0.52,50,50,0],[1,50,50,0]],"lin":1}]}},"zap04":{"k":"game","match":1,"n":"Všichni odpálí, pak střídání","c":"odpal","t":["mety","hra"],"e":2,"min":12,"kids":6,"ag":["U6","U7"],"gear":["Tee (stojánek)","Pálky","Helmy","Mety","Měkké míčky","Rukavice"],"gn":"čísla nebo barevné šátky pro pořadí pálkařů pomůžou","d":"Směna nekončí třemi auty, ale až když odpálí všichni hráči týmu. Každý odpálený běžec doběhne na metu a další odpal ho posune o metu dál, až doběhne domů a zařadí se na konec řady. Když odpálí poslední dítě, trenér zavolá „Střídání!“ a týmy si vymění pole a pálku. Skóre se nepočítá, počítá se jen, kolikrát celý tým odpálil.","va":"Na závěr sezóny: tým, který rychleji vystřídá (všichni v poli na svých místech), vyhrává potlesk.","kid":"Každý odpálí – a když odpálí poslední, voláme Střídání!","dev":"odpal, běh po metách, posun na další metu, pochopení směny a střídání, trpělivé čekání na řadu","an":{"d":9,"s":[["diamond"],["tee",50,51],["txt",14,44,"řada"]],"cap":[[0,"Každý odpálí a doběhne na metu"],[0.36,"Další odpal posune běžce dál"],[0.88,"Odpálili všichni – Střídání!"]],"a":[{"t":"k","p":[[0,47,56,0],[0.1,47,56,0],[0.22,72,34,0],[0.38,72,34,0],[0.5,50,12,0],[0.68,50,12,0],[0.8,28,34,0],[1,28,34,0]]},{"t":"k","p":[[0,18,50,0],[0.2,18,50,0],[0.3,47,56,0],[0.4,47,56,0],[0.52,72,34,0],[0.68,72,34,0],[0.8,50,12,0],[1,50,12,0]]},{"t":"k","p":[[0,12,50,0],[0.2,12,50,0],[0.3,18,50,0],[0.5,18,50,0],[0.6,47,56,0],[0.7,47,56,0],[0.82,72,34,0],[1,72,34,0]]},{"t":"swing","x":48,"y":56,"at":[[0.04,0.1],[0.34,0.4],[0.64,0.7]]},{"t":"k2","p":[[0,60,26,0]]},{"t":"k2","p":[[0,40,26,0]]},{"t":"k2","p":[[0,74,31,0]]},{"t":"b","p":[[0,62,26,0],[0.08,50,51,0],[0.098,51.5,47.875,3.5],[0.115,53,44.75,6],[0.133,54.5,41.625,7.5],[0.15,56,38.5,8],[0.168,57.5,35.375,7.5],[0.185,59,32.25,6],[0.203,60.5,29.125,3.5],[0.22,62,26,0],[1,62,26,0]],"lin":1},{"t":"b","p":[[0,38,26,0],[0.38,50,51,0],[0.398,48.5,47.875,3.938],[0.415,47,44.75,6.75],[0.433,45.5,41.625,8.438],[0.45,44,38.5,9],[0.468,42.5,35.375,8.438],[0.485,41,32.25,6.75],[0.503,39.5,29.125,3.938],[0.52,38,26,0],[1,38,26,0]],"lin":1,"show":0.38},{"t":"b","p":[[0,62,22,0],[0.68,50,51,0],[0.698,51.5,47.375,4.375],[0.715,53,43.75,7.5],[0.733,54.5,40.125,9.375],[0.75,56,36.5,10],[0.768,57.5,32.875,9.375],[0.785,59,29.25,7.5],[0.803,60.5,25.625,4.375],[0.82,62,22,0],[1,62,22,0]],"lin":1,"show":0.68}]}}};
+const kindName=a=>a.match?'Zápas':KINDS[a.k],kindCls=a=>a.match?'match':a.k;
 const BT={start:'Nástup',warm:'Rozehřátí',skillr:'Rutina dovedností',skill:'Dovednosti',drink:'Pauza',game:'Hra',match:'Mini zápas',end:'Závěr'};
 const GL='ABCDEFGH';
 /* úrovně dětí: Orlíci (začátečníci) → Orli → Orliska (nejzkušenější) */
@@ -679,7 +684,8 @@ function generate(){
  const tp=S.draft.tpl&&S.tpls[S.draft.tpl],struct=tp?tp.blocks.map(b=>[b.type,+b.min||5,b.mode]):TPL[S.draft.minutes];
  const wk=S.draft.week?SEASON[S.draft.week-1]:null,must=(wk?wk.must:[]).filter(id=>ACT[id]&&agOf(ACT[id]).includes(c.age));must.forEach(id=>c.used.add(id));
  const hasR=struct.some(x=>x[0]==='skillr');
- const mSeq=must.filter(id=>ACT[id].k==='seq'&&hasR),mMatch=must.filter(id=>ACT[id].match),mGame=must.filter(id=>ACT[id].k==='game'&&!ACT[id].st&&!ACT[id].match),mSt=must.filter(id=>!mSeq.includes(id)&&!mMatch.includes(id)&&!mGame.includes(id));
+ const hasM=struct.some(x=>x[0]==='match');
+ const mSeq=must.filter(id=>ACT[id].k==='seq'&&hasR),mMatch=must.filter(id=>ACT[id].match&&hasM),mGame=must.filter(id=>ACT[id].k==='game'&&!ACT[id].st&&!(ACT[id].match&&hasM)),mSt=must.filter(id=>!mSeq.includes(id)&&!mMatch.includes(id)&&!mGame.includes(id));
  struct.forEach(([type,min])=>{
   let b={id:uid(),type,min,items:[],mode:'same'};
   if(type==='skillr'&&mSeq.length){b.items=[mSeq.shift()];blocks.push(b);return}
@@ -982,7 +988,7 @@ function vField(){
  let mid='';
  if(s.r!=null){mid=`<div class="mx-wrap" style="width:100%"><table class="mx"><thead><tr><th>Skupina</th><th>Stanoviště</th><th>Trenér</th></tr></thead><tbody>${S.plan.groups.map((g,gi)=>{const si=(gi+s.r)%b.items.length;return `<tr><th>${GL[gi]} · ${g.length}</th><td><button class="aname" style="font-size:17px" data-a="open" data-v="${b.items[si]}">${esc(actName(b.items[si]))}</button></td><td>${esc(S.plan.coaches[si]||'')}</td></tr>`}).join('')}</tbody></table></div>
   <p class="small muted">${s.r===0?'Skupiny začínají u stanoviště se svým číslem.':'Na písknutí vláček na další stanoviště, trenéři zůstávají.'}</p>`}
- else{const a=ACT[b.items[s.item]],G=nG(S.plan);mid=`${G>1&&MODEABLE.includes(b.type)?`<p class="small">Všechny skupiny dělají totéž: ${S.plan.groups.map((g,gi)=>GL[gi]+' – '+esc(S.plan.coaches[gi]||'')).join(', ')}</p>`:''}<button class="aname" data-a="open" data-v="${a?a.id:''}">${esc(a?a.n:'')}</button>${a&&AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}${a&&a.kid?`<div class="cue"><span class="label">Řekni dětem</span><br>${esc(a.kid)}</div>`:''}${a&&a.steps?`<div class="cue"><span class="label">Kroky</span>${stepsHtml(a)}</div>`:''}${a?`<div class="cue small">${esc(a.d)}</div>`:''}`}
+ else{const a=ACT[b.items[s.item]],G=nG(S.plan);mid=`${G>1&&MODEABLE.includes(b.type)?`<p class="small">Všechny skupiny dělají totéž: ${S.plan.groups.map((g,gi)=>GL[gi]+' – '+esc(S.plan.coaches[gi]||'')).join(', ')}</p>`:''}<button class="aname" data-a="open" data-v="${a?a.id:''}">${esc(a?a.n:'')}</button>${a&&animSpec(a.id)?`<div class="animbox" data-anim="${a.id}"></div>`:''}${a&&a.kid?`<div class="cue"><span class="label">Řekni dětem</span><br>${esc(a.kid)}</div>`:''}${a&&a.steps?`<div class="cue"><span class="label">Kroky</span>${stepsHtml(a)}</div>`:''}${a?`<div class="cue small">${esc(a.d)}</div>`:''}`}
  const nx=st[S.run.i+1];
  return `<section class="card now">
   <span class="label">${esc(planTitle(S.plan))} · ${BT[b.type]||''} · ${at}′–${at+s.min}′ z ${S.plan.minutes}′</span>
@@ -1026,24 +1032,24 @@ function vLib(){
  return `<section class="card">
   <div class="sumline"><h2>Hry a cviky</h2><button class="btn ghost sm" data-a="newact">+ Vlastní</button></div>
   <input type="search" id="libq" data-c="libq" placeholder="Hledat hru, cvik nebo pomůcku" value="${esc(L.q)}" aria-label="Hledat">
-  <div class="row">${[['all','Vše'],['game','Hry'],['drill','Cviky'],['seq','Rutiny'],['routine','Organizace']].map(([k,l])=>`<button class="chip ${L.kind===k?'on':''}" data-a="lk" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="row">${[['all','Vše'],['game','Hry'],['match','Zápasy'],['drill','Cviky'],['seq','Rutiny'],['routine','Organizace']].map(([k,l])=>`<button class="chip ${L.kind===k?'on':''}" data-a="lk" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="row">${[['all','Každý věk'],['U6','Pro U6'],['U7','Pro U7']].map(([k,l])=>`<button class="chip ${L.age===k?'on':''}" data-a="la" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="row">${[['all','Všechny oblasti']].concat(Object.entries(CATS)).filter(([k])=>k!=='rutina').map(([k,l])=>`<button class="chip ${L.cat===k?'on':''}" data-a="lc" data-v="${k}">${l}</button>`).join('')}</div>
  </section><div class="lib-list" id="libList"></div>`
 }
 function renderLibList(){
  const L=S.lib,q=L.q.trim().toLowerCase();
- const list=acts().filter(a=>(L.kind==='all'||a.k===L.kind)&&(L.age==='all'||agOf(a).includes(L.age))&&(L.cat==='all'||a.c===L.cat||(a.t||[]).includes(L.cat))&&(!q||(a.n+' '+(a.v||'')+' '+gearText(a)+' '+(a.gn||'')+' '+(a.dev||'')).toLowerCase().includes(q)))
+ const list=acts().filter(a=>(L.kind==='all'||(L.kind==='match'?a.match:a.k===L.kind&&!(L.kind==='game'&&a.match)))&&(L.age==='all'||agOf(a).includes(L.age))&&(L.cat==='all'||a.c===L.cat||(a.t||[]).includes(L.cat))&&(!q||(a.n+' '+(a.v||'')+' '+gearText(a)+' '+(a.gn||'')+' '+(a.dev||'')).toLowerCase().includes(q)))
   .sort((a,b)=>a.k.localeCompare(b.k)||a.n.localeCompare(b.n,'cs'));
  const el=$('#libList');if(!el)return;
- el.innerHTML=list.length?`<p class="small muted">${list.length} položek</p>`+list.map(a=>`<button class="item" data-a="open" data-v="${a.id}"><h3>${esc(a.n)}${a.v?` <span class="muted" style="font-weight:500">/ ${esc(a.v)}</span>`:''}</h3><span class="kb ${a.k}">${KINDS[a.k]}</span><span class="meta"><b class="ag">${agTxt(a)}</b> · ${CATS[a.c]||''} · ${a.min} min${a.kids>1?' · od '+a.kids+' dětí':''}${a.st?' · na stanoviště':''}${a.custom?' · vlastní':''}${rateBadge(a.id)}<br>${esc(gearText(a))}</span></button>`).join(''):'<p class="muted">Nic nenalezeno.</p>'
+ el.innerHTML=list.length?`<p class="small muted">${list.length} položek</p>`+list.map(a=>`<button class="item" data-a="open" data-v="${a.id}"><h3>${esc(a.n)}${a.v?` <span class="muted" style="font-weight:500">/ ${esc(a.v)}</span>`:''}</h3><span class="kb ${kindCls(a)}">${kindName(a)}</span><span class="meta"><b class="ag">${agTxt(a)}</b> · ${CATS[a.c]||''} · ${a.min} min${a.kids>1?' · od '+a.kids+' dětí':''}${a.st?' · na stanoviště':''}${a.custom?' · vlastní':''}${rateBadge(a.id)}<br>${esc(gearText(a))}</span></button>`).join(''):'<p class="muted">Nic nenalezeno.</p>'
 }
 function openAct(id){const a=ACT[id];if(!a)return;
  const sh=$('#sheet');
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="${esc(a.n)}">
-  <div class="sumline"><span class="kb ${a.k}">${KINDS[a.k]} · ${CATS[a.c]||''}</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
+  <div class="sumline"><span class="kb ${kindCls(a)}">${kindName(a)} · ${CATS[a.c]||''}</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <h2>${esc(a.n)}</h2>
-  ${AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}
+  ${animSpec(a.id)?`<div class="animbox" data-anim="${a.id}"></div>`:''}
   <div class="dl">
    <div><span class="label">${a.k==='game'?'Jak se hraje':'Jak na to'}</span><p>${esc(a.d)}</p></div>
    ${a.steps?`<div><span class="label">Kroky rutiny</span>${stepsHtml(a)}</div>`:''}
@@ -1076,6 +1082,7 @@ function actForm(cid){const c=cid?S.custom[cid]:{k:'game',c:'hazeni',min:6,kids:
    <div class="field"><span class="label">Řekni dětem (nepovinné)</span><input type="text" id="f_kid" name="kid" value="${esc(c.kid||'')}"></div>
    <div class="field"><span class="label">Rozvíjí</span><input type="text" id="f_dev" name="dev" value="${esc(c.dev||'')}"></div>
    <label class="row"><input type="checkbox" id="f_st" name="st" ${c.st?'checked':''}> Hodí se na stanoviště s jedním trenérem</label>
+   <label class="row"><input type="checkbox" id="f_match" name="match" ${c.match?'checked':''}> Zápas – nabízí se do bloku Mini zápas</label>
    <label class="row"><input type="checkbox" id="f_warm" name="warm" ${(c.t||[]).includes('warm')?'checked':''}> Hodí se i na rozehřátí</label>
    <div class="row"><button class="btn" type="submit">Uložit</button></div>
   </form></div>`;sh.hidden=false}
@@ -1237,12 +1244,14 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
  if(f.id==='addP'){const raw=$('#np_num').value.trim().replace(/^0+(?=\d)/,''),name=$('#np_name').value.trim();if(!name)return toast('Napiš jméno dítěte.');if(raw&&!/^\d{1,3}$/.test(raw))return toast('Číslo dresu má 1–3 číslice.');const num=raw||'~'+uid().slice(-6);const t=clone(team());if(t.players.some(p=>p.num===num))return toast('Číslo '+num+' už v soupisce je.');t.players.push({num,name,lvl:''});
   const pr=S.draft.present[S.teamId];if(pr){pr.push(num);saveDraft()}await saveTeam(t);render(true);const n=$('#np_num');if(n)n.focus()}
  if(f.id==='actForm'){const g=id=>$(id).value;const d={n:g('#f_n').trim(),k:g('#f_k'),c:g('#f_c'),min:Math.max(1,+g('#f_min')||5),kids:Math.max(1,+g('#f_kids')||1),gear:[...document.querySelectorAll('#actForm [data-gear]')].filter(x=>x.checked).map(x=>x.dataset.gear).concat(g('#f_gear').split(',').map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/^./,ch=>ch.toUpperCase()))).filter((x,i,arr)=>arr.indexOf(x)===i),gn:g('#f_gn').trim(),d:g('#f_d').trim(),kid:g('#f_kid').trim(),dev:g('#f_dev').trim(),st:$('#f_st').checked?1:0,e:2,t:$('#f_warm').checked?['warm']:[]};
+  {const old=f.dataset.id&&S.custom[f.dataset.id];const keepT=old&&Array.isArray(old.t)?old.t.filter(x=>x!=='warm'):[];if(old){d.t=keepT.concat(d.t);Object.keys(old).forEach(k=>{if(!(k in d))d[k]=old[k]})}
+   if($('#f_match').checked){d.match=1;if(d.k!=='game')d.k='game'}else delete d.match}
   if(d.k==='routine')d.slot='start';if(!d.n)return toast('Doplň název.');const id=f.dataset.id||uid();await Store.put('custom',id,d);closeSheet();toast('Uloženo.');if(S.tab==='lib')render(true)}
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.run.running)lock(true)});
 
 /* Verze aplikace: při každém vydání zvýšit APP_VERSION a datum (stejně jako ve Scorekeeperu). */
-const APP_VERSION='1.0',APP_DATE='2026-10-16';
+const APP_VERSION='1.1',APP_DATE='2026-10-16';
 const verTxt=()=>'verze '+APP_VERSION;
 const DEN_NAME={teamlist:'seznam týmů',teams:'soupisky',training:'tréninková data',photos:'fotky'};
 const deniedKey=p=>p.split('/')[0];
@@ -1321,9 +1330,13 @@ const Web={
    Web.compose();Web.ready();render()});
   Web.on('training/staff',x=>{const v=PJ(x.val());W.raw.staff=Array.isArray(v)?v:null;W.loaded.staff=1;staffMigrate();Web.compose();render()});
   COLS.forEach(col=>Web.on('training/'+col,s=>{const v=s.val()||{},m={};Object.keys(v).forEach(id=>{const d=PJ(v[id]);if(d)m[id]=d});S[col]=m;ls.set('u7w-'+col,m);W.loaded[col]=1;if(col==='custom')rebuildActs();Web.ready();render()}))},
- ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c]))S.ready=true},
+ ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c])){S.ready=true;Web.seed()}},
+ async seed(){if(W.seeded||!W.code||!W.fb)return;W.seeded=1;
+  try{const s=await W.fb.db.ref('training/seeds/zapasy').once('value');if(s.exists())return;
+   const miss=Object.keys(SEED_MATCH).filter(id=>!S.custom[id]);for(const id of miss)await Store.put('custom',id,SEED_MATCH[id]);
+   Web.write('training/seeds/zapasy',{ts:Date.now(),n:miss.length});if(miss.length)toast('Do knihovny přibyly zápasy ('+miss.length+').')}catch(e){W.seeded=0}},
  logout(msg){try{if(W.fb&&W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(e){}
-  W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.denied={};W.seen={};W.loaded={};W.pins=null;
+  W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.denied={};W.seen={};W.loaded={};W.seeded=0;W.pins=null;
   try{localStorage.removeItem(WKEY)}catch(e){}W.role=null;W.code=null;W.msg=msg||'';S.ready=false;S.mode='local';render()}
 };
 
