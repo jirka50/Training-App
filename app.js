@@ -612,7 +612,7 @@ const acts=()=>Object.values(ACT);
 const actName=id=>{const a=ACT[id];return a?a.n:'(smazaná položka)'};
 
 /* ===== Úložiště: sdílená databáze, jinak prohlížeč ===== */
-function syncLine(){const el=$('#sync');el.textContent=!W.role?'Přihlášení':S.mode==='err'?'Chybí oprávnění k datům':ROLE_NAME[W.role]+(W.online?' · online, sdílené se Scorekeeperem':' · offline, uloží se po připojení')}
+function syncLine(){const el=$('#sync');el.textContent=!W.role?'Přihlášení':S.mode==='err'?'Chybí oprávnění: '+Object.keys(W.denied).filter(k=>k!=='photos').map(k=>DEN_NAME[k]||k).join(', '):ROLE_NAME[W.role]+(W.online?' · online, sdílené se Scorekeeperem':' · offline, uloží se po připojení')}
 function fixTeam(){const ids=Object.keys(S.teams);if(!ids.length)return;if(!S.teams[S.teamId]){S.teamId=ids.sort((a,b)=>(S.teams[a].name||'').localeCompare(S.teams[b].name||''))[0];ls.set('u7-team',S.teamId)}}
 const team=()=>S.teams[S.teamId]||null;
 /* hráči bez čísla dresu mají v zápisníku num začínající „~“ */
@@ -1228,8 +1228,10 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.run.running)lock(true)});
 
 /* Verze aplikace: při každém vydání zvýšit APP_VERSION a datum (stejně jako ve Scorekeeperu). */
-const APP_VERSION='1.0',APP_DATE='2026-10-16';
+const APP_VERSION='1.1',APP_DATE='2026-10-16';
 const verTxt=()=>'verze '+APP_VERSION;
+const DEN_NAME={teamlist:'seznam týmů',teams:'soupisky',training:'tréninková data',photos:'fotky'};
+const deniedKey=p=>p.split('/')[0];
 try{const hv=document.getElementById('hver');if(hv)hv.textContent=verTxt()}catch(e){}
 /* =================================================================================
    WEBOVÁ VERZE · Firebase Realtime Database sdílená se Scorekeeperem
@@ -1240,7 +1242,7 @@ try{const hv=document.getElementById('hver');if(hv)hv.textContent=verTxt()}catch
    ================================================================================= */
 const FB_CONFIG={apiKey:"AIzaSyDqwd6A6eaeHlczoLhGvaxQlzdp9od-0Pg",authDomain:"eagles-scorekeeper.firebaseapp.com",databaseURL:"https://eagles-scorekeeper-default-rtdb.europe-west1.firebasedatabase.app",projectId:"eagles-scorekeeper",storageBucket:"eagles-scorekeeper.firebasestorage.app",messagingSenderId:"691498301504",appId:"1:691498301504:web:ec05dfb8a51095ec1e87a5"};
 const WKEY='u7w-auth',CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',COLS=['plans','custom','tpls'];
-const W={sdel:null,phMsg:'',phDel:null,assign:null,rmove:null,rNoNum:false,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{},photos:{},staff:null}};
+const W={sdel:null,phMsg:'',phDel:null,assign:null,rmove:null,rNoNum:false,rmsg:'',role:null,code:null,uid:null,online:false,msg:'',busy:false,pins:null,pinMsg:'',imp:null,impMsg:'',fb:null,subs:[],denied:{},seen:{},loaded:{},raw:{teamlist:{},roster:{},coaches:{},kids:{},photos:{},staff:null}};
 const J=v=>JSON.stringify(v);
 const PJ=v=>{try{return v&&typeof v.json==='string'?JSON.parse(v.json):null}catch(e){return null}};
 const normCode=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^(.{4})(.+)$/,'$1-$2');
@@ -1295,7 +1297,7 @@ const Web={
    out[tid]={name:R.name||(tl[tid]&&tl[tid].name)||'Tým',coaches:Array.isArray(W.raw.staff)?W.raw.staff.filter(c=>(c.teams||[]).includes(tid)).map(c=>({id:c.id,name:c.name})):(W.raw.coaches[tid]||[]),
     players:(Array.isArray(R.players)?R.players:[]).filter(p=>p&&p.num!=null).map(p=>{const num=String(p.num),k=kids[num]||kv.find(x=>x.name&&x.name===p.name)||{};return{num,name:p.name||'',lvl:k.lvl||'',sk:Array.isArray(k.sk)?k.sk:[]}})}});
   S.teams=out;ls.set('u7w-teams',out);fixTeam()},
- on(path,cb){const r=W.fb.db.ref(path);const h=r.on('value',cb,e=>{if(isPerm(e)){S.mode='err';syncLine()}});W.subs.push(()=>r.off('value',h))},
+ on(path,cb){const r=W.fb.db.ref(path);const h=r.on('value',cb,e=>{if(!isPerm(e))return;const k=deniedKey(path);W.denied[k]=1;console.warn('Firebase: chybí oprávnění ke čtení',path);if(k!=='photos')S.mode='err';syncLine();render()});W.subs.push(()=>r.off('value',h))},
  subscribe(){if(W.subs.length)return;S.mode='web';syncLine();
   Web.on('teamlist',s=>{W.raw.teamlist=s.val()||{};W.loaded.tl=1;Object.keys(W.raw.teamlist).forEach(tid=>{if(W.seen[tid])return;W.seen[tid]=1;
    Web.on('teams/'+tid+'/roster',x=>{W.raw.roster[tid]=PJ(x.val())||{};Web.compose();render()});
@@ -1307,7 +1309,7 @@ const Web={
   COLS.forEach(col=>Web.on('training/'+col,s=>{const v=s.val()||{},m={};Object.keys(v).forEach(id=>{const d=PJ(v[id]);if(d)m[id]=d});S[col]=m;ls.set('u7w-'+col,m);W.loaded[col]=1;if(col==='custom')rebuildActs();Web.ready();render()}))},
  ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c]))S.ready=true},
  logout(msg){try{if(W.fb&&W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(e){}
-  W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.seen={};W.loaded={};W.pins=null;
+  W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.denied={};W.seen={};W.loaded={};W.pins=null;
   try{localStorage.removeItem(WKEY)}catch(e){}W.role=null;W.code=null;W.msg=msg||'';S.ready=false;S.mode='local';render()}
 };
 
@@ -1416,9 +1418,9 @@ const WHO=Object.assign({teams:[],size:'m'},ls.get('u7w-who',{}));const whoSave=
 const initials=n=>String(n||'?').trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
 function whoTeams(){let t=(WHO.teams||[]).filter(x=>S.teams[x]);if(!t.length&&S.teams[S.teamId])t=[S.teamId];return t}
 function vWho(){
- if(!team())return noTeam();const sel=whoTeams(),all=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs'));
+ if(!team())return noTeam();const den=W.denied.photos?'<p class="note">Fotky nejdou načíst: databáze zatím nemá pravidla pro fotky. Správce musí ve Firebase konzoli (Realtime Database → Rules) vložit aktuální database.rules.json a dát Publish.</p>':'';const sel=whoTeams(),all=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs'));
  const n=sel.reduce((s,t)=>s+(S.teams[t].players||[]).length,0),nf=sel.reduce((s,t)=>s+(S.teams[t].players||[]).filter(p=>photoOf(t,p)).length,0);
- return `<section class="card who-f"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>
+ return den+`<section class="card who-f"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>
   <div class="row" style="gap:6px">${all.length>1?all.map(([id,x])=>{const on=sel.includes(id);return `<button class="chip sm ${on?'on':''}" data-a="whot" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join(''):''}
    <div class="seg sm" role="group" aria-label="Velikost fotek" style="margin-left:auto">${[['s','S','Malé'],['m','M','Střední'],['l','L','Velké']].map(([k,l,t])=>`<button data-a="whosz" data-v="${k}" class="${WHO.size===k?'on':''}" title="${t}" aria-label="${t}">${l}</button>`).join('')}</div></div></section>
  ${sel.map(tid=>{const ps=S.teams[tid].players||[];return `${sel.length>1?`<h3 class="who-h">${esc(tName(tid))} · ${ps.length}</h3>`:''}
