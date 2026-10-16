@@ -1504,7 +1504,7 @@ function shrinkPhoto(file){return new Promise((res,rej)=>{const url=URL.createOb
 kidPh=x=>{const img=x&&x.tid?photoOf(x.tid,{num:x.num,name:x.name}):'';return img?`<img class="kph" src="${img}" alt="" loading="lazy">`:''};
 dipLogo='logo.png';kidImg=x=>x&&x.tid?photoOf(x.tid,{num:x.num,name:x.name}):'';
 /* ---------- Počasí na den tréninku (Open-Meteo, bez klíče) ---------- */
-const WX_DEF={lat:50.08,lon:14.42,name:'Praha',h:17};
+const WX_DEF={lat:50.034,lon:14.435,name:'Eagles Park, Krč',h:17};
 const wxPref=()=>Object.assign({},WX_DEF,S.pref.wx||{});
 const WX={data:null,key:'',at:0,busy:false,err:false};
 function wxLoad(){const P=wxPref(),key=P.lat.toFixed(2)+','+P.lon.toFixed(2);
@@ -1525,7 +1525,7 @@ weatherBox=()=>{const d=S.draft,date=d.date||today(),P=wxPref(),days=Math.round(
  return `<div class="wx"><div class="sumline"><span><b class="big">${ic} ${w.tmin===w.tmax?w.tmax:w.tmin+'–'+w.tmax} °C</b> ${tx}</span><span class="small muted">${esc(P.name)} · ${P.h}–${P.h+2} h</span></div>
   <span class="small">Srážky ${w.prob} %${w.mm>=.1?' · '+w.mm.toFixed(1).replace('.',',')+' mm':''} · vítr ${w.wind} km/h${w.wind>=40?' – silný vítr':''}</span>
   <span class="small">Doporučení: <b>${rec==='hala'?'hala':'venku'}</b> – ${why}.</span>${rec!==d.venue?`<div class="row"><button class="btn ghost sm" data-a="venue" data-v="${rec}">Přepnout na ${rec==='hala'?'halu':'venku'}</button></div>`:''}</div>`};
-function wxSet(){const P=wxPref();return `<div class="field"><span class="label">Počasí: místo tréninku</span><div class="row"><span><b>${esc(P.name)}</b></span><button class="btn ghost sm" data-a="wxgeo">📍 Použít polohu telefonu</button>${S.pref.wx&&S.pref.wx.lat!=null?'<button class="btn ghost sm" data-a="wxreset">Praha</button>':''}</div></div>
+function wxSet(){const P=wxPref();return `<div class="field"><span class="label">Počasí: místo tréninku</span><div class="row"><span><b>${esc(P.name)}</b></span><button class="btn ghost sm" data-a="wxgeo">📍 Použít polohu telefonu</button>${S.pref.wx&&S.pref.wx.lat!=null?'<button class="btn ghost sm" data-a="wxreset">Eagles Park</button>':''}</div></div>
   <div class="field"><span class="label">Obvyklý začátek tréninku</span><select id="pf_wxh" data-c="wxh">${[14,15,16,17,18,19].map(h=>`<option value="${h}" ${P.h===h?'selected':''}>${h}:00</option>`).join('')}</select></div>`}
 function legacyDel(tid,keys){const m=Object.assign({},W.raw.photos[tid]||{});keys.forEach(k=>{if(m[k]){delete m[k];Web.write('photos/'+tid+'/'+k,null)}});W.raw.photos[tid]=m;phCache()}
 function photoSet(tid,num,img){const R=rosterOf(tid),p=R.players.find(x=>String(x.num)===String(num));if(!p)return;if(img)p.photo=img;else delete p.photo;rosterSave(tid,R);legacyDel(tid,[phKey(num)])}
