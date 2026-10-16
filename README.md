@@ -26,4 +26,4 @@ Plánovač používá **stejnou databázi Firebase jako Baseball Scorekeeper**. 
 4. Jednorázově v Nastavení → „Převzít data z verze v Claude“ nahraj `planovac-zaloha.json`.
 
 ## Verze
-Číslo verze je v `app.js` (`APP_VERSION`, `APP_DATE`, stejně jako ve Scorekeeperu). Zobrazuje se pod názvem v hlavičce a dole v Nastavení. Při vydání zvýšit verzi a v `sw.js` název mezipaměti (`u7-vN`).
+Číslo verze je v `app.js` (`APP_VERSION`, `APP_DATE`, stejně jako ve Scorekeeperu). Zobrazuje se pod názvem v hlavičce a dole v Nastavení. Číslo verze se mění jen po odsouhlasení správcem – před změnou se zeptat. Při každém vydání se ale zvyšuje název mezipaměti v `sw.js` (`u7-vN`), aby telefony načetly novou verzi.
