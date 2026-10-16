@@ -1227,6 +1227,10 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.run.running)lock(true)});
 
+/* Verze aplikace: při každém vydání zvýšit APP_VERSION a datum (stejně jako ve Scorekeeperu). */
+const APP_VERSION='1.0',APP_DATE='2026-10-16';
+const verTxt=()=>'verze '+APP_VERSION;
+try{const hv=document.getElementById('hver');if(hv)hv.textContent=verTxt()}catch(e){}
 /* =================================================================================
    WEBOVÁ VERZE · Firebase Realtime Database sdílená se Scorekeeperem
    Role: správce (kód správce ze Scorekeeperu) · trenér (společný kód, zakládá správce)
@@ -1492,6 +1496,7 @@ function vSet(){
   <label class="row"><input type="checkbox" id="pf_wake" data-c="wake" ${S.pref.wake!==false?'checked':''}> Během tréninku na hřišti nenechat obrazovku zhasnout</label>
   ${voiceSet()}
   <p class="small muted">Aplikaci si můžeš přidat na plochu telefonu (v prohlížeči Sdílet → Přidat na plochu). Tlačítko ☀ nahoře zapne režim na slunce.</p></section>`;
+ h+=`<p class="small muted ver">Tréninkový plánovač U7 · ${verTxt()} · ${new Date(APP_DATE).toLocaleDateString('cs-CZ')}</p>`;
  return h}
 Object.assign(actions,{
  wlogout:()=>Web.logout(''),
