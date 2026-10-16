@@ -18,7 +18,7 @@ Plánovač používá **stejnou databázi Firebase jako Baseball Scorekeeper**. 
 - čte: `teamlist/<tid>`, `teams/<tid>/roster` (spravuje Scorekeeper)
 - píše: `training/coaches/<tid>`, `training/kids/<tid>` (úrovně a dovednosti podle čísla dresu), `training/plans/<id>`, `training/tpls/<id>`, `training/custom/<id>`
 - kódy: `pinmap/<kód> = {role:'coach'}`
-- zápasy: výchozí zápasy (T-ball, Coach pitch, Mini zápas 3 na 3, Všichni odpálí) se jednou zapíšou do `training/custom` i s animací: `zap01–zap04` od verze 1.1 (značka `training/seeds/zapasy`), `zap05–zap12` od verze 1.2 (značka `training/seeds/zapasy2`); značky hlídají, aby se smazané znovu nevracely
+- zápasy: výchozí zápasy (T-ball, Coach pitch, Mini zápas 3 na 3, Všichni odpálí) se jednou zapíšou do `training/custom` i s animací: `zap01–zap04` od verze 1.1 (značka `training/seeds/zapasy`), `zap05–zap12` jako druhá dávka (značka `training/seeds/zapasy2`); značky hlídají, aby se smazané znovu nevracely
 
 ## Zprovoznění
 1. Ve Firebase konzoli (projekt eagles-scorekeeper) → Realtime Database → Rules vlož obsah `database.rules.json` a dej Publish.
