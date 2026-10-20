@@ -1276,6 +1276,24 @@ function vHist(){
  <div id="histList" style="display:grid;gap:16px"></div>`
 }
 function histAll(){return Object.entries(S.plans).filter(([,p])=>planTeams(p).includes(S.teamId)).sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''))}
+/* ===== Souhrn uloženého tréninku ===== */
+function openSummary(id){const p=S.plans[id];if(!p)return;const sh=$('#sheet'),G=p.groups||[],r=p.rate||{};let t=0;
+ const its=[...new Set((p.blocks||[]).flatMap(b=>b.items))].map(i=>ACT[i]).filter(a=>a&&a.k!=='routine');
+ const cats=[...new Set(its.map(a=>a.c).filter(c=>FOCUS.includes(c)))],up=Object.values(r).filter(v=>v>0).length,down=Object.values(r).filter(v=>v<0).length;
+ const kidsTxt=g=>g.map(n=>{const x=kid(n,p);return esc((noNum(x.num)?'':x.num+' ')+(x.dn||x.name||'?'))}).join(', ');
+ sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Souhrn tréninku"><div class="sumline"><span class="kb game">Souhrn</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
+  <h2>${esc(planTitle(p))}</h2>
+  <p class="small">${fmtDate(p.date)} · ${p.minutes} min · ${p.venue==='hala'?'hala':'venku'}${p.age?' · '+p.age:''}${p.season?' · '+esc(p.season):''} · ${planTeams(p).map(t=>esc(tName(t))).join(' + ')}</p>
+  <div class="dl">
+   <div><span class="label">Docházka</span><p><b>${(p.present||[]).length} dětí</b> · trenéři: ${(p.coaches||[]).map(esc).join(', ')||'–'}</p>
+    ${G.length>1?G.map((g,gi)=>`<p class="small"><b>Skupina ${GL[gi]}${p.coaches[gi]?' · '+esc(p.coaches[gi]):''}:</b> ${kidsTxt(g)}</p>`).join(''):`<p class="small">${kidsTxt(p.present||[])}</p>`}</div>
+   <div><span class="label">Zaměření</span><p>${(p.focus||[]).map(f=>CATS[f]).join(', ')||'–'}${p.week&&SEASON[p.week-1]?` · sezónní plán, týden ${p.week}: ${esc(SEASON[p.week-1].n)}`:''}</p>${cats.length?`<p class="small muted">Procvičené oblasti: ${cats.map(c=>CATS[c]).join(', ')}</p>`:''}</div>
+   <div><span class="label">Průběh</span>${(p.blocks||[]).map(b=>{const st=t;t+=b.min;return `<p class="small"><b>${st}′ ${esc(BT[b.type]||b.type)}</b> · ${b.min} min${b.mode==='st'?' · stanoviště':''}<br>${b.items.map(i=>esc(actName(i))+(r[i]>0?' 👍':r[i]<0?' 👎':'')).join(', ')}</p>`}).join('')}</div>
+   ${up||down?`<div><span class="label">Hodnocení</span><p>👍 ${up} · 👎 ${down}</p></div>`:''}
+   ${p.note?`<div><span class="label">Poznámka</span><p>${esc(p.note)}</p></div>`:''}
+  </div>
+  <div class="row"><button class="btn ghost sm" data-a="hsumload" data-v="${esc(id)}">Otevřít k úpravám</button><button class="btn ghost sm" data-a="hsumpr" data-v="${esc(id)}">🖨 Vytisknout</button></div></div>`;
+ sh.hidden=false;sh.dataset.id=''}
 function renderHistList(){
  const el=$('#histList');if(!el)return;const H=S.hist,q=H.q.trim().toLowerCase();
  const seaOn=H.sea&&SEA().name&&(SEA().from||SEA().to),all=histAll(),list=all.filter(([,p])=>(!seaOn||inSeason(p.date))&&(!H.fav||p.fav)&&(H.focus==='all'||(p.focus||[]).includes(H.focus)||(p.blocks||[]).some(b=>b.items.some(i=>ACT[i]&&ACT[i].c===H.focus)))&&(!q||(planTitle(p)+' '+(p.coaches||[]).join(' ')+' '+(p.blocks||[]).map(b=>b.items.map(actName).join(' ')).join(' ')).toLowerCase().includes(q)));
@@ -1283,7 +1301,7 @@ function renderHistList(){
  el.innerHTML=(list.length?'':`<p class="muted" style="text-align:center">Žádný trénink neodpovídá filtru.${H.fav?' Hvězdičkou ☆ u tréninku ho přidáš do oblíbených.':''}</p>`)+list.map(([id,p])=>`<section class="card"><div class="sumline"><h3>${esc(planTitle(p))}${p.name?` <span class="muted" style="font-weight:500">· ${fmtDate(p.date)}</span>`:''} · ${p.minutes} min${p.week?` <span class="lvl">týden ${p.week}</span>`:''}${p.season&&p.season!==SEA().name?` <span class="lvl">${esc(p.season)}</span>`:''}${p.rate&&Object.keys(p.rate).length?' <span class="lvl">zhodnoceno</span>':''}</h3><button class="ib star ${p.fav?'on':''}" data-a="fav" data-v="${esc(id)}" aria-pressed="${!!p.fav}" aria-label="${p.fav?'Odebrat z oblíbených':'Přidat do oblíbených'}">${p.fav?'★':'☆'}</button></div>
   <p class="small muted">${planTeams(p).length>1?'společně s '+planTeams(p).filter(t=>t!==S.teamId).map(t=>esc(tName(t))).join(', ')+' · ':''}${(p.present||[]).length} dětí · ${(p.coaches||[]).map(esc).join(', ')}${(p.focus||[]).length?' · '+(p.focus||[]).map(f=>CATS[f]).join(', '):''}</p>
   <p class="small">${(p.blocks||[]).map(b=>b.items.map(actName).join(' + ')).join(' → ')}</p>
-  ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="load" data-v="${esc(id)}">Otevřít</button><button class="btn ghost sm" data-a="dup" data-v="${esc(id)}">Použít znovu</button><button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button></div>`}
+  ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="hsum" data-v="${esc(id)}">Souhrn</button><button class="btn ghost sm" data-a="load" data-v="${esc(id)}">Otevřít</button><button class="btn ghost sm" data-a="dup" data-v="${esc(id)}">Použít znovu</button><button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button></div>`}
  </section>`).join('')
 }
 
@@ -1350,7 +1368,7 @@ const actions={
   else{const ms=remaining();S.run.endAt=Date.now()+ms;S.run.running=true;S.run.left=null;beeped=ms<=0;lock(true);if(ms>=curStep().min*60000-1000)announce()}saveRun();render(true)},
  plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();tick()},
  next:()=>gotoStep(S.run.i+1),prev:()=>gotoStep(S.run.i-1),goto:v=>gotoStep(+v),
- lk:v=>{S.lib.kind=v;render(true)},popen:v=>switchPlan(v),pnew:()=>{parkCurrent();S.addNew=true;actions.tab('plan')},pnewno:()=>{S.addNew=false;render(true)},
+ lk:v=>{S.lib.kind=v;render(true)},hsum:v=>openSummary(v),hsumload:v=>{closeSheet();actions.load(v)},hsumpr:v=>{const p=S.plans[v];if(!p)return;closeSheet();printHtml(planPrintHtml(p))},popen:v=>switchPlan(v),pnew:()=>{parkCurrent();S.addNew=true;actions.tab('plan')},pnewno:()=>{S.addNew=false;render(true)},
  pclose:()=>{if(!S.plan)return;const id=S.plan.id;closePlan(id);toast('Trénink zavřen. V Historii zůstává.');if(!S.plan)actions.tab('plan');else render(true)},
  pstale:()=>{openList().filter(e=>stale(e)&&(!S.plan||e.plan.id!==S.plan.id)).forEach(e=>delete OPEN[e.plan.id]);saveOpen();render(true)},
  genadd:()=>{S.addNew=true;generate()},borrow:v=>{S.draft.guests[selKey()]=guests().concat([v]);saveDraft();if(S.tab==='train'&&S.plan)applyCoaches();else render(true);toast(v+' je na tomto tréninku jako host.')},pcoach:v=>{actions.ctog(v);applyCoaches()},pguest:v=>{const k=selKey(),g=guests().slice();g.splice(+v,1);S.draft.guests[k]=g;saveDraft();applyCoaches()},pickit:(v,el)=>openPick(+el.dataset.b,+el.dataset.s),pickset:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(b){b.items[+el.dataset.s]=v;savePlan()}closeSheet();render(true)},replan:()=>{S.confirm='replan';render(true)},replango:()=>{S.confirm=null;if(S.plan){delete OPEN[S.plan.id];saveOpen()}S.plan=null;S.sel=null;S.gear={};S.openRate=false;savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();lock(false);actions.tab('plan');toast('Trénink zahozen. Naplánuj nový.')},patt:v=>pAttToggle(v),hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},

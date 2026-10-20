@@ -27,3 +27,8 @@ Plánovač používá **stejnou databázi Firebase jako Baseball Scorekeeper**. 
 
 ## Verze
 Číslo verze je v `app.js` (`APP_VERSION`, `APP_DATE`, stejně jako ve Scorekeeperu). Zobrazuje se pod názvem v hlavičce a dole v Nastavení. Číslo verze se mění jen po odsouhlasení správcem – před změnou se zeptat. Při každém vydání se ale zvyšuje název mezipaměti v `sw.js` (`u7-vN`), aby telefony načetly novou verzi.
+
+## Zdrojové soubory
+`app.js`, `app.css` a `index.html` se generují ze složky `src/`:
+`python3 src/build_web.py src/planovac-u7.src.html src/web.js .`
+Úpravy dělej v `src/` a pak spusť build, jinak je příští build přepíše.
