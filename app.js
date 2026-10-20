@@ -959,7 +959,7 @@ function parTxt(d){const L=[`⚾ ${d.title}${d.title.indexOf(fmtDate(d.date))<0?
 function parentsText(p){const f=(p.focus||[])[0]||'hazeni',on=pubOn(p),pv=on.length?W.pub[on[0]][p.id]:null,pd=pv?PJ(pv):null;
  return parTxt(Object.assign(pubData(p,true),{hw:pd&&pd.hw||HOME[f]||HOME.hazeni,note:pd&&pd.note||''}))}
 let parentsPub=()=>'';
-function vParents(){return `<section class="card"><div class="sumline"><h2>Pro rodiče</h2><button class="btn ghost sm" data-a="copypar">Kopírovat</button></div>
+function vParents(){return `<section class="card"><div class="sumline"><h2>Pro rodiče</h2><span class="row" style="gap:6px">${typeof shareWA==='function'?'<button class="btn sm" data-a="parwa">WhatsApp</button>':''}<button class="btn ghost sm" data-a="copypar">Kopírovat</button></span></div>
  <p class="small muted">Stejný text jako na stránce pro rodiče, bez jmen dětí. Před zkopírováním ho můžeš upravit.</p>
  <textarea id="parentsTxt" rows="14">${esc(parentsText(S.plan))}</textarea>${parentsPub()}</section>`}
 
@@ -1277,6 +1277,7 @@ function vHist(){
 }
 function histAll(){return Object.entries(S.plans).filter(([,p])=>planTeams(p).includes(S.teamId)).sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''))}
 /* ===== Souhrn uloženého tréninku ===== */
+let sumParents=()=>'';
 function openSummary(id){const p=S.plans[id];if(!p)return;const sh=$('#sheet'),G=p.groups||[],r=p.rate||{};let t=0;
  const its=[...new Set((p.blocks||[]).flatMap(b=>b.items))].map(i=>ACT[i]).filter(a=>a&&a.k!=='routine');
  const cats=[...new Set(its.map(a=>a.c).filter(c=>FOCUS.includes(c)))],up=Object.values(r).filter(v=>v>0).length,down=Object.values(r).filter(v=>v<0).length;
@@ -1291,6 +1292,7 @@ function openSummary(id){const p=S.plans[id];if(!p)return;const sh=$('#sheet'),G
    <div><span class="label">Průběh</span>${(p.blocks||[]).map(b=>{const st=t;t+=b.min;return `<p class="small"><b>${st}′ ${esc(BT[b.type]||b.type)}</b> · ${b.min} min${b.mode==='st'?' · stanoviště':''}<br>${b.items.map(i=>esc(actName(i))+(r[i]>0?' 👍':r[i]<0?' 👎':'')).join(', ')}</p>`}).join('')}</div>
    ${up||down?`<div><span class="label">Hodnocení</span><p>👍 ${up} · 👎 ${down}</p></div>`:''}
    ${p.note?`<div><span class="label">Poznámka</span><p>${esc(p.note)}</p></div>`:''}
+   ${sumParents(p)}
   </div>
   <div class="row"><button class="btn ghost sm" data-a="hsumload" data-v="${esc(id)}">Otevřít k úpravám</button><button class="btn ghost sm" data-a="hsumpr" data-v="${esc(id)}">🖨 Vytisknout</button></div></div>`;
  sh.hidden=false;sh.dataset.id=''}
@@ -1568,6 +1570,13 @@ parentsPub=()=>{const p=S.plan;if(!p)return'';const f=(p.focus||[])[0]||'hazeni'
   <div class="row"><button class="btn sm" data-a="pubgo">${pv?'Aktualizovat na stránce':'Zveřejnit pro rodiče'}</button>${pv?'<button class="btn ghost sm" data-a="pubdel">Stáhnout</button>':''}</div>
   ${pv?`<p class="small">✓ Zveřejněno ${new Date(pv.ts).toLocaleString('cs-CZ',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})}${on.length>1?' pro '+on.map(t=>esc(tName(t))).join(', '):''}</p>`:''}
   ${sel.map(t=>`<div class="row"><span class="small">Odkaz ${esc(tName(t))}:</span><button class="btn ghost sm" data-a="wcopy" data-v="${esc(parentUrl(t))}">Kopírovat odkaz</button></div>`).join('')}</div>`};
+sumParents=p=>{const on=pubOn(p),pv=on.length?W.pub[on[0]][p.id]:null,pd=pv?PJ(pv):null,f=(p.focus||[])[0]||'hazeni';
+ const d=pd&&pd.title?pd:Object.assign(pubData(p,true),{hw:HOME[f]||HOME.hazeni,note:''});
+ return `<div><span class="label">Shrnutí pro rodiče</span>${on.length?`<p class="small">✓ Zveřejněno pro ${on.map(t=>esc(tName(t))).join(', ')}${pv&&pv.ts?' · '+new Date(pv.ts).toLocaleString('cs-CZ',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):''}</p>`:'<p class="small muted">Zatím nezveřejněno na stránce pro rodiče.</p>'}
+  <div class="partxt">${esc(parTxt(d))}</div><div class="row"><button class="btn sm" data-a="sumwa">Poslat do WhatsApp</button><button class="btn ghost sm" data-a="sumcopy">Kopírovat text</button></div></div>`};
+/* WhatsApp: nativní sdílení (vybereš WhatsApp a skupinu), jinak odkaz wa.me s předvyplněným textem */
+async function shareWA(t){if(!t)return;if(navigator.share){try{await navigator.share({text:t});return}catch(e){if(e&&e.name==='AbortError')return}}
+ const u='https://wa.me/?text='+encodeURIComponent(t);try{window.open(u,'_blank','noopener')}catch(e){location.href=u}}
 const P={tid:PARENT,list:null,err:false};
 function parentBoot(){applyTheme();syncLine();const f=fbInit();if(!f){renderParentPage();return}
  f.db.ref('public/'+PARENT+'/training').on('value',s=>{const v=s.val()||{};P.list=Object.entries(v).map(([id,x])=>Object.assign({id,ts:x&&x.ts},PJ(x)||{})).filter(x=>x.date).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);renderParentPage()},()=>{P.err=true;renderParentPage()});
@@ -1827,6 +1836,9 @@ function vSet(){
  h+=`<p class="small muted ver">Tréninkový plánovač U7 · ${verTxt()} · ${new Date(APP_DATE).toLocaleDateString('cs-CZ')}</p>`;
  return h}
 Object.assign(actions,{
+ sumwa:()=>{const el=document.querySelector('#sheet .partxt');if(el)shareWA(el.textContent)},
+ parwa:()=>{const t=$('#parentsTxt');if(t)shareWA(t.value)},
+ sumcopy:async()=>{const el=document.querySelector('#sheet .partxt');if(!el)return;try{await navigator.clipboard.writeText(el.textContent);toast('Zkopírováno. Vlož do skupiny rodičů.')}catch(e){toast('Text se nepodařilo zkopírovat.')}},
  pubt:v=>{const p=S.plan;if(!p)return;const s=pubSel(p).slice(),i=s.indexOf(v);if(i>=0)s.splice(i,1);else s.push(v);PUBT[p.id]=s;render(true)},
  xlsone:()=>exportXls([S.teamId]),xlsall:()=>exportXls(Object.keys(S.teams).sort((a,b)=>tName(a).localeCompare(tName(b),'cs'))),
  pubgo:()=>pubPlan(),pubdel:()=>unpubPlan(),pexp:v=>{PEXP[v]=1;renderParentPage()},

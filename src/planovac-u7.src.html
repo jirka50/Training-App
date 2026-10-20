@@ -1233,7 +1233,7 @@ function parTxt(d){const L=[`⚾ ${d.title}${d.title.indexOf(fmtDate(d.date))<0?
 function parentsText(p){const f=(p.focus||[])[0]||'hazeni',on=pubOn(p),pv=on.length?W.pub[on[0]][p.id]:null,pd=pv?PJ(pv):null;
  return parTxt(Object.assign(pubData(p,true),{hw:pd&&pd.hw||HOME[f]||HOME.hazeni,note:pd&&pd.note||''}))}
 let parentsPub=()=>'';
-function vParents(){return `<section class="card"><div class="sumline"><h2>Pro rodiče</h2><button class="btn ghost sm" data-a="copypar">Kopírovat</button></div>
+function vParents(){return `<section class="card"><div class="sumline"><h2>Pro rodiče</h2><span class="row" style="gap:6px">${typeof shareWA==='function'?'<button class="btn sm" data-a="parwa">WhatsApp</button>':''}<button class="btn ghost sm" data-a="copypar">Kopírovat</button></span></div>
  <p class="small muted">Stejný text jako na stránce pro rodiče, bez jmen dětí. Před zkopírováním ho můžeš upravit.</p>
  <textarea id="parentsTxt" rows="14">${esc(parentsText(S.plan))}</textarea>${parentsPub()}</section>`}
 
@@ -1586,6 +1586,7 @@ function vHist(){
 }
 function histAll(){return Object.entries(S.plans).filter(([,p])=>planTeams(p).includes(S.teamId)).sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''))}
 /* ===== Souhrn uloženého tréninku ===== */
+let sumParents=()=>'';
 function openSummary(id){const p=S.plans[id];if(!p)return;const sh=$('#sheet'),G=p.groups||[],r=p.rate||{};let t=0;
  const its=[...new Set((p.blocks||[]).flatMap(b=>b.items))].map(i=>ACT[i]).filter(a=>a&&a.k!=='routine');
  const cats=[...new Set(its.map(a=>a.c).filter(c=>FOCUS.includes(c)))],up=Object.values(r).filter(v=>v>0).length,down=Object.values(r).filter(v=>v<0).length;
@@ -1600,6 +1601,7 @@ function openSummary(id){const p=S.plans[id];if(!p)return;const sh=$('#sheet'),G
    <div><span class="label">Průběh</span>${(p.blocks||[]).map(b=>{const st=t;t+=b.min;return `<p class="small"><b>${st}′ ${esc(BT[b.type]||b.type)}</b> · ${b.min} min${b.mode==='st'?' · stanoviště':''}<br>${b.items.map(i=>esc(actName(i))+(r[i]>0?' 👍':r[i]<0?' 👎':'')).join(', ')}</p>`}).join('')}</div>
    ${up||down?`<div><span class="label">Hodnocení</span><p>👍 ${up} · 👎 ${down}</p></div>`:''}
    ${p.note?`<div><span class="label">Poznámka</span><p>${esc(p.note)}</p></div>`:''}
+   ${sumParents(p)}
   </div>
   <div class="row"><button class="btn ghost sm" data-a="hsumload" data-v="${esc(id)}">Otevřít k úpravám</button><button class="btn ghost sm" data-a="hsumpr" data-v="${esc(id)}">🖨 Vytisknout</button></div></div>`;
  sh.hidden=false;sh.dataset.id=''}
