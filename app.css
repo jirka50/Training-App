@@ -78,6 +78,7 @@ p{margin:0}
 .att{display:grid;gap:4px}
 .attrow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(60px,1fr) auto;gap:10px;align-items:center;background:none;border:0;border-top:1px solid var(--line);padding:6px 0;text-align:left;color:var(--ink);font:inherit}
 .attrow>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.borrow{display:grid;gap:6px;border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:6px 0}
 .bdg{font-size:16px;letter-spacing:1px;margin-left:4px}
 .chip.badge.on{font-weight:700}
 .chip.badge.off{opacity:.55}
