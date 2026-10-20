@@ -1725,7 +1725,7 @@ function migratePhotos(tid){if(!W.loaded['r_'+tid]||!W.loaded['p_'+tid]||!W.raw.
  keys.forEach(k=>{const d=m[k];if(!d||!d.img)return done.push(k);const p=R.players.find(x=>phKey(x.num)===k)||R.players.find(x=>d.name&&x.name===d.name);if(!p)return;if(!p.photo){p.photo=d.img;ch=true}done.push(k)});
  if(ch)rosterSave(tid,R);if(done.length)legacyDel(tid,done)}
 document.addEventListener('change',async e=>{if(e.target.id!=='who_file')return;const f=e.target.files&&e.target.files[0],key=e.target.dataset.k;if(!f||!key)return;
- const x=kid(key),p=(S.teams[x.tid].players||[]).find(q=>q.num===x.num);W.phMsg='Ukládám fotku…';openWho(key);
+ const x=kid(key);W.phMsg='Ukládám fotku…';openWho(key);
  try{const img=await shrinkPhoto(f);photoSet(x.tid,x.num,img);W.phMsg='';toast('Fotka uložena.')}catch(err){W.phMsg='Tuhle fotku se nepodařilo načíst. Zkus jinou.'}
  openWho(key);if(S.tab==='who')render(true)});
 
