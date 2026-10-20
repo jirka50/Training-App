@@ -964,8 +964,8 @@ function vParents(){return `<section class="card"><div class="sumline"><h2>Pro r
  <textarea id="parentsTxt" rows="14">${esc(parentsText(S.plan))}</textarea>${parentsPub()}</section>`}
 
 /* ===== Vykreslení ===== */
-const MENU=[['Trénink',['plan','train','field']],['Tým',['team','who','kids','hist']],['Knihovna',['lib']],['Nastavení',['set']]];
-const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['team','Tým'],['who','Kdo je kdo'],['kids','Děti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
+const MENU=[['Trénink',['plan','train','field','hist']],['Tým',['team','who','kids']],['Knihovna',['lib']],['Nastavení',['set']]];
+const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['team','Tým'],['who','Kdo je kdo'],['kids','Dovednosti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
 let pend=false;
 function render(force){
  if(PARENT){renderParentPage();return}
@@ -1174,7 +1174,7 @@ function openMk(){const p=S.plan;if(!p)return;if(!S.mk||!SK.some(x=>x.id===S.mk)
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Kdo co zvládl"><div class="sumline"><h2>Kdo co zvládl</h2><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <div class="field"><span class="label">Dovednost</span><select id="mk_sk" data-c="mksk">${FOCUS.map(f=>`<optgroup label="${esc(CATS[f])}">${SK.filter(x=>x.c===f).map(x=>`<option value="${x.id}" ${x.id===sk.id?'selected':''}>${esc(x.n)}</option>`).join('')}</optgroup>`).join('')}</select></div>
   <p class="small"><b>${done} z ${tot}</b> dětí na tréninku to zvládá. Klepni na dítě, které to dnes předvedlo; dalším klepnutím značku zrušíš.</p>
-  ${grp}<p class="small muted">Ukládá se hned do karty dítěte (Děti → dovednosti) a počítá se do návrhu úrovně.</p></div>`;
+  ${grp}<p class="small muted">Ukládá se hned do karty dítěte (Dovednosti) a počítá se do návrhu úrovně.</p></div>`;
  sh.hidden=false;sh.dataset.id=''}
 async function mkToggle(key){const p=S.plan,x=kid(key,p),t=clone(S.teams[x.tid]);if(!t)return;const pl=(t.players||[]).find(q=>q.num===x.num);if(!pl)return;const sk=skOf(pl),id=S.mk;
  pl.sk=sk.includes(id)?sk.filter(q=>q!==id):sk.concat([id]);await Store.put('teams',x.tid,t);openMk()}
@@ -1815,16 +1815,16 @@ function vSet(){
  let h=`<section class="card"><div class="sumline"><h2>Účet</h2><button class="btn ghost sm" data-a="wlogout">Odhlásit</button></div>
   <p class="small">Přihlášen jako <b>${ROLE_NAME[W.role]||''}</b>${W.code?` · kód ${esc(W.code.slice(0,4))}-••••`:''} · ${W.online?'online':'offline, změny se uloží po připojení'}</p></section>`;
  if(adm){const cc=coachCodes();if(W.pins===null){W.pins=undefined;loadPins()}
-  h+=`<section class="card"><h2>Kód pro trenéry</h2>
+  h+=`<h2 class="sect">Správa <span class="small muted">jen správce</span></h2><section class="card"><h2>Kód pro trenéry</h2>
   <p class="small muted">Jeden společný kód pro všechny trenéry. Trenéři plánují tréninky, upravují soupisky v záložce Tým, úrovně, dovednosti a seznam trenérů. Nové týmy zakládáš ve Scorekeeperu.</p>
   ${W.pins===undefined?'<p class="small muted">Načítám…</p>':cc.length?`<div class="row">${cc.map(c=>`<code class="code">${esc(c)}</code>`).join(' ')}</div>`:'<p class="small">Zatím žádný kód.</p>'}
   <div class="row"><button class="btn sm" data-a="wpinnew">${cc.length?'Vyměnit kód':'Vytvořit kód'}</button>${cc.length?'<button class="btn ghost sm" data-a="wpindrop">Zrušit kód</button>':''}<button class="btn ghost sm" data-a="wcopy" data-v="${esc(baseUrl())}">Kopírovat odkaz na plánovač</button></div>
   ${W.pinMsg?`<p class="small"><b>${esc(W.pinMsg)}</b></p>`:''}<p class="small muted">„Vyměnit kód“ zruší starý kód a kdo s ním byl přihlášený, bude se muset přihlásit novým.</p></section>`}
- h+=`<section class="card"><div class="sumline"><h2>Týmy</h2></div>
+ if(adm)h+=`<section class="card"><div class="sumline"><h2>Týmy</h2></div>
   ${Object.keys(S.teams).length?`<div class="row">${Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'')).map(([id,x])=>`<button class="chip ${id===S.teamId?'on':''}" data-a="team" data-v="${esc(id)}">${esc(x.name)} · ${(x.players||[]).length}</button>`).join('')}</div>`:`<p class="muted">${S.ready?'Ve Scorekeeperu zatím není žádný tým.':'Načítám týmy…'}</p>`}
   <p class="small muted">Týmy jsou společné se Scorekeeperem. Soupisku upravíš v záložce Tým, nový tým založíš ve Scorekeeperu.</p>
   ${Object.keys(S.teams).length?`<div class="field"><span class="label">Export do Excelu</span><div class="row"><button class="btn ghost sm" data-a="xlsone">⬇ ${esc(team()?team().name:'')}</button>${Object.keys(S.teams).length>1?'<button class="btn ghost sm" data-a="xlsall">⬇ Všechny týmy</button>':''}</div><span class="small muted">Jméno, kategorie a úroveň dětí. Všechny týmy = jeden list se sloupcem Tým.</span></div>`:''}</section>`;
- h+=vSeaSet();
+ if(adm)h+=vSeaSet()+'<h2 class="sect">Trenéři a aplikace</h2>';
  if(t)h+=vStaff();
  h+=`${tplList().length?`<section class="card"><h2>Šablony tréninku</h2><div class="dl">${tplList().map(([id,tp])=>`<div class="sumline"><span><b>${esc(tp.name)}</b> · ${tplMin(tp)} min<br><span class="small muted">${tp.blocks.map(b=>BT[b.type]||b.type).join(' → ')}</span></span>${S.confirm==='t_'+id?`<span class="row"><button class="btn danger sm" data-a="tpldel" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></span>`:`<button class="ib" data-a="tplask" data-v="${esc(id)}" aria-label="Smazat šablonu ${esc(tp.name)}">✕</button>`}</div>`).join('')}</div></section>`:''}
  <section class="card"><h2>Aplikace v tomto telefonu</h2>

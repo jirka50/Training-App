@@ -1238,8 +1238,8 @@ function vParents(){return `<section class="card"><div class="sumline"><h2>Pro r
  <textarea id="parentsTxt" rows="14">${esc(parentsText(S.plan))}</textarea>${parentsPub()}</section>`}
 
 /* ===== Vykreslení ===== */
-const MENU=[['Trénink',['plan','train','field']],['Tým',['kids','hist']],['Knihovna',['lib']],['Nastavení',['set']]];
-const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['kids','Děti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
+const MENU=[['Trénink',['plan','train','field','hist']],['Tým',['kids']],['Knihovna',['lib']],['Nastavení',['set']]];
+const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['kids','Dovednosti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
 let pend=false;
 function render(force){
  const ae=document.activeElement;
@@ -1446,7 +1446,7 @@ function openMk(){const p=S.plan;if(!p)return;if(!S.mk||!SK.some(x=>x.id===S.mk)
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Kdo co zvládl"><div class="sumline"><h2>Kdo co zvládl</h2><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <div class="field"><span class="label">Dovednost</span><select id="mk_sk" data-c="mksk">${FOCUS.map(f=>`<optgroup label="${esc(CATS[f])}">${SK.filter(x=>x.c===f).map(x=>`<option value="${x.id}" ${x.id===sk.id?'selected':''}>${esc(x.n)}</option>`).join('')}</optgroup>`).join('')}</select></div>
   <p class="small"><b>${done} z ${tot}</b> dětí na tréninku to zvládá. Klepni na dítě, které to dnes předvedlo; dalším klepnutím značku zrušíš.</p>
-  ${grp}<p class="small muted">Ukládá se hned do karty dítěte (Děti → dovednosti) a počítá se do návrhu úrovně.</p></div>`;
+  ${grp}<p class="small muted">Ukládá se hned do karty dítěte (Dovednosti) a počítá se do návrhu úrovně.</p></div>`;
  sh.hidden=false;sh.dataset.id=''}
 async function mkToggle(key){const p=S.plan,x=kid(key,p),t=clone(S.teams[x.tid]);if(!t)return;const pl=(t.players||[]).find(q=>q.num===x.num);if(!pl)return;const sk=skOf(pl),id=S.mk;
  pl.sk=sk.includes(id)?sk.filter(q=>q!==id):sk.concat([id]);await Store.put('teams',x.tid,t);openMk()}

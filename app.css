@@ -228,6 +228,8 @@ table.mx th{font:600 14px var(--f-disp);letter-spacing:.05em;text-transform:uppe
 details summary{cursor:pointer;font:700 18px var(--f-disp);text-transform:uppercase;letter-spacing:.04em}
 @media (prefers-reduced-motion:no-preference){.prog i{transition:width .25s linear}}
 
+h2.sect{margin:18px 4px 2px;font-size:22px}
+h2.sect .small{font-family:var(--f-body);font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px}
 .partxt{white-space:pre-wrap;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.45}
 .why{margin:6px 0 0;padding-left:18px}
 .why li{margin:3px 0}
