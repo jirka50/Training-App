@@ -1180,13 +1180,17 @@ const SEA=()=>S.season||{};
 const DOW=['Ne','Po','Út','St','Čt','Pá','So'],DOWL=['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
 const isoD=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const inSeason=d=>{const s=SEA();return !!d&&(!s.from||d>=s.from)&&(!s.to||d<=s.to)};
-function nextTraining(from){const s=SEA(),days=s.days||[];if(!days.length)return null;let d=new Date((s.from&&s.from>from?s.from:from)+'T12:00');
- for(let i=0;i<8;i++){const iso=isoD(d);if(days.includes(d.getDay()))return s.to&&iso>s.to?null:iso;d.setDate(d.getDate()+1)}return null}
+/* Zimní příprava: část sezóny s vlastním rozvrhem (dny, čas, délka, prostor) */
+const inWinter=iso=>{const w=SEA().winter;return !!(w&&w.from&&w.to&&iso&&iso>=w.from&&iso<=w.to)};
+function schedAt(iso){const s=SEA(),w=s.winter||{};if(inWinter(iso))return{winter:true,days:(w.days&&w.days.length?w.days:s.days)||[],time:w.time||s.time||'',minutes:+w.minutes||0,venue:w.venue||'hala'};return{winter:false,days:s.days||[],time:s.time||'',minutes:0,venue:''}}
+function nextTraining(from){const s=SEA();let d=new Date((s.from&&s.from>from?s.from:from)+'T12:00');
+ for(let i=0;i<15;i++){const iso=isoD(d);if(s.to&&iso>s.to)return null;if((schedAt(iso).days||[]).includes(d.getDay()))return iso;d.setDate(d.getDate()+1)}return null}
+function applySched(iso){const sc=schedAt(iso);if(sc.winter){S.draft.venue=sc.venue||'hala';if(sc.minutes&&TPL[sc.minutes]){S.draft.minutes=sc.minutes;S.draft.tpl=''}}}
 function seasonWeek(date){const st=SEA().plan;if(!st||!date)return 0;const n=Math.floor((new Date(date+'T12:00')-new Date(st+'T12:00'))/(7*864e5))+1;return n>=1&&n<=SEASON.length?n:0}
 const dowShort=iso=>DOW[new Date(iso+'T12:00').getDay()].toLowerCase();
 function vSeaHead(){const s=SEA();if(!s.name)return '';const d=S.draft,nx=nextTraining(today()),wk=seasonWeek(d.date);
  const out=s.to&&today()>s.to,pre=s.from&&today()<s.from;
- return `<p class="small sea">📅 <b>${esc(s.name)}</b>${pre?' začíná '+fmtDate(s.from):out?' skončila '+fmtDate(s.to):''}${wk?' · týden '+wk+' z '+SEASON.length:''}${nx?` · příští trénink ${dowShort(nx)} ${fmtDate(nx)}${s.time?' v '+esc(s.time):''}`:''}${nx&&d.date!==nx?` <button class="btn ghost sm" data-a="seanext" data-v="${nx}">Naplánovat na ${dowShort(nx)} ${fmtDate(nx).replace(/ \d{4}$/,'')}</button>`:''}</p>`}
+ return `<p class="small sea">📅 <b>${esc(s.name)}</b>${pre?' začíná '+fmtDate(s.from):out?' skončila '+fmtDate(s.to):''}${wk?' · týden '+wk+' z '+SEASON.length:''}${inWinter(d.date)?' · ❄ zimní příprava':''}${nx?` · příští trénink ${dowShort(nx)} ${fmtDate(nx)}${schedAt(nx).time?' v '+esc(schedAt(nx).time):''}${schedAt(nx).winter&&!inWinter(d.date)?' (zimní příprava)':''}`:''}${nx&&d.date!==nx?` <button class="btn ghost sm" data-a="seanext" data-v="${nx}">Naplánovat na ${dowShort(nx)} ${fmtDate(nx).replace(/ \d{4}$/,'')}</button>`:''}</p>`}
 function vSeason(){const d=S.draft,dw=doneWeeks(selTeams()),nx=SEASON.findIndex((_,i)=>!dw.has(i+1))+1,w=d.week?SEASON[d.week-1]:null;
  return `<div class="field"><div class="sumline"><span class="label">Sezónní plán · hotovo ${dw.size} z ${SEASON.length}</span>${(()=>{const cw=seasonWeek(d.date);return cw&&d.week!==cw?`<button class="btn ghost sm" data-a="week" data-v="${cw}">Podle kalendáře: týden ${cw}</button>`:nx&&!cw&&d.week!==nx?`<button class="btn ghost sm" data-a="week" data-v="${nx}">Další: týden ${nx}</button>`:''})()}</div>
   <div class="row"><button class="chip ${!d.week?'on':''}" data-a="week" data-v="0">Bez plánu</button>${SEASON.map((x,i)=>`<button class="chip ${d.week===i+1?'on':''}" data-a="week" data-v="${i+1}" aria-pressed="${d.week===i+1}" title="${esc(x.n)}">${dw.has(i+1)?'✓ ':''}${i+1}</button>`).join('')}</div>
@@ -1263,7 +1267,7 @@ function noTeam(){return `<section class="card empty"><h2>Zatím žádný tým</
 
 function vPlan(){
  if(!team())return noTeam();
- if(S.draft.date<today()){const nx=nextTraining(today());if(nx){S.draft.date=nx;const w=seasonWeek(nx);if(w)S.draft.week=w;saveDraft()}}
+ if(S.draft.date<today()){const nx=nextTraining(today());if(nx){S.draft.date=nx;const w=seasonWeek(nx);if(w)S.draft.week=w;applySched(nx);saveDraft()}}
  const d=S.draft,st=selTeams(),mt=st.length>1,pr=presentKeys(),cs=coachPool(),sel=coachSelIds(),gs=guests();
  const all=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||''));
  const nAll=st.reduce((s,t)=>s+plOf(t).length,0);
@@ -1621,7 +1625,7 @@ const actions={
  vtest:()=>say('Stanoviště. Každá skupina ke svému trenérovi. Ještě minuta.',true),
  menu:()=>{S.menu=!S.menu;render(true)},
  tab:v=>{S.menu=false;S.tab=v;ls.set('u7-tab',v);S.sel=null;render(true);window.scrollTo(0,0)},
- venue:v=>{S.draft.venue=v;saveDraft();render(true)},seanext:v=>{S.draft.date=v;const w=seasonWeek(v);if(w)S.draft.week=w;saveDraft();render(true)},age:v=>{S.draft.ageBy=Object.assign({},S.draft.ageBy,{[selKey()]:v});S.draft.age='';saveDraft();render(true)},
+ venue:v=>{S.draft.venue=v;saveDraft();render(true)},seanext:v=>{S.draft.date=v;const w=seasonWeek(v);if(w)S.draft.week=w;applySched(v);saveDraft();render(true)},age:v=>{S.draft.ageBy=Object.assign({},S.draft.ageBy,{[selKey()]:v});S.draft.age='';saveDraft();render(true)},
  min:v=>{S.draft.minutes=+v;S.draft.tpl='';saveDraft();render(true)},
  focus:v=>{const f=S.draft.focus;const i=f.indexOf(v);if(i>=0)f.splice(i,1);else f.push(v);saveDraft();render(true)},
  ctog:v=>{const s=coachSelIds();const i=s.indexOf(v);if(i>=0)s.splice(i,1);else s.push(v);S.draft.coachSel[selKey()]=s;saveDraft();render(true)},

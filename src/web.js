@@ -264,7 +264,7 @@ kidPh=x=>{const img=x&&x.tid?photoOf(x.tid,{num:x.num,name:x.name}):'';return im
 dipLogo='logo.png';kidImg=x=>x&&x.tid?photoOf(x.tid,{num:x.num,name:x.name}):'';
 /* ---------- Počasí na den tréninku (Open-Meteo, bez klíče) ---------- */
 const WX_DEF={lat:50.034,lon:14.435,name:'Eagles Park, Krč',h:17};
-const wxPref=()=>{const P=Object.assign({},WX_DEF,S.pref.wx||{}),t=SEA().time;if(t&&/^\d{1,2}:/.test(t))P.h=Math.min(21,+t.split(':')[0]);return P};
+const wxPref=()=>{const P=Object.assign({},WX_DEF,S.pref.wx||{}),t=schedAt(S.draft&&S.draft.date||today()).time;if(t&&/^\d{1,2}:/.test(t))P.h=Math.min(21,+t.split(':')[0]);return P};
 const WX={data:null,key:'',at:0,busy:false,err:false};
 function wxLoad(){const P=wxPref(),key=P.lat.toFixed(2)+','+P.lon.toFixed(2);
  if(!WX.data&&!WX.key){const c=ls.get('u7w-wx',null);if(c&&c.key){WX.data=c.data;WX.key=c.key;WX.at=c.at}}
@@ -335,7 +335,7 @@ document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||el.data
 
 /* ---------- Sezóna (training/season, společná pro všechny trenéry) ---------- */
 function seaSave(patch){if(W.role!=='admin'){toast('Sezónu nastavuje správce.');return}S.season=Object.assign({},SEA(),patch);ls.set('u7w-season',S.season);Web.write('training/season',{ts:Date.now(),json:J(S.season)});render(true)}
-function vSeaSet(){const s=SEA(),y=new Date().getFullYear(),days=s.days||[];
+function vSeaSet(){const s=SEA(),y=new Date().getFullYear(),days=s.days||[],wi=s.winter||{};
  if(W.role!=='admin')return `<section class="card"><div class="sumline"><h2>Sezóna</h2></div>${s.name?`<p><b>${esc(s.name)}</b>${s.from||s.to?' · '+(s.from?fmtDate(s.from):'…')+' – '+(s.to?fmtDate(s.to):'…'):''}</p>
   <p class="small">${days.length?'Tréninky: '+[1,2,3,4,5,6,0].filter(d=>days.includes(d)).map(d=>DOWL[d]).join(', '):'Tréninkové dny nejsou nastavené'}${s.time?' v '+esc(s.time):''}${s.plan?' · týden 1 plánu od '+fmtDate(s.plan):''}</p>`:'<p class="small">Sezóna zatím není nastavená.</p>'}
   <p class="small muted">Sezónu nastavuje správce.</p></section>`;
@@ -352,9 +352,21 @@ function vSeaSet(){const s=SEA(),y=new Date().getFullYear(),days=s.days||[];
    <div class="field"><span class="label">Týden 1 sezónního plánu</span><input type="date" id="sea_plan" data-c="seaplan" value="${esc(s.plan||'')}"><span class="small muted">${s.plan?'Týden '+(seasonWeek(today())||'–')+' z '+SEASON.length+' podle dnešního data.':'Od tohoto dne se počítá 10 týdnů plánu.'}</span></div>
    <div class="field"><span class="label">Datum na diplomech</span><input type="date" id="sea_dip" data-c="seadip" value="${esc(s.dip||'')}"><span class="small muted">${s.dip?'':'Když nevyplníš, dá se datum tisku.'}</span></div>
   </div>
+  <div class="field winter"><span class="label">❄ Zimní příprava</span><p class="small muted">Část sezóny, kdy se trénuje jinak (např. v hale). Ve dnech zimní přípravy se použije tento rozvrh.</p>
+   <div class="grid2"><div class="field"><span class="label">Začátek</span><input type="date" id="seaw_from" data-c="seawfrom" value="${esc(wi.from||'')}"></div>
+   <div class="field"><span class="label">Konec</span><input type="date" id="seaw_to" data-c="seawto" value="${esc(wi.to||'')}"></div></div>
+   <div class="field"><span class="label">Tréninkové dny v přípravě</span><div class="row" style="gap:6px">${[1,2,3,4,5,6,0].map(d=>{const on=(wi.days||[]).includes(d);return `<button class="chip ${on?'on':''}" data-a="seawday" data-v="${d}" aria-pressed="${on}" title="${DOWL[d]}">${DOW[d]}</button>`}).join('')}</div>${(wi.days||[]).length?'':'<span class="small muted">Když nevybereš, platí dny sezóny.</span>'}</div>
+   <div class="grid2"><div class="field"><span class="label">Čas tréninku</span><input type="time" id="seaw_time" data-c="seawtime" value="${esc(wi.time||'')}"></div>
+   <div class="field"><span class="label">Délka tréninku</span><select id="seaw_min" data-c="seawmin"><option value="">jako obvykle</option>${Object.keys(TPL).map(m=>`<option value="${m}" ${String(wi.minutes||'')===m?'selected':''}>${m} min</option>`).join('')}</select></div></div>
+   <div class="field"><span class="label">Prostor</span><div class="seg">${[['hala','Hala'],['venku','Venku']].map(([k,l])=>`<button data-a="seawvenue" data-v="${k}" class="${(wi.venue||'hala')===k?'on':''}">${l}</button>`).join('')}</div></div>
+   ${wi.from&&wi.to?`<p class="small">Zimní příprava ${fmtDate(wi.from)} – ${fmtDate(wi.to)}${inWinter(today())?' · <b>právě probíhá</b>':''}</p>`:''}</div>
   ${s.name?(W.seaConf?`<div class="note"><b>Začít ${esc(seaNext())}?</b><br><span class="small">Vymaže se začátek, konec, týden 1 plánu a datum na diplomech. Tréninkové dny a čas zůstanou. Staré tréninky zůstanou v Historii pod „${esc(s.name)}“.</span><div class="row" style="margin-top:8px"><button class="btn sm" data-a="seanext2">Začít novou sezónu</button><button class="btn ghost sm" data-a="seanextno">Zrušit</button></div></div>`:`<div class="row"><button class="btn ghost sm" data-a="seanextask">Začít novou sezónu…</button></div>`):`<div class="row"><button class="btn sm" data-a="seanew" data-v="${y}">Založit sezónu ${y}</button></div>`}</section>`}
 function seaNext(){const n=SEA().name||'',m=n.match(/(\d{4})(?!.*\d{4})/),y=new Date().getFullYear();if(m){const ny=Math.max(+m[1]+1,y);return n.replace(/(\d{4})(?!.*\d{4})/,String(ny))}return 'Sezóna '+(y+1)}
-document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.dataset.c;if(!c||!/^sea/.test(c))return;
+document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.dataset.c;if(!c||!/^seaw/.test(c))return;
+ const k={seawfrom:'from',seawto:'to',seawtime:'time',seawmin:'minutes'}[c];if(!k)return;const v=(el.value||'').trim(),wi=Object.assign({},SEA().winter);
+ if((k==='from'&&wi.to&&v&&v>wi.to)||(k==='to'&&wi.from&&v&&v<wi.from)){toast('Konec zimní přípravy musí být po začátku.');render(true);return}
+ wi[k]=k==='minutes'?(+v||''):v;seaSave({winter:wi})});
+document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.dataset.c;if(!c||!/^sea/.test(c)||/^seaw/.test(c))return;
  const k={seaname:'name',seatime:'time',seafrom:'from',seato:'to',seaplan:'plan',seadip:'dip'}[c];if(!k)return;const v=(el.value||'').trim();
  if(k==='name'&&!v){toast('Sezóna musí mít název.');render(true);return}
  if((k==='from'&&SEA().to&&v&&v>SEA().to)||(k==='to'&&SEA().from&&v&&v<SEA().from)){toast('Konec sezóny musí být po začátku.');render(true);return}
@@ -393,9 +405,11 @@ Object.assign(actions,{
  pubt:v=>{const p=S.plan;if(!p)return;const s=pubSel(p).slice(),i=s.indexOf(v);if(i>=0)s.splice(i,1);else s.push(v);PUBT[p.id]=s;render(true)},
  xlsone:()=>exportXls([S.teamId]),xlsall:()=>exportXls(Object.keys(S.teams).sort((a,b)=>tName(a).localeCompare(tName(b),'cs'))),
  pubgo:()=>pubPlan(),pubdel:()=>unpubPlan(),pexp:v=>{PEXP[v]=1;renderParentPage()},
+ seawday:v=>{const wi=Object.assign({},SEA().winter),ds=(wi.days||[]).slice(),d=+v,i=ds.indexOf(d);if(i>=0)ds.splice(i,1);else ds.push(d);wi.days=ds.sort();seaSave({winter:wi})},
+ seawvenue:v=>seaSave({winter:Object.assign({},SEA().winter,{venue:v})}),
  seaday:v=>{const d=+v,ds=(SEA().days||[]).slice();const i=ds.indexOf(d);if(i>=0)ds.splice(i,1);else ds.push(d);seaSave({days:ds.sort()})},
  seanextask:()=>{W.seaConf=true;render(true)},seanextno:()=>{W.seaConf=false;render(true)},
- seanext2:()=>{const nm=seaNext();W.seaConf=false;S.hist.sea=true;seaSave({name:nm,from:'',to:'',plan:'',dip:''});toast(nm+' začala.')},
+ seanext2:()=>{const nm=seaNext();W.seaConf=false;S.hist.sea=true;seaSave({name:nm,from:'',to:'',plan:'',dip:'',winter:Object.assign({},SEA().winter,{from:'',to:''})});toast(nm+' začala.')},
  seanew:v=>seaSave({name:'Sezóna '+v,days:SEA().days||[],time:SEA().time||''}),
  wxgeo:()=>{if(!navigator.geolocation){toast('Telefon polohu nepodporuje.');return}navigator.geolocation.getCurrentPosition(pos=>{S.pref.wx=Object.assign({},S.pref.wx,{lat:+pos.coords.latitude.toFixed(3),lon:+pos.coords.longitude.toFixed(3),name:'u tebe (poloha telefonu)'});savePref();WX.at=0;toast('Poloha uložena.');render(true)},()=>toast('Polohu se nepodařilo zjistit.'),{timeout:10000})},
  wxreset:()=>{const h=wxPref().h;S.pref.wx={h};savePref();WX.at=0;render(true)},
