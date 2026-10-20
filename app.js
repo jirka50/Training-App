@@ -1524,26 +1524,6 @@ async function newCoachPin(){if(!W.fb||W.role!=='admin')return;const u={};coachC
  try{await W.fb.db.ref('pinmap').update(u);W.pinMsg='Nový kód pro trenéry: '+code+'. Starý kód přestal platit.'}catch(e){W.pinMsg=isPerm(e)?'Pravidla databáze zatím roli trenér neznají. Vlož do Firebase nová pravidla (README).':'Kód se nepodařilo vytvořit.'}loadPins()}
 async function dropCoachPins(){if(!W.fb||W.role!=='admin')return;const u={};coachCodes().forEach(c=>u[c]=null);try{await W.fb.db.ref('pinmap').update(u);W.pinMsg='Kód pro trenéry je zrušený.'}catch(e){W.pinMsg='Kód se nepodařilo zrušit.'}loadPins()}
 
-/* ---------- správce: převzetí dat z verze v Claude ---------- */
-
-function planImport(b){const tl=W.raw.teamlist||{},byName={};Object.keys(tl).forEach(id=>{byName[nameKey(tl[id]&&tl[id].name)]=id});
- const map={},miss=[];Object.entries(b.teams||{}).forEach(([old,t])=>{const nid=byName[nameKey(t.name)];if(nid)map[old]=nid;else if((t.players||[]).length||(t.coaches||[]).length)miss.push(t.name)});return{map,miss}}
-async function runImport(){const b=W.imp;if(!b)return;const {map,miss}=planImport(b),db=W.fb.db,ts=Date.now(),u={},st=clone(staffList());
- Object.entries(map).forEach(([old,nid])=>{const t=b.teams[old],R=W.raw.roster[nid]||{},ps=Array.isArray(R.players)?R.players:[],kids=Object.assign({},W.raw.kids[nid]||{});
-  (t.players||[]).forEach(p=>{if(!p.lvl&&!(p.sk&&p.sk.length))return;const m=ps.find(x=>String(x.num)===String(p.num))||ps.find(x=>x.name===p.name);if(m)kids[String(m.num)]={lvl:p.lvl||'',sk:p.sk||[],name:m.name||p.name}});
-  u['training/kids/'+nid]={ts,json:J(kids)};
-  (t.coaches||[]).forEach(c=>{const nm=String(c.name||c).trim();if(!nm)return;let x=st.find(y=>nameKey(y.name)===nameKey(nm));if(!x){x={id:'c'+uid(),name:nm,teams:[]};st.push(x)}if(!x.teams.includes(nid))x.teams.push(nid)})});
- u['training/staff']={ts,json:J(st)};
- const remapKey=k=>{k=String(k);const i=k.indexOf('|');return i<0?k:(map[k.slice(0,i)]||k.slice(0,i))+k.slice(i)};
- Object.entries(b.plans||{}).forEach(([id,p])=>{p=clone(p);p.team=map[p.team]||p.team;if(Array.isArray(p.teams))p.teams=p.teams.map(t=>map[t]||t);
-  if(Array.isArray(p.present))p.present=p.present.map(k=>String(k).includes('|')?remapKey(k):(map[p.team]?p.team+'|'+k:k));
-  if(Array.isArray(p.groups))p.groups=p.groups.map(g=>g.map(k=>String(k).includes('|')?remapKey(k):k));u['training/plans/'+id]={ts,json:J(p)}});
- Object.entries(b.custom||{}).forEach(([id,c])=>{u['training/custom/'+id]={ts,json:J(c)}});
- Object.entries(b.tpls||{}).forEach(([id,t])=>{u['training/tpls/'+id]={ts,json:J(t)}});
- try{await db.ref().update(u);W.imp=null;W.impMsg='Převzato: '+Object.keys(map).length+' týmy, '+Object.keys(b.plans||{}).length+' tréninků, '+Object.keys(b.tpls||{}).length+' šablon, '+Object.keys(b.custom||{}).length+' vlastních položek.'+(miss.length?' Nenalezené týmy: '+miss.join(', ')+'.':'')}
- catch(e){W.impMsg=isPerm(e)?'Převzetí odmítla pravidla databáze. Vlož do Firebase nová pravidla (README) a zkus to znovu.':'Převzetí se nepovedlo.'}render(true)}
-document.addEventListener('change',e=>{if(e.target.id!=='wimpfile')return;const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
- r.onload=()=>{try{const b=JSON.parse(r.result);if(!b||b.app!=='u7-planovac')throw 0;W.imp=b;W.impMsg=''}catch(x){W.imp=null;W.impMsg='Tohle není záloha tréninkového plánovače.'}render(true)};r.readAsText(f)});
 
 
 /* ---------- záložka Tým: stejné funkce jako karta Tým ve Scorekeeperu ---------- */
@@ -1744,12 +1724,6 @@ function vSet(){
   <p class="small muted">Týmy jsou společné se Scorekeeperem. Soupisku upravíš v záložce Tým, nový tým založíš ve Scorekeeperu.</p></section>`;
  h+=vSeaSet();
  if(t)h+=vStaff();
- if(adm)h+=`<section class="card"><h2>Převzít data z verze v Claude</h2>
-  <p class="small muted">Jednorázově nahraj soubor zálohy (planovac-zaloha.json). Týmy se spárují podle názvu, převezmou se trenéři, úrovně, dovednosti, uložené tréninky, šablony a vlastní hry.</p>
-  <input type="file" id="wimpfile" accept=".json,application/json" aria-label="Soubor zálohy">
-  ${W.imp?(()=>{const {map,miss}=planImport(W.imp);return `<div class="note">Spárované týmy: ${Object.keys(map).map(k=>esc(W.imp.teams[k].name)).join(', ')||'žádný'}${miss.length?`<br>Bez protějšku ve Scorekeeperu: ${miss.map(esc).join(', ')}`:''}<br>Tréninky ${Object.keys(W.imp.plans||{}).length} · šablony ${Object.keys(W.imp.tpls||{}).length} · vlastní položky ${Object.keys(W.imp.custom||{}).length}
-   <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wimpgo">Převzít</button><button class="btn ghost sm" data-a="wimpno">Zrušit</button></div></div>`})():''}
-  ${W.impMsg?`<p class="small"><b>${esc(W.impMsg)}</b></p>`:''}</section>`;
  h+=`${tplList().length?`<section class="card"><h2>Šablony tréninku</h2><div class="dl">${tplList().map(([id,tp])=>`<div class="sumline"><span><b>${esc(tp.name)}</b> · ${tplMin(tp)} min<br><span class="small muted">${tp.blocks.map(b=>BT[b.type]||b.type).join(' → ')}</span></span>${S.confirm==='t_'+id?`<span class="row"><button class="btn danger sm" data-a="tpldel" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></span>`:`<button class="ib" data-a="tplask" data-v="${esc(id)}" aria-label="Smazat šablonu ${esc(tp.name)}">✕</button>`}</div>`).join('')}</div></section>`:''}
  <section class="card"><h2>Aplikace v tomto telefonu</h2>
   <div class="field"><span class="label">Vzhled</span><select id="pf_theme" data-c="theme">${[['','podle telefonu'],['light','světlý'],['dark','tmavý'],['sun','na slunce (vysoký kontrast)']].map(([v,l])=>`<option value="${v}" ${(S.pref.theme||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>
@@ -1779,8 +1753,7 @@ Object.assign(actions,{
  whodelgo:v=>{const x=kid(v);W.phDel=null;photoSet(x.tid,x.num,null);openWho(v);if(S.tab==='who')render(true);toast('Fotka odebrána.')},
  whokid:v=>{const x=kid(v);if(S.teamId!==x.tid){S.teamId=x.tid;ls.set('u7-team',x.tid)}openKid(x.num)},
  stteam:(v,el)=>{const list=clone(staffList()),c=list.find(x=>x.id===v),t=el.dataset.t;if(!c)return;c.teams=c.teams||[];const i=c.teams.indexOf(t);if(i>=0)c.teams.splice(i,1);else c.teams.push(t);staffSave(list)},
- stdel:v=>{W.sdel=v;render(true)},stdelno:()=>{W.sdel=null;render(true)},stdelgo:v=>{W.sdel=null;staffSave(clone(staffList()).filter(c=>c.id!==v));toast('Trenér odebrán.')},
- wimpgo:()=>runImport(),wimpno:()=>{W.imp=null;W.impMsg='';render(true)}
+ stdel:v=>{W.sdel=v;render(true)},stdelno:()=>{W.sdel=null;render(true)},stdelgo:v=>{W.sdel=null;staffSave(clone(staffList()).filter(c=>c.id!==v));toast('Trenér odebrán.')}
 });
 
 applyTheme(true);syncLine();Store.start();

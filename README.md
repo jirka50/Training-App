@@ -24,7 +24,6 @@ Plánovač používá **stejnou databázi Firebase jako Baseball Scorekeeper**. 
 1. Ve Firebase konzoli (projekt eagles-scorekeeper) → Realtime Database → Rules vlož obsah `database.rules.json` a dej Publish.
 2. Nahraj soubory do tohoto repozitáře a zapni GitHub Pages (Settings → Pages → Deploy from branch → main / root).
 3. Otevři plánovač, přihlas se kódem správce, v Nastavení vytvoř kód pro trenéry.
-4. Jednorázově v Nastavení → „Převzít data z verze v Claude“ nahraj `planovac-zaloha.json`.
 
 ## Verze
 Číslo verze je v `app.js` (`APP_VERSION`, `APP_DATE`, stejně jako ve Scorekeeperu). Zobrazuje se pod názvem v hlavičce a dole v Nastavení. Číslo verze se mění jen po odsouhlasení správcem – před změnou se zeptat. Při každém vydání se ale zvyšuje název mezipaměti v `sw.js` (`u7-vN`), aby telefony načetly novou verzi.
