@@ -830,6 +830,10 @@ function dipHtml(p,tid){const t=S.teams[tid]||{},h=skOf(p),bs=badgesOf(p),img=ki
   <div class="dip-k"><b>Zvládnuté dovednosti</b><ul>${(h.length?SK.filter(x=>h.includes(x.id)):[]).map(x=>`<li>✓ ${esc(x.n)}</li>`).join('')||'<li>Začínám a bavím se baseballem!</li>'}</ul></div>
   <div class="dip-f"><span>${co.length?esc(co.join(', ')):'&nbsp;'}<br><small>trenéři</small></span><span>${fmtDate(SEA().dip||today())}<br><small>datum</small></span></div>
  </div></section>`}
+/* Tisk z menu prohlížeče (Ctrl+P / Sdílet → Tisk) v Tréninku a Na hřišti: místo stránky s ovládáním jen čistý popis tréninku */
+if(window.addEventListener){window.addEventListener('beforeprint',()=>{if(document.body.classList.contains('printing')||!S.plan||!['train','field'].includes(S.tab))return;
+ let el=document.getElementById('print');if(!el){el=document.createElement('div');el.id='print';document.body.appendChild(el)}el.innerHTML=planPrintHtml(S.plan);document.body.classList.add('printing','autoprint')});
+window.addEventListener('afterprint',()=>{if(!document.body.classList.contains('autoprint'))return;document.body.classList.remove('printing','autoprint');const el=document.getElementById('print');if(el)el.innerHTML=''});}
 function printHtml(html){let el=document.getElementById('print');if(!el){el=document.createElement('div');el.id='print';document.body.appendChild(el)}
  el.innerHTML=html;document.body.classList.add('printing');
  const done=()=>{document.body.classList.remove('printing');el.innerHTML='';window.removeEventListener('afterprint',done)};window.addEventListener('afterprint',done);
@@ -848,7 +852,7 @@ function planPrintHtml(p){const t0=SEA().time||'',G=p.groups||[],gear=new Map();
   <p>Trenéři: ${(p.coaches||[]).map(esc).join(', ')||'–'} · dětí ${(p.present||[]).length}${p.week&&SEASON[p.week-1]?' · sezónní plán, týden '+p.week+': '+esc(SEASON[p.week-1].n):''}</p></div></div>
   ${blocks}
   ${G.length>1?`<h2>Skupiny</h2><div class="pr-g">${G.map((g,gi)=>`<div><b>Skupina ${GL[gi]}${p.coaches[gi]?' · '+esc(p.coaches[gi]):''}</b><br>${g.map(n=>{const x=kid(n,p);return esc((noNum(x.num)?'':x.num+' ')+(x.name||'?'))}).join(', ')}</div>`).join('')}</div>`:''}
-  <h2>Pomůcky</h2><p class="pr-gear">${[...gear.keys()].sort((a,b)=>a.localeCompare(b,'cs')).map(g=>'<span>☐ '+esc(g)+'</span>').join(' ')||'bez pomůcek'}</p>
+  <h2>Pomůcky</h2><p class="pr-gear">${[...gear.keys()].sort((a,b)=>a.localeCompare(b,'cs')).map(esc).join(', ')||'bez pomůcek'}</p>
   ${p.note?`<h2>Poznámka</h2><p>${esc(p.note)}</p>`:''}</section>`}
 /* ===== Docházka za sezónu (z tréninků uložených v Historii) ===== */
 function attStats(tid){const ps=plOf(tid),seaOn=!!(SEA().from||SEA().to),pl=Object.values(S.plans).filter(p=>planTeams(p).includes(tid)&&p.date<=today()&&(!seaOn||inSeason(p.date)));
@@ -1506,10 +1510,17 @@ const Web={
 /* ---------- Stránka pro rodiče: public/<tým>/training/<id> = {ts,json}; čte kdokoli, zapisuje správce a trenér ---------- */
 const PARENT=(()=>{try{return new URLSearchParams(location.search).get('rodice')||''}catch(e){return''}})();
 const parentUrl=tid=>location.origin+location.pathname+'?rodice='+encodeURIComponent(tid);
+const WHY={warm:'Zahřáté tělo se méně zraní a děti se hravou formou naladí na trénink.',
+ hazeni:'Správná technika hodu chrání rameno a loket a je základem hry v poli – kdo umí hodit přesně, pomůže týmu zastavit běžce.',
+ chytani:'Chytání dává dětem jistotu a odvahu – kdo se nebojí míče, užije si hru v poli a zabrání soupeři v bězích.',
+ odpal:'Odpal je pro děti nejvíc zábavný; správný postoj a švih vedou k úspěchu a bezpečné zacházení s pálkou chrání ostatní.',
+ mety:'Běh po metách je srdce baseballu – děti se učí pravidla hry, rychlé starty a orientaci na hřišti.',
+ hra:'Hry učí poslouchat trenéra, spolupracovat a chápat, co se na hřišti právě děje.'};
+const pDev=a=>{const d=String(a.dev||'').trim();return d?d.charAt(0).toUpperCase()+d.slice(1):''};
 function pubData(p){const items=[...new Set(p.blocks.flatMap(b=>b.items))].map(id=>ACT[id]).filter(a=>a&&a.k!=='routine');const f=(p.focus||[])[0]||(items[0]||{}).c||'hazeni';
  const seq=items.filter(a=>a.k==='seq'&&a.c!=='warm'&&a.steps),w=p.week&&SEASON[p.week-1],nt=$('#parNote'),hw=$('#parHw');
  return{date:p.date,title:planTitle(p),teams:planTeams(p).map(tName),focus:(p.focus||[]).map(x=>CATS[x]),week:w?{n:p.week,name:w.n}:null,season:p.season||SEA().name||'',
-  items:items.map(a=>({n:a.n,d:short(a.kid||a.d,170)})),learn:seq.map(a=>({n:a.n,steps:a.steps.map(x=>x.n)})),hw:hw?hw.value.trim():(HOME[f]||HOME.hazeni),note:nt?nt.value.trim():''}}
+  items:items.map(a=>({n:a.n,dev:pDev(a)})),whys:[...new Set(items.map(a=>WHY[a.c]?a.c:'hra'))].map(c=>({c:CATS[c]||'',t:WHY[c]})),learn:seq.map(a=>({n:a.n,steps:a.steps.map(x=>x.n)})),hw:hw?hw.value.trim():(HOME[f]||HOME.hazeni),note:nt?nt.value.trim():''}}
 const PUBT={};
 const pubOn=p=>Object.keys(S.teams).filter(t=>W.pub[t]&&W.pub[t][p.id]);
 const pubSel=p=>PUBT[p.id]||[...new Set(planTeams(p).filter(t=>S.teams[t]).concat(pubOn(p)))];
@@ -1539,7 +1550,8 @@ function renderParentPage(){$('#tabs').innerHTML='';const ts=$('#teamSel');if(ts
   (P.err?'<p class="warnnote">Stránku se nepodařilo načíst. Zkontroluj odkaz od trenéra.</p>':L==null?'<p class="muted">Načítám…</p>':!L.length?'<section class="card"><p class="muted">Trenéři sem zatím žádný trénink nezveřejnili.</p></section>':
   L.map((x,i)=>`<section class="card par"><div class="sumline"><h2>${esc(x.title||'Trénink')}</h2><span class="small muted">${fmtDate(x.date)}</span></div>
    ${x.week?`<p class="small">Sezónní plán, týden ${x.week.n}: <b>${esc(x.week.name)}</b></p>`:''}${(x.focus||[]).length?`<p>Trénovali jsme: <b>${x.focus.map(esc).join(', ').toLowerCase()}</b></p>`:''}
-   ${i===0||PEXP[x.id]?`${(x.items||[]).length?`<div class="dl">${x.items.map(a=>`<div><span class="label">${esc(a.n)}</span><p class="small">${esc(a.d)}</p></div>`).join('')}</div>`:''}
+   ${i===0||PEXP[x.id]?`${(x.items||[]).length?`<div class="dl">${x.items.map(a=>`<div><span class="label">${esc(a.n)}</span>${a.dev?`<p class="small">Rozvíjí: ${esc(a.dev)}</p>`:`<p class="small">${esc(a.d||'')}</p>`}</div>`).join('')}</div>`:''}
+   ${(x.whys||[]).length?`<div class="note"><b>Proč to děláme</b><ul class="why">${x.whys.map(y=>`<li><b>${esc(y.c)}:</b> ${esc(y.t)}</li>`).join('')}</ul></div>`:''}
    ${(x.learn||[]).length?`<p><b>Nově se učíme:</b> ${x.learn.map(a=>esc(a.n)+' ('+a.steps.map(esc).join(' → ').toLowerCase()+')').join('; ')}</p>`:''}`:`<button class="btn ghost sm" data-a="pexp" data-v="${esc(x.id)}">Co jsme hráli</button>`}
    ${x.hw?`<div class="note"><b>🏠 Na doma (5 minut):</b> ${esc(x.hw)}</div>`:''}${x.note?`<p class="note">💬 ${esc(x.note)}</p>`:''}</section>`).join(''))+
   `<p class="small muted ver">Tréninkový plánovač U7 · ${verTxt()}</p>`}

@@ -87,6 +87,8 @@ p{margin:0}
 .wx b.big{font-size:22px}
 #print{display:none}
 @media print{
+ body:not(.printing) button:not(.aname),body:not(.printing) select,body:not(.printing) input,body:not(.printing) textarea,body:not(.printing) form,body:not(.printing) .hctl,body:not(.printing) .seg,body:not(.printing) .ctrls,body:not(.printing) .openbar,body:not(.printing) .toast,body:not(.printing) .animbox{display:none!important}
+ body:not(.printing) .card{break-inside:avoid;box-shadow:none}
  @page{size:A4 portrait;margin:12mm}
  @page dip{size:A4 landscape;margin:8mm}
  .dip{page:dip}
@@ -226,6 +228,8 @@ table.mx th{font:600 14px var(--f-disp);letter-spacing:.05em;text-transform:uppe
 details summary{cursor:pointer;font:700 18px var(--f-disp);text-transform:uppercase;letter-spacing:.04em}
 @media (prefers-reduced-motion:no-preference){.prog i{transition:width .25s linear}}
 
+.why{margin:6px 0 0;padding-left:18px}
+.why li{margin:3px 0}
 .par-h{display:flex;gap:14px;align-items:center}
 .par-h img{height:56px;width:auto}
 .par-h h2{margin:0}
