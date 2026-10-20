@@ -1510,20 +1510,25 @@ function pubData(p){const items=[...new Set(p.blocks.flatMap(b=>b.items))].map(i
  const seq=items.filter(a=>a.k==='seq'&&a.c!=='warm'&&a.steps),w=p.week&&SEASON[p.week-1],nt=$('#parNote'),hw=$('#parHw');
  return{date:p.date,title:planTitle(p),teams:planTeams(p).map(tName),focus:(p.focus||[]).map(x=>CATS[x]),week:w?{n:p.week,name:w.n}:null,season:p.season||SEA().name||'',
   items:items.map(a=>({n:a.n,d:short(a.kid||a.d,170)})),learn:seq.map(a=>({n:a.n,steps:a.steps.map(x=>x.n)})),hw:hw?hw.value.trim():(HOME[f]||HOME.hazeni),note:nt?nt.value.trim():''}}
-async function pubPlan(){const p=S.plan;if(!p)return;if(!S.plans[p.id]){toast('Nejdřív trénink ulož do historie.');return}
- const d=pubData(p),ts=Date.now();try{for(const tid of planTeams(p)){await W.fb.db.ref('public/'+tid+'/training/'+p.id).set({ts,json:J(d)});
+const PUBT={};
+const pubOn=p=>Object.keys(S.teams).filter(t=>W.pub[t]&&W.pub[t][p.id]);
+const pubSel=p=>PUBT[p.id]||[...new Set(planTeams(p).filter(t=>S.teams[t]).concat(pubOn(p)))];
+async function pubPlan(){const p=S.plan;if(!p)return;const sel=pubSel(p);if(!sel.length){toast('Vyber aspoň jeden tým.');return}if(!S.plans[p.id]){toast('Nejdřív trénink ulož do historie.');return}
+ const d=pubData(p),ts=Date.now();try{for(const tid of pubOn(p).filter(t=>!sel.includes(t)))await W.fb.db.ref('public/'+tid+'/training/'+p.id).remove();
+  for(const tid of sel){await W.fb.db.ref('public/'+tid+'/training/'+p.id).set({ts,json:J(d)});
    const all=Object.entries(W.pub[tid]||{}).map(([id,v])=>[id,(PJ(v)||{}).date||'']).concat([[p.id,d.date]]);const keep=new Set(all.sort((a,b)=>b[1].localeCompare(a[1])).slice(0,12).map(x=>x[0]));
    all.forEach(([id])=>{if(!keep.has(id))W.fb.db.ref('public/'+tid+'/training/'+id).remove().catch(()=>{})})}
-  toast('Zveřejněno na stránce pro rodiče.')}catch(e){toast(isPerm(e)?'Zápis odmítnut: ve Firebase je potřeba nahrát nová pravidla (database.rules.json).':'Zveřejnění se nepovedlo. Zkus to znovu.')}}
-async function unpubPlan(){const p=S.plan;if(!p)return;try{for(const tid of planTeams(p))await W.fb.db.ref('public/'+tid+'/training/'+p.id).remove();toast('Staženo ze stránky pro rodiče.')}catch(e){toast('Nepovedlo se.')}}
-parentsPub=()=>{const p=S.plan;if(!p)return'';const f=(p.focus||[])[0]||'hazeni',tids=planTeams(p),pv=W.pub[tids[0]]&&W.pub[tids[0]][p.id],pd=pv?PJ(pv):null;
+  toast(sel.length>1?'Zveřejněno pro '+sel.length+' týmy.':'Zveřejněno na stránce pro rodiče.')}catch(e){toast(isPerm(e)?'Zápis odmítnut: ve Firebase je potřeba nahrát nová pravidla (database.rules.json).':'Zveřejnění se nepovedlo. Zkus to znovu.')}}
+async function unpubPlan(){const p=S.plan;if(!p)return;try{for(const tid of pubOn(p))await W.fb.db.ref('public/'+tid+'/training/'+p.id).remove();delete PUBT[p.id];toast('Staženo ze stránky pro rodiče.')}catch(e){toast('Nepovedlo se.')}}
+parentsPub=()=>{const p=S.plan;if(!p)return'';const f=(p.focus||[])[0]||'hazeni',sel=pubSel(p),on=pubOn(p),pv=on.length?W.pub[on[0]][p.id]:null,pd=pv?PJ(pv):null,all=Object.keys(S.teams).sort((a,b)=>tName(a).localeCompare(tName(b),'cs'));
  return `<div class="field" style="margin-top:12px"><span class="label">Stránka pro rodiče</span>
   <p class="small muted">Veřejná stránka týmu se seznamem posledních tréninků (bez jmen a fotek dětí). Odkaz pošli rodičům jednou, nové tréninky se tam objeví samy.</p>
   <div class="field"><span class="label">Na doma</span><input type="text" id="parHw" value="${esc(pd&&pd.hw||HOME[f]||HOME.hazeni)}"></div>
   <div class="field"><span class="label">Vzkaz rodičům (nepovinný)</span><input type="text" id="parNote" value="${esc(pd&&pd.note||'')}" placeholder="např. Příště s sebou lahev s pitím"></div>
+  ${all.length>1?`<div class="field"><span class="label">Zveřejnit pro týmy</span><div class="row" style="gap:6px">${all.map(t=>{const s=sel.includes(t);return `<button class="chip ${s?'on':''}" data-a="pubt" data-v="${esc(t)}" aria-pressed="${s}">${esc(tName(t))}${on.includes(t)?' ✓':''}</button>`}).join('')}</div><span class="small muted">Stejný trénink se objeví na stránce každého vybraného týmu. ✓ = už zveřejněno.</span></div>`:''}
   <div class="row"><button class="btn sm" data-a="pubgo">${pv?'Aktualizovat na stránce':'Zveřejnit pro rodiče'}</button>${pv?'<button class="btn ghost sm" data-a="pubdel">Stáhnout</button>':''}</div>
-  ${pv?`<p class="small">✓ Zveřejněno ${new Date(pv.ts).toLocaleString('cs-CZ',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})}</p>`:''}
-  ${tids.map(t=>`<div class="row"><span class="small">Odkaz ${esc(tName(t))}:</span><button class="btn ghost sm" data-a="wcopy" data-v="${esc(parentUrl(t))}">Kopírovat odkaz</button></div>`).join('')}</div>`};
+  ${pv?`<p class="small">✓ Zveřejněno ${new Date(pv.ts).toLocaleString('cs-CZ',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})}${on.length>1?' pro '+on.map(t=>esc(tName(t))).join(', '):''}</p>`:''}
+  ${sel.map(t=>`<div class="row"><span class="small">Odkaz ${esc(tName(t))}:</span><button class="btn ghost sm" data-a="wcopy" data-v="${esc(parentUrl(t))}">Kopírovat odkaz</button></div>`).join('')}</div>`};
 const P={tid:PARENT,list:null,err:false};
 function parentBoot(){applyTheme();syncLine();const f=fbInit();if(!f){renderParentPage();return}
  f.db.ref('public/'+PARENT+'/training').on('value',s=>{const v=s.val()||{};P.list=Object.entries(v).map(([id,x])=>Object.assign({id,ts:x&&x.ts},PJ(x)||{})).filter(x=>x.date).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);renderParentPage()},()=>{P.err=true;renderParentPage()});
@@ -1782,6 +1787,7 @@ function vSet(){
  h+=`<p class="small muted ver">Tréninkový plánovač U7 · ${verTxt()} · ${new Date(APP_DATE).toLocaleDateString('cs-CZ')}</p>`;
  return h}
 Object.assign(actions,{
+ pubt:v=>{const p=S.plan;if(!p)return;const s=pubSel(p).slice(),i=s.indexOf(v);if(i>=0)s.splice(i,1);else s.push(v);PUBT[p.id]=s;render(true)},
  xlsone:()=>exportXls([S.teamId]),xlsall:()=>exportXls(Object.keys(S.teams).sort((a,b)=>tName(a).localeCompare(tName(b),'cs'))),
  pubgo:()=>pubPlan(),pubdel:()=>unpubPlan(),pexp:v=>{PEXP[v]=1;renderParentPage()},
  seaday:v=>{const d=+v,ds=(SEA().days||[]).slice();const i=ds.indexOf(d);if(i>=0)ds.splice(i,1);else ds.push(d);seaSave({days:ds.sort()})},
