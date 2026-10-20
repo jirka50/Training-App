@@ -972,7 +972,9 @@ function splitText(k,n){const b=Math.floor(k/n),r=k%n,out=[];for(let i=0;i<n;i++
 
 function vTrain(){
  if(!S.plan)return `<section class="card empty"><h2>Zatím žádný trénink</h2><p class="muted">Vyber v Plánování délku, týmy, trenéry a přítomné děti a klepni na Sestavit trénink. Nebo otevři uložený trénink z Historie.</p><div class="row" style="justify-content:center"><button class="btn" data-a="tab" data-v="plan">Naplánovat</button><button class="btn ghost" data-a="tab" data-v="hist">Historie</button></div></section>`;
- return vPlanOut()
+ const saved=!!S.plans[S.plan.id];
+ return vPlanOut()+`<section class="card">${S.confirm==='replan'?`<p><b>Zahodit tento trénink a naplánovat nový?</b></p><p class="small muted">${saved?'V Historii zůstane uložená verze.':'Trénink není uložený v Historii, smaže se úplně.'} Nastavení v Plánování (týmy, trenéři, docházka) zůstane.</p>
+  <div class="row"><button class="btn danger" data-a="replango">Ano, naplánovat znovu</button><button class="btn ghost" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn ghost" data-a="replan">↺ Naplánovat znovu</button></div>`}</section>`
 }
 function vPlanOut(){
  const p=S.plan;let t=0;const total=p.blocks.reduce((s,b)=>s+b.min,0);
@@ -1276,7 +1278,7 @@ const actions={
   else{const ms=remaining();S.run.endAt=Date.now()+ms;S.run.running=true;S.run.left=null;beeped=ms<=0;lock(true);if(ms>=curStep().min*60000-1000)announce()}saveRun();render(true)},
  plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();tick()},
  next:()=>gotoStep(S.run.i+1),prev:()=>gotoStep(S.run.i-1),goto:v=>gotoStep(+v),
- lk:v=>{S.lib.kind=v;render(true)},patt:v=>pAttToggle(v),hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
+ lk:v=>{S.lib.kind=v;render(true)},replan:()=>{S.confirm='replan';render(true)},replango:()=>{S.confirm=null;S.plan=null;S.sel=null;S.gear={};S.openRate=false;savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();lock(false);actions.tab('plan');toast('Trénink zahozen. Naplánuj nový.')},patt:v=>pAttToggle(v),hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
  agetog:async v=>{const id=$('#sheet').dataset.id,a=ACT[id];if(!a)return;const cur=agOf(a),nx=cur.includes(v)?cur.filter(x=>x!==v):AGES.filter(x=>x===v||cur.includes(x));if(!nx.length){toast('Aspoň jedna kategorie musí zůstat.');return}
   if(nx.join()===agDef(a).join())await Store.del('ages',id);else await Store.put('ages',id,{ag:nx});openAct(id);renderLibList()},
  agereset:async()=>{const id=$('#sheet').dataset.id;await Store.del('ages',id);openAct(id);renderLibList()},lc:v=>{S.lib.cat=v;render(true)},
