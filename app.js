@@ -1660,8 +1660,11 @@ document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||el.data
  const list=clone(staffList()),c=list.find(x=>x.id===el.dataset.v);if(!c||c.name===v)return;c.name=v;staffSave(list)});
 
 /* ---------- Sezóna (training/season, společná pro všechny trenéry) ---------- */
-function seaSave(patch){S.season=Object.assign({},SEA(),patch);ls.set('u7w-season',S.season);Web.write('training/season',{ts:Date.now(),json:J(S.season)});render(true)}
+function seaSave(patch){if(W.role!=='admin'){toast('Sezónu nastavuje správce.');return}S.season=Object.assign({},SEA(),patch);ls.set('u7w-season',S.season);Web.write('training/season',{ts:Date.now(),json:J(S.season)});render(true)}
 function vSeaSet(){const s=SEA(),y=new Date().getFullYear(),days=s.days||[];
+ if(W.role!=='admin')return `<section class="card"><div class="sumline"><h2>Sezóna</h2></div>${s.name?`<p><b>${esc(s.name)}</b>${s.from||s.to?' · '+(s.from?fmtDate(s.from):'…')+' – '+(s.to?fmtDate(s.to):'…'):''}</p>
+  <p class="small">${days.length?'Tréninky: '+[1,2,3,4,5,6,0].filter(d=>days.includes(d)).map(d=>DOWL[d]).join(', '):'Tréninkové dny nejsou nastavené'}${s.time?' v '+esc(s.time):''}${s.plan?' · týden 1 plánu od '+fmtDate(s.plan):''}</p>`:'<p class="small">Sezóna zatím není nastavená.</p>'}
+  <p class="small muted">Sezónu nastavuje správce.</p></section>`;
  return `<section class="card"><div class="sumline"><h2>Sezóna</h2>${s.name?`<span class="small muted">${esc(s.name)}</span>`:''}</div>
   <p class="small muted">Platí pro všechny trenéry. Podle sezóny se předvyplní datum dalšího tréninku, týden sezónního plánu, čas pro počasí, filtr v Historii a údaje na diplomech.</p>
   <div class="grid2">
