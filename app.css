@@ -161,6 +161,8 @@ textarea{min-height:84px;resize:vertical}
 .aname{font:700 20px/1.15 var(--f-disp);background:none;border:0;padding:0;text-align:left;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px}
 .aname:hover{text-decoration-color:var(--field)}
 .ctrls{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+select.btype{width:auto;padding:6px 10px;font-size:15px;min-height:0}
+.item.cur{outline:2px solid var(--field)}
 .mins{display:inline-flex;align-items:center;gap:6px;font:700 17px var(--f-disp);font-variant-numeric:tabular-nums;margin-right:6px}
 .st-list{display:grid;gap:8px}
 .st{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--sunk);border-radius:8px;padding:8px 10px;min-width:0}
