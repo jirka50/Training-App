@@ -944,15 +944,22 @@ function announce(){const s=curStep();if(!s)return;const b=S.plan.blocks[s.bi];
 const HOME={hazeni:'Hoď ponožkový míček do koše nebo krabice ze 2–3 kroků, 10× s krokem opačnou nohou.',chytani:'Vyhoď si měkký míček nebo balónek a chyť ho oběma rukama. Kdo zvládne 10× za sebou?',
  odpal:'Švihy pěnovou nudlí nebo plastovou pálkou na nafukovací balónek, který hází rodič. Oči na balónku!',mety:'V parku poslouží jako mety tři značky (bunda, láhev…). Oběhni je a na každou šlápni.',
  hra:'Zahrajte si doma „Trenér říká“: rodič dává pokyny a dítě předvádí švih, hod nebo chytání.',warm:'Pět minut atletické abecedy na chodníku: liftink, skipink, zakopávání.'};
-function parentsText(p){const items=[...new Set(p.blocks.flatMap(b=>b.items))].filter(id=>ACT[id]&&ACT[id].k!=='routine');const f=(p.focus||[])[0]||(ACT[items[0]]||{}).c||'hazeni';
- const seq=items.map(id=>ACT[id]).filter(a=>a&&a.k==='seq'&&a.c!=='warm');const w=p.week&&SEASON[p.week-1];
- return `⚾ ${p.name?p.name+' ('+fmtDate(p.date)+')':planTitle(p)}\n`+(w?`Sezónní plán, týden ${p.week}: ${w.n}.\n`:'')+`Dnes jsme trénovali: ${(p.focus||[]).map(x=>CATS[x].toLowerCase()).join(', ')||'všestrannost'}.\n`
-  +`Hráli jsme a cvičili: ${items.map(actName).join(', ')}.\n`+(seq.length?`Nově se učíme: ${seq.map(a=>a.n+' ('+a.steps.map(x=>x.n.toLowerCase()).join(', ')+')').join('; ')}.\n`:'')
-  +`\nNa doma (5 minut): ${HOME[f]||HOME.hazeni}\n\nDíky, že děti vozíte!`}
+/* Text ke zkopírování = stejný obsah jako karta tréninku na stránce pro rodiče (pubData). */
+function parTxt(d){const L=[`⚾ ${d.title}${d.title.indexOf(fmtDate(d.date))<0?' ('+fmtDate(d.date)+')':''}`];
+ if(d.week)L.push(`Sezónní plán, týden ${d.week.n}: ${d.week.name}`);
+ if((d.focus||[]).length)L.push(`Trénovali jsme: ${d.focus.join(', ').toLowerCase()}`);
+ if((d.items||[]).length){L.push('','Co jsme hráli:');d.items.forEach(a=>L.push('• '+a.n+(a.dev?' – rozvíjí: '+a.dev.charAt(0).toLowerCase()+a.dev.slice(1):'')))}
+ if((d.whys||[]).length){L.push('','Proč to děláme:');d.whys.forEach(y=>L.push('• '+(y.c?y.c+': ':'')+y.t))}
+ if((d.learn||[]).length)L.push('','Nově se učíme: '+d.learn.map(a=>a.n+' ('+a.steps.join(' → ').toLowerCase()+')').join('; '));
+ if(d.hw)L.push('','🏠 Na doma (5 minut): '+d.hw);
+ if(d.note)L.push('','💬 '+d.note);
+ return L.join('\n')}
+function parentsText(p){const f=(p.focus||[])[0]||'hazeni',on=pubOn(p),pv=on.length?W.pub[on[0]][p.id]:null,pd=pv?PJ(pv):null;
+ return parTxt(Object.assign(pubData(p,true),{hw:pd&&pd.hw||HOME[f]||HOME.hazeni,note:pd&&pd.note||''}))}
 let parentsPub=()=>'';
 function vParents(){return `<section class="card"><div class="sumline"><h2>Pro rodiče</h2><button class="btn ghost sm" data-a="copypar">Kopírovat</button></div>
- <p class="small muted">Krátké shrnutí do skupiny rodičů, bez jmen dětí. Text můžeš před zkopírováním upravit.</p>
- <textarea id="parentsTxt" rows="9">${esc(parentsText(S.plan))}</textarea>${parentsPub()}</section>`}
+ <p class="small muted">Stejný text jako na stránce pro rodiče, bez jmen dětí. Před zkopírováním ho můžeš upravit.</p>
+ <textarea id="parentsTxt" rows="14">${esc(parentsText(S.plan))}</textarea>${parentsPub()}</section>`}
 
 /* ===== Vykreslení ===== */
 const MENU=[['Trénink',['plan','train','field']],['Tým',['team','who','kids','hist']],['Knihovna',['lib']],['Nastavení',['set']]];
@@ -1372,6 +1379,7 @@ function gotoStep(i){const st=steps();if(i<0||i>=st.length)return;S.run.i=i;cons
 document.addEventListener('click',e=>{if(S.menu&&!e.target.closest('.menu')){S.menu=false;render(true)}const b=e.target.closest('[data-a]');if(!b){if(e.target.id==='sheet')closeSheet();return}if(b.disabled)return;const f=actions[b.dataset.a];if(f){e.preventDefault();f(b.dataset.v,b)}});
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(S.menu){S.menu=false;render(true)}else if(!$('#sheet').hidden)closeSheet()});
 $('#teamSel').addEventListener('change',e=>actions.team(e.target.value));
+document.addEventListener('input',e=>{const id=e.target.id;if((id==='parHw'||id==='parNote')&&S.plan){const t=$('#parentsTxt');if(t)t.value=parTxt(pubData(S.plan))}});
 document.addEventListener('input',e=>{const el=e.target,c=el.dataset.c;if(!c)return;
  if(c==='libq'){S.lib.q=el.value;renderLibList()}
  else if(c==='histq'){S.hist.q=el.value;renderHistList()}
@@ -1517,8 +1525,8 @@ const WHY={warm:'Zahřáté tělo se méně zraní a děti se hravou formou nala
  mety:'Běh po metách je srdce baseballu – děti se učí pravidla hry, rychlé starty a orientaci na hřišti.',
  hra:'Hry učí poslouchat trenéra, spolupracovat a chápat, co se na hřišti právě děje.'};
 const pDev=a=>{const d=String(a.dev||'').trim();return d?d.charAt(0).toUpperCase()+d.slice(1):''};
-function pubData(p){const items=[...new Set(p.blocks.flatMap(b=>b.items))].map(id=>ACT[id]).filter(a=>a&&a.k!=='routine');const f=(p.focus||[])[0]||(items[0]||{}).c||'hazeni';
- const seq=items.filter(a=>a.k==='seq'&&a.c!=='warm'&&a.steps),w=p.week&&SEASON[p.week-1],nt=$('#parNote'),hw=$('#parHw');
+function pubData(p,noDom){const items=[...new Set(p.blocks.flatMap(b=>b.items))].map(id=>ACT[id]).filter(a=>a&&a.k!=='routine');const f=(p.focus||[])[0]||(items[0]||{}).c||'hazeni';
+ const seq=items.filter(a=>a.k==='seq'&&a.c!=='warm'&&a.steps),w=p.week&&SEASON[p.week-1],nt=noDom?null:$('#parNote'),hw=noDom?null:$('#parHw');
  return{date:p.date,title:planTitle(p),teams:planTeams(p).map(tName),focus:(p.focus||[]).map(x=>CATS[x]),week:w?{n:p.week,name:w.n}:null,season:p.season||SEA().name||'',
   items:items.map(a=>({n:a.n,dev:pDev(a)})),whys:[...new Set(items.map(a=>WHY[a.c]?a.c:'hra'))].map(c=>({c:CATS[c]||'',t:WHY[c]})),learn:seq.map(a=>({n:a.n,steps:a.steps.map(x=>x.n)})),hw:hw?hw.value.trim():(HOME[f]||HOME.hazeni),note:nt?nt.value.trim():''}}
 const PUBT={};
