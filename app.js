@@ -998,6 +998,7 @@ function vPlanOut(){
   <div class="tl">${blocks}</div>
   <div class="row"><button class="btn ghost sm" data-a="addblk">+ Přidat hru</button><button class="btn ghost sm" data-a="adddrink">+ Pauza na pití</button></div>
  </section>`;
+ h+=vAttEdit();
  if(nG(p)>1)h+=vGroups();
  h+=vGear();
  h+=vRate()+vParents();
@@ -1008,6 +1009,17 @@ function vPlanOut(){
 /* malá fotka dítěte ve skupinách; webová verze ji dodá ze soupisky */
 let kidPh=()=>'';
 const faces=(g,p)=>{const ks=g.map(n=>kid(n,p)),ph=ks.map(x=>kidPh(x));if(!ph.some(Boolean))return'';return `<span class="faces">${ks.map((x,i)=>ph[i]||`<span class="kph ini" title="${esc(x.name)}">${esc((x.name||'?').trim().charAt(0).toUpperCase())}</span>`).join('')}</span>`};
+/* ===== Docházka přímo v Tréninku (před spuštěním) ===== */
+function vAttEdit(){const p=S.plan,ts=planTeams(p),mt=ts.length>1,pr=new Set((p.present||[]).map(k=>normKey(k,p))),all=ts.reduce((n,t)=>n+plOf(t).length,0);
+ return `<section class="card"><div class="sumline"><h2>Docházka · ${pr.size} z ${all}</h2></div>
+  <p class="small muted">Klepnutím dítě odebereš nebo přidáš. Přidané dítě se zařadí do nejmenší skupiny, skupiny se jinak nemíchají.</p>
+  ${ts.map(tid=>`${mt?`<h3>${esc(tName(tid))}</h3>`:''}<div class="kids">${sortPl(plOf(tid)).map(x=>{const k=K(tid,x.num),on=pr.has(k);return `<button class="chip kid ${on?'on':'off'}" data-a="patt" data-v="${esc(k)}" aria-pressed="${on}">${kidPh({tid,num:x.num,name:x.name})}<b>${esc(numShort(x.num))}</b>${esc(x.name)}</button>`}).join('')||'<span class="muted small">soupiska je prázdná</span>'}</div>`).join('')}</section>`}
+function pAttToggle(key){const p=S.plan;if(!p)return;const x=kid(key,p),nk=K(x.tid,x.num),same=k=>normKey(k,p)===nk;p.groups=p.groups&&p.groups.length?p.groups:[[]];
+ if((p.present||[]).some(same)){p.present=p.present.filter(k=>!same(k));p.groups=p.groups.map(g=>g.filter(k=>!same(k)));if(S.sel&&same(S.sel))S.sel=null;
+  if(S.draft.present[x.tid])S.draft.present[x.tid]=S.draft.present[x.tid].filter(n=>n!==x.num)}
+ else{p.present=(p.present||[]).concat([nk]);let gi=0;p.groups.forEach((g,i)=>{if(g.length<p.groups[gi].length)gi=i});p.groups[gi].push(nk);
+  const d=S.draft.present[x.tid]||(S.draft.present[x.tid]=[]);if(!d.includes(x.num))d.push(x.num)}
+ saveDraft();savePlan();render(true)}
 function vGroups(){
  const p=S.plan,cc=coachCount(),stb=p.blocks.filter(b=>b.mode==='st');
  const changed=JSON.stringify(p.present.map(k=>normKey(k,p)).sort())!==JSON.stringify(presentKeys().slice().sort())||nG(p)!==(cc>=2?cc:1);const mt=planTeams(p).length>1;
@@ -1264,7 +1276,7 @@ const actions={
   else{const ms=remaining();S.run.endAt=Date.now()+ms;S.run.running=true;S.run.left=null;beeped=ms<=0;lock(true);if(ms>=curStep().min*60000-1000)announce()}saveRun();render(true)},
  plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();tick()},
  next:()=>gotoStep(S.run.i+1),prev:()=>gotoStep(S.run.i-1),goto:v=>gotoStep(+v),
- lk:v=>{S.lib.kind=v;render(true)},hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
+ lk:v=>{S.lib.kind=v;render(true)},patt:v=>pAttToggle(v),hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
  agetog:async v=>{const id=$('#sheet').dataset.id,a=ACT[id];if(!a)return;const cur=agOf(a),nx=cur.includes(v)?cur.filter(x=>x!==v):AGES.filter(x=>x===v||cur.includes(x));if(!nx.length){toast('Aspoň jedna kategorie musí zůstat.');return}
   if(nx.join()===agDef(a).join())await Store.del('ages',id);else await Store.put('ages',id,{ag:nx});openAct(id);renderLibList()},
  agereset:async()=>{const id=$('#sheet').dataset.id;await Store.del('ages',id);openAct(id);renderLibList()},lc:v=>{S.lib.cat=v;render(true)},
