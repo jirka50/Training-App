@@ -1650,8 +1650,9 @@ function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);return XL
 const xlsRows=tid=>sortPl(plOf(tid)).map(p=>({'Jméno':p.name||'','Kategorie':kidAge(tid,p),'Úroveň':LVL[p.lvl]||''}));
 const safeSheet=n=>String(n||'Tým').replace(/[\\/?*[\]:]/g,' ').slice(0,31)||'Tým';
 async function exportXls(tids){if(!tids.length)return;toast('Připravuji soubor…');let X;try{X=await loadXLSX()}catch(e){toast('Export potřebuje připojení k internetu.');return}
- const wb=X.utils.book_new(),used={};tids.forEach(tid=>{const ws=X.utils.json_to_sheet(xlsRows(tid),{header:['Jméno','Kategorie','Úroveň']});ws['!cols']=[{wch:28},{wch:11},{wch:11}];
-  let nm=safeSheet(tName(tid)),i=2;while(used[nm])nm=safeSheet(tName(tid)).slice(0,28)+' '+(i++);used[nm]=1;X.utils.book_append_sheet(wb,ws,nm)});
+ const wb=X.utils.book_new(),multi=tids.length>1,rows=multi?tids.flatMap(tid=>xlsRows(tid).map(r=>Object.assign({'Tým':tName(tid)},r))):xlsRows(tids[0]);
+ const ws=X.utils.json_to_sheet(rows,{header:(multi?['Tým']:[]).concat(['Jméno','Kategorie','Úroveň'])});ws['!cols']=(multi?[{wch:24}]:[]).concat([{wch:28},{wch:11},{wch:11}]);
+ X.utils.book_append_sheet(wb,ws,multi?'Všechny týmy':safeSheet(tName(tids[0])));
  X.writeFile(wb,(tids.length>1?'Týmy':tName(tids[0])).replace(/[\\/:*?"<>|]/g,' ')+' – '+today()+'.xlsx')}
 function legacyDel(tid,keys){const m=Object.assign({},W.raw.photos[tid]||{});keys.forEach(k=>{if(m[k]){delete m[k];Web.write('photos/'+tid+'/'+k,null)}});W.raw.photos[tid]=m;phCache()}
 function photoSet(tid,num,img){const R=rosterOf(tid),p=R.players.find(x=>String(x.num)===String(num));if(!p)return;if(img)p.photo=img;else delete p.photo;rosterSave(tid,R);legacyDel(tid,[phKey(num)])}
@@ -1731,7 +1732,7 @@ function vSet(){
  h+=`<section class="card"><div class="sumline"><h2>Týmy</h2></div>
   ${Object.keys(S.teams).length?`<div class="row">${Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'')).map(([id,x])=>`<button class="chip ${id===S.teamId?'on':''}" data-a="team" data-v="${esc(id)}">${esc(x.name)} · ${(x.players||[]).length}</button>`).join('')}</div>`:`<p class="muted">${S.ready?'Ve Scorekeeperu zatím není žádný tým.':'Načítám týmy…'}</p>`}
   <p class="small muted">Týmy jsou společné se Scorekeeperem. Soupisku upravíš v záložce Tým, nový tým založíš ve Scorekeeperu.</p>
-  ${Object.keys(S.teams).length?`<div class="field"><span class="label">Export do Excelu</span><div class="row"><button class="btn ghost sm" data-a="xlsone">⬇ ${esc(team()?team().name:'')}</button>${Object.keys(S.teams).length>1?'<button class="btn ghost sm" data-a="xlsall">⬇ Všechny týmy</button>':''}</div><span class="small muted">Jméno, kategorie a úroveň dětí. Více týmů = každý tým na vlastním listu.</span></div>`:''}</section>`;
+  ${Object.keys(S.teams).length?`<div class="field"><span class="label">Export do Excelu</span><div class="row"><button class="btn ghost sm" data-a="xlsone">⬇ ${esc(team()?team().name:'')}</button>${Object.keys(S.teams).length>1?'<button class="btn ghost sm" data-a="xlsall">⬇ Všechny týmy</button>':''}</div><span class="small muted">Jméno, kategorie a úroveň dětí. Všechny týmy = jeden list se sloupcem Tým.</span></div>`:''}</section>`;
  h+=vSeaSet();
  if(t)h+=vStaff();
  h+=`${tplList().length?`<section class="card"><h2>Šablony tréninku</h2><div class="dl">${tplList().map(([id,tp])=>`<div class="sumline"><span><b>${esc(tp.name)}</b> · ${tplMin(tp)} min<br><span class="small muted">${tp.blocks.map(b=>BT[b.type]||b.type).join(' → ')}</span></span>${S.confirm==='t_'+id?`<span class="row"><button class="btn danger sm" data-a="tpldel" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></span>`:`<button class="ib" data-a="tplask" data-v="${esc(id)}" aria-label="Smazat šablonu ${esc(tp.name)}">✕</button>`}</div>`).join('')}</div></section>`:''}
