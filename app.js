@@ -114,6 +114,60 @@ const A=[
  gear:['Malé fotbalové míče'],gn:'varianta Na magnety je bez pomůcek',dev:'poslouchání trenéra, soustředění, koordinace, rychlá reakce na povel, padání a zvedání',
  d:'Hráči si chodí po hřišti a vyhazují míče. Trenér zakřičí povel a děti ho co nejrychleji splní, míč vždy položí na zem: „zadek na míč“, „břicho na míč“, „koleno na míč“, „ucho na míč“, „loket na míč“…',
  va:'Na magnety: na píšťalku trenér zavolá třeba „Magnet na kolena!“ a děti se bleskově přilepí ke kamarádovi koleny. Kdo zbude, udělá 3 dřepy.'},
+{id:'g32',k:'game',n:'Na babu po metách',c:'warm',t:['mety'],e:3,min:6,kids:4,
+ gear:['Mety'],gn:'místo met jdou kužely nebo obruče',dev:'rychlost, změna směru, orientace na hřišti, znalost met',
+ d:'Klasická honička, kde jsou mety „domečky“. Jeden nebo dva honiči (podle počtu dětí) chytají ostatní. Kdo stojí na metě, je v bezpečí, ale nejdéle 5 vteřin a na jedné metě smí stát jen jedno dítě. Když přiběhne další, ten první musí metu opustit. Koho honič chytí, stává se honičem.',
+ va:'Pojmenované mety: trenér zavolá „první!“ nebo „třetí!“ a ta meta je na chvíli zavřená, nikdo na ní nesmí stát.',
+ kid:'„Meta je domeček, ale jen na pět vteřin: pět, čtyři, tři…“'},
+{id:'g33',k:'game',n:'Opičí dráha',c:'warm',t:['hazeni'],e:3,min:7,kids:2,
+ gear:['Kužely', 'Obruče', 'Měkké míčky', 'Kbelíky'],gn:'4 kužely na slalom, 3 obruče, kbelík na konci',dev:'obratnost, skoky snožmo, koordinace, hod na cíl po pohybu',
+ d:'Postav dráhu: slalom mezi 4 kužely, potom 3 obruče za sebou (skoky snožmo), na konci čára, odkud se hází míček do kbelíku. Děti vyrážejí jedno po druhém, další startuje, když je předchozí v obručích. Po hodu dítě míček sebere a běží zpět na konec řady. Postupně se dá přidat podlézání (nudle mezi dvěma kužely) nebo couvání.',
+ va:'Závod družstev: dvě stejné dráhy vedle sebe, počítá se, kolik míčků družstvo dostane do kbelíku, než projdou všichni.',
+ kid:'„Slalom jako lyžař, skoky jako žabka a na konci trefa do kbelíku!“'},
+{id:'g34',k:'game',n:'Kolem met',v:'Čtyři rohy',c:'hazeni',t:['chytani','tym'],e:2,min:7,kids:4,
+ gear:['Mety', 'Měkké míčky', 'Rukavice', 'Stopky'],gn:'mety blíž k sobě (8–10 m)',dev:'chytání a rychlý hod na spoluhráče, otočení k cíli, přesnost, týmová spolupráce',
+ d:'Na každé metě stojí jedno dítě (na domácí metě taky). Míček putuje od domácí mety na první, druhou, třetí a zpátky domů – to je jedno kolo. Kdo chytí, otočí se k další metě a hodí. Trenér měří, kolik kol tým stihne za minutu, a pak se to snaží překonat. Po každém pokusu se děti posunou o metu dál. Když míček upadne, sebere ho ten, komu byl určen, a hra pokračuje.',
+ va:'Čtyři rohy: kužely ve čtverci asi 8 m od sebe, na každém rohu dítě. Kdo hodí, běží za svým míčkem na další roh, takže se děti točí s míčkem dokola.',
+ kid:'„Chyť, otoč se k další metě, hoď! Kolik kol dáme?“',
+ link:'https://mojo.sport/coachs-corner/10-best-baseball-drills-for-7-and-8-year-olds/',lt:'MOJO – Four Corners'},
+{id:'g35',k:'game',n:'Sestřel kužel',c:'hazeni',e:1,min:7,kids:2,st:1,
+ gear:['Kužely', 'Měkké míčky', 'Mety'],gn:'kužely nebo helmy postavené na metách či kbelících',dev:'přesnost hodu, míření, vrchní hod s krokem',
+ d:'Na metách nebo obrácených kbelících stojí kužely (nebo helmy) asi 5–7 m od čáry. Děti stojí za čarou a házejí vrchním hodem s krokem. Shozený kužel = bod pro družstvo, trenér ho hned postaví zpátky. Blízký kužel stojí bod, vzdálenější dva.',
+ va:'Kuželkový král: uprostřed stojí jeden „královský“ kužel, za který jsou 3 body, ale shodit ho smí jen ten, kdo předtím shodil obyčejný.',
+ kid:'„Rukavice ukáže na kužel, krok a bum!“'},
+{id:'g36',k:'game',n:'Zem nebo nebe',c:'chytani',e:2,min:6,kids:2,st:1,
+ gear:['Měkké míčky'],gn:'měkké nebo tenisové míčky, bez rukavic',dev:'chytání holýma rukama, rozlišení přízemního a vysokého míče, postoj polaře',
+ d:'Děti stojí v řadě 5–6 m před trenérem, bez rukavic. Trenér střídá přízemní míč („zem“) a vysoký míč („nebe“). Na přízemák dítě zaujme postoj polaře a míček nabere oběma rukama, na vysoký míč dá ruce nahoru, palce k sobě. Míček vrátí trenérovi a jde na konec řady. Trenér předem nehlásí, co přijde.',
+ va:'Hlasitá verze: děti musí ještě před chycením zakřičet „zem!“ nebo „nebe!“.',
+ kid:'„Zem? Ruce dolů jako krokodýl. Nebe? Ruce nahoru, palečky k sobě!“',
+ link:'https://www.mojo.sport/coachs-corner/10-best-baseball-drills-for-9-and-10-year-olds',lt:'MOJO – Grab Bag'},
+{id:'g37',k:'game',n:'Běž do pole!',c:'hra',t:['warm'],e:3,min:6,kids:2,out:1,
+ gear:['Kužely'],gn:'tři kužely: levé, střední a pravé pole',dev:'pozice v poli, orientace na hřišti, reakce na povel, rychlost',
+ d:'Trenér vezme děti do vnějšího pole a ukáže tři kužely: levé, střední a pravé pole. Pak se všichni vrátí k domácí metě. Trenér zavolá pole a děti tam co nejrychleji doběhnou a zaujmou postoj polaře. Kdo je tam první, může zavolat další pole. Později se dají přidat vnitřní pozice (první, druhá, třetí meta, spojka).',
+ va:'Bez ukazování: trenér jen zavolá pozici a děti si samy musí vzpomenout, kde je.',
+ kid:'„Levé, střed, nebo pravé? Kdo tam bude první?“',
+ link:'https://www.littleleague.org/?p=11401',lt:'Little League – Tee Ball Program'},
+{id:'g38',k:'game',n:'Závod s míčkem',c:'mety',t:['hazeni','chytani'],e:3,min:8,kids:5,
+ gear:['Mety', 'Měkké míčky', 'Rukavice'],dev:'běh kolem met, rychlé přihrávky, chytání, týmová spolupráce',
+ d:'Na každé metě stojí polař. Běžec vyrazí z domácí mety a oběhne všechny mety. Ve stejnou chvíli trenér hodí míček na první metu a polaři si ho posílají první – druhá – třetí – domů. Kdo bude doma dřív, běžec, nebo míček? Když míček upadne, musí ho polař sebrat a hodit znovu. Běžci a polaři se střídají.',
+ va:'Dva běžci naráz: druhý vybíhá, až je první na druhé metě. Polaři pak musí míček poslat dvakrát dokola.',
+ kid:'„Běžče, utíkej! Polaři, rychle chytit a hodit!“'},
+{id:'g39',k:'game',n:'Doručte míček',c:'hra',t:['hazeni','chytani'],e:3,min:7,kids:6,
+ gear:['Měkké míčky', 'Kužely'],gn:'kužely na hranice hřiště a zónu kapitána',dev:'útok a obrana, přihrávka volnému spoluhráči, pohyb bez míče, komunikace',
+ d:'Dvě družstva. Na konci hřiště stojí v zóně z kuželů kapitán útočníků. Útočníci si přihrávají (s míčkem v ruce se nesmí běhat) a snaží se míček dostat až ke kapitánovi. Obránci se snaží přihrávku chytit nebo míček zachytit na zemi. Povedená doručení = bod, pak se role prohodí. Hraje se v malých skupinkách 3 na 3 nebo 4 na 4.',
+ va:'Lehčí verze pro začátečníky: obránci smí jen chodit, ne běhat.',
+ kid:'„S míčkem stůj, bez míčku běž na volné místo a volej!“',
+ link:'https://www.littleleague.org/?p=11401',lt:'Little League – Offense & Defense'},
+{id:'g40',k:'game',n:'Odpal a kbelík',c:'hra',t:['odpal','mety','hazeni'],e:3,min:10,kids:5,
+ gear:['Tee (stojánek)', 'Pálky', 'Helmy', 'Měkké míčky', 'Rukavice', 'Mety', 'Kbelíky', 'Obruče'],gn:'kbelík na místě nadhazovače',dev:'odpal a start, běh kolem met, polaři zpracují míč a hodí do cíle, herní rozhodování',
+ d:'Pálkař odpálí z tee, pálku položí do obruče a běží kolem met. Polaři míček co nejrychleji zpracují a hodí (nebo donesou) do kbelíku na místě nadhazovače. Ve chvíli, kdy je míček v kbelíku, trenér zavolá „stop!“ a pálkař dostane bod za každou metu, kterou stihl. Každý pálí 2–3×, pak výměna.',
+ va:'Týmová: pálí všichni z jednoho družstva po sobě a body se sčítají, pak se družstva vymění.',
+ kid:'„Polaři, míček do kbelíku! Běžče, kolik met stihneš?“'},
+{id:'g41',k:'game',n:'Krokodýli na metách',c:'chytani',t:['mety'],e:2,min:7,kids:5,
+ gear:['Mety', 'Měkké míčky', 'Rukavice'],gn:'koš míčků pro trenéra',dev:'chytání přízemních míčů, krokodýlí tlama, hod zpět, běh kolem met',
+ d:'„Krokodýli“ s rukavicí stojí u každé mety. Trenér uprostřed kutálí míčky ke krokodýlům, ti je „snědí“ krokodýlí tlamou a hodí zpátky. Mezitím druhé družstvo „běžců“ obíhá mety. Krokodýli dostávají bod za každý chycený míček, běžci za každé celé kolo. Po 2 minutách se družstva vymění a porovnají se body.',
+ va:'Hladový krokodýl: kdo nechá míček proklouznout mezi nohama, musí si pro něj doběhnout a teprve pak hodit zpět.',
+ kid:'„Krokodýl má tlamu u země – ham a míček je snězený!“'},
 /* --- CVIKY --- */
 {id:'d01',k:'drill',n:'Držení míče',c:'hazeni',e:1,min:5,kids:1,st:1,gear:['Měkké míčky'],gn:'míček pro každé dítě',
  dev:'správný úchop míče, příprava na hod',
@@ -183,6 +237,27 @@ const A=[
  dev:'postoj polaře, připravenost na míč',
  d:'Děti stojí na svých pozicích v poli. Trenér volá „Připravit!“ a děti zaujmou postoj: nohy od sebe, kolena pokrčená, ruce vpředu, váha na špičkách. Trenér předvede nadhoz na sucho a děti udělají dva malé skoky vpřed („hop-hop“).',
  kid:'„Pilka, kolena, rukavice dolů – a hop-hop!“'},
+{id:'d18',k:'drill',n:'Odrazy od zdi',c:'chytani',t:['hazeni'],e:1,min:5,kids:1,st:1,gear:['Měkké míčky', 'Síť nebo plachta'],gn:'tenisák pro každé dítě; potřeba stěna nebo odrazová síť',
+ dev:'chytání po odrazu, sledování míče, souhra očí a rukou, samostatné opakování',
+ d:'Každé dítě stojí 2–3 m od stěny (v hale) nebo odrazové sítě a hází tenisák spodem proti zdi. Odražený míček chytá oběma rukama, později do rukavice. Počítá, kolikrát za sebou chytí bez upuštění. Pokročilí házejí vrchem, nechají míček jednou odskočit od země nebo chytají jen rukavicí.',
+ kid:'„Hoď o zeď, chyť oběma rukama! Kolikrát to dáš za sebou?“'},
+{id:'d19',k:'drill',n:'Pohyblivý stojan',c:'odpal',e:1,min:8,kids:1,st:1,gear:['Tee (stojánek)', 'Pálky', 'Helmy', 'Měkké míčky', 'Síť nebo plachta'],gn:'stojan s nastavitelnou výškou',
+ dev:'odpal z různých výšek a míst, přizpůsobení švihu, sledování míče',
+ d:'Dítě odpaluje z tee do sítě. Po každém odpalu trenér stojan posune: blíž k tělu, dál od těla, výš nebo níž. Dítě si musí najít správný postoj a míček trefit tam, kde zrovna je. Začni velkými změnami, pak jemnějšími. Pálkař vždy v helmě, ostatní za čarou.',
+ kid:'„Kde je míček teď? Najdi ho a trefuj!“',
+ link:'https://thehittingvault.com/?p=2660',lt:'The Hitting Vault – Moving Tee'},
+{id:'d20',k:'drill',n:'Obří míč na tee',c:'odpal',e:1,min:6,kids:1,st:1,gear:['Tee (stojánek)', 'Pálky', 'Helmy', 'Velké měkké míče', 'Měkké míčky'],gn:'velký měkký nebo malý fotbalový míč položený na tee či kužel',
+ dev:'první úspěšné odpaly, odvaha švihnout, sledování míče, rovný švih',
+ d:'Na tee (nebo kužel) se položí velký měkký míč. Dítě ho švihem shodí co nejdál. Velký cíl znamená jistý zásah, takže se dítě může soustředit na postoj a celý švih. Po několika úspěšných odpalech se míč vymění za menší, až po normální měkký míček.',
+ kid:'„Velký míč, velký zásah – a teď zkusíme menší!“'},
+{id:'d21',k:'drill',n:'Skoky mezi metami',c:'mety',t:['warm'],e:3,min:5,kids:1,gear:['Mety'],
+ dev:'běh po metách ve správném pořadí, koordinace, různé způsoby pohybu, šlápnutí na metu',
+ d:'Děti obíhají mety, ale každý úsek jinak: z domácí na první poskoky, z první na druhou snožmo jako žabka, z druhé na třetí bokem jako krab, ze třetí domů sprint. Na každou metu se musí šlápnout. Děti vybíhají po jednom, další startuje, když je předchozí na první metě. Způsoby pohybu se dají střídat (pozpátku, po jedné noze, jako slon).',
+ kid:'„Poskoky, žabka, krab a domů sprint! A na každou metu šlápni.“'},
+{id:'d22',k:'drill',n:'Aut nebo safe?',c:'hra',t:['mety'],e:2,min:6,kids:3,st:1,gear:['Mety', 'Měkké míčky', 'Rukavice', 'Kužely'],gn:'kužely nebo lano na čáry fér',
+ dev:'pochopení pravidel: aut, safe, fér a faul; rozhodování, pozornost',
+ d:'Trenér ukazuje situace a děti rozhodují. Běžec doběhne na metu dřív než míček do rukavice polaře: všichni ukážou SAFE (ruce do stran). Míček je v rukavici na metě dřív: AUT (pěst nahoru). Pak trenér kutálí nebo odpálí míček a děti hlásí FÉR (míček v poli mezi čarami, skok dopředu) nebo FAUL (mimo čáru, skok dozadu). Děti se střídají v roli běžce a polaře.',
+ kid:'„Safe? Ruce do stran! Aut? Pěst nahoru! Fér skok dopředu, faul skok dozadu.“'},
 /* --- RUTINY --- */
 {id:'r01',k:'routine',n:'Nástup a pozdrav',c:'rutina',slot:'start',min:3,kids:1,gear:[],
  dev:'struktura tréninku, pozornost',
@@ -212,6 +287,14 @@ const A=[
  dev:'správná ruka, otevírání rukavice',
  d:'Každé dítě si nasadí rukavici, ukáže, že je na správné ruce (na ruce, kterou neházíme), a třikrát ji „otevře a zavře“ jako tlamu. Trenér zkontroluje zapnutí a velikost.',kid:'„Rukavice zívá: otevřít, zavřít!“'}
 ,
+{id:'r10',k:'routine',n:'Bezpečná zóna pálkaře',c:'rutina',slot:'start',t:['odpal'],min:2,kids:1,gear:['Pálky', 'Helmy', 'Obruče', 'Kužely'],gn:'kužely na kruh kolem domácí mety a čáru pro čekající',
+ dev:'bezpečnost na hřišti, pravidla kolem pálky, pořádek při odpalech',
+ d:'Na začátku tréninku s odpalem se ukážou a nacvičí tři pravidla: 1) kolem domácí mety je kruh pálkaře, dovnitř smí jen pálkař a trenér; 2) čekající stojí za čarou, pálka se bere do ruky jen na povel trenéra; 3) po švihu jde pálka do obruče, nikdy se neháže. Bez helmy se nepálí. Trenér pravidla nechá zopakovat a pak to děti jednou vyzkouší na sucho.',
+ kid:'„V kruhu jen pálkař. Pálka jen na povel. Po švihu pálka do postýlky. Helma vždycky!“'},
+{id:'r11',k:'routine',n:'Hledání pokladu',c:'rutina',slot:'end',min:3,kids:1,gear:['Měkké míčky', 'Kbelíky'],
+ dev:'úklid po tréninku, spolupráce, počítání',
+ d:'Na konci tréninku jsou míčky rozházené po hřišti a v trávě – to je ukrytý poklad. Děti je hledají a nosí do kbelíku, každé smí nést jen jeden míček najednou. U kbelíku se nahlas počítá, kolik pokladu už je doma. Trenér řekne, kolik míčků bylo, a když chybí, hledá se dál. Nejlepší hledač může nést kbelík do tašky.',
+ kid:'„Kdo najde nejvíc pokladu? Jeden míček, jedna cesta – a počítáme!“'},
 /* --- DOVEDNOSTNÍ RUTINY (progrese pro děti do U8) --- */
 {id:'s01',k:'seq',n:'Házecí progrese',c:'hazeni',e:2,min:10,kids:2,st:1,gear:['Měkké míčky', 'Rukavice'],gn:'míček pro dvojici',
  dev:'celý pohyb hodu po částech: úchop, „ukaž psovi míček“, mířit rukavicí, krok, dotažení',
@@ -295,7 +378,7 @@ const A=[
 
 ];
 /* Věková kategorie: návrh pro každou položku. Jen U7 = složitější pravidla, přesnější hod nebo chytání, hra s tagováním. Ostatní se hodí pro U6 i U7. Trenéři to můžou v Knihovně přepsat (kolekce „ages“). */
-const AGES=['U6','U7'],U7_ONLY=['g03','g06','g14','g18','g20','g28','g29','g30','d08','d14','d16','s01','s03','s04','s07'];
+const AGES=['U6','U7'],U7_ONLY=['g03','g06','g14','g18','g20','g28','g29','g30','d08','d14','d16','s01','s03','s04','s07','g34','g38','g39','g40','g41','d22'];
 A.forEach(a=>{a.ag=U7_ONLY.includes(a.id)?['U7']:['U6','U7']});
 
 /* ===== Animace: hřiště shora (děti = tečky), technika = postava z boku ===== */
@@ -431,6 +514,46 @@ g30:{d:8,s:[['diamond'],...[[72,34],[50,12],[28,34],[50,56]].flatMap(([x,y])=>[[
  KP(around(0,.9)),{t:'b',f:t=>{const p=kfAt(around(0,.9),t);return[p[0]+2.5,p[1]+1.5,0]}},{t:'x',f:Wd(50,34,10,10,1,2,0)},{t:'x',f:Wd(50,34,12,8,2,1,2)}]},
 g31:{d:6,cap:[[0,'Vyhazuj si míč a choď'],[.5,'Míče na zem, zadek na míč!']],a:[
  ...[0,1,2].flatMap(i=>{const w=Wd(50,31,30,18,1,1+i%2,i*2);return[K_(t=>w(Math.min(t,.5)*2)),{t:'b',f:t=>{const p=w(Math.min(t,.5)*2);return[p[0]+2,p[1],t<.5?Math.abs(Math.sin(t*TAU*4+i))*8:0]}}]})]},
+g32:{d:7,s:[['diamond']],cap:[[0,'Honič loví, mety jsou domečky'],[.5,'Na metě nejdéle 5 vteřin, pak pryč']],a:[
+ {t:'x',f:Wd(50,34,18,14,1,2,0)},
+ KP([[0,36,22],[.2,28,34],[.45,28,34],[.6,40,46],[.8,62,44],[1,36,22]]),
+ KP([[0,72,34],[.3,72,34],[.42,60,20],[.55,50,12],[.8,50,12],[1,72,34]]),
+ K_(Wd(50,34,30,20,2,1,2)),K_(Wd(50,34,26,18,1,1,4))]},
+g33:{d:8,s:[['cone',16,31],['cone',24,31],['cone',32,31],['cone',40,31],['hoop',52,31,3],['hoop',60,31,3],['hoop',68,31,3],['dash',78,22,78,40],['bucket',92,31],['txt',8,24,'start']],cap:[[0,'Slalom mezi kužely'],[.4,'Skoky snožmo do obručí'],[.62,'Z čáry hod do kbelíku']],a:[
+ KP([[0,8,31],[.05,12,31],[.09,16,37],[.13,20,31],[.17,24,25],[.21,28,31],[.25,32,37],[.29,36,31],[.33,40,25],[.37,44,31],[.4,48,31,0],[.42,50,31,5],[.44,52,31,0],[.46,56,31,5],[.48,60,31,0],[.5,64,31,5],[.52,68,31,0],[.58,76,31],[.72,76,31],[.78,70,48],[.95,10,48],[1,8,31]]),
+ KP([[0,4,40]]),KP([[0,4,47]]),
+ BALL([[.64,.74,77,31,92,31,10]],{show:[.62,.8]})]},
+g34:{d:8,s:[['diamond']],cap:[[0,'Chyť, otoč se k další metě, hoď'],[.5,'Kolik kol stihneme za minutu?']],a:[
+ {t:'c',p:pth([[0,88,54]])},...[[50,52],[69,34],[50,15],[31,34]].map(([x,y])=>KP([[0,x,y]])),
+ BALL([0,1].flatMap(r=>[0,1,2,3].map(i=>{const P=[[50,52],[69,34],[50,15],[31,34]],a=P[i],b=P[(i+1)%4],t=r*.5+i*.12+.01;return[t,t+.1,a[0],a[1],b[0],b[1],5]})))]},
+g35:{d:6,s:[['dash',20,4,20,58],['base',62,18],['base',76,31],['base',62,44]],cap:[[0,'Vrchní hod s krokem na kužel'],[.87,'Shozený kužel = bod']],a:[
+ KP([[0,14,18]]),KP([[0,14,31]],{t:'k2'}),KP([[0,14,44]]),
+ {t:'cone',x:62,y:16,down:[[.27,1]]},{t:'cone',x:76,y:29,down:[[.57,1]]},{t:'cone',x:62,y:42,down:[[.87,1]]},
+ BALL([[.07,.27,15,18,62,16,12]],{show:[.07,.4]}),BALL([[.37,.57,15,31,76,29,12]],{show:[.37,.7]}),BALL([[.67,.87,15,44,62,42,12]],{show:[.67,1]})]},
+g36:{d:8,cap:[[0,'Zem: holé ruce dolů a nabrat'],[.5,'Nebe: ruce nahoru, palečky k sobě']],a:[
+ {t:'c',p:pth([[0,50,52]])},
+ KP([[0,50,26],[.4,50,26],[.45,58,21],[.5,50,16],[.9,50,16],[1,50,26]]),
+ KP([[0,50,16],[.4,50,16],[.5,50,26],[.88,50,26],[.94,42,21],[1,50,16]],{t:'k2'}),
+ BALL([[.03,.2,50,50,50,27,0],[.24,.36,50,27,50,50,5],[.55,.75,50,50,50,27,24],[.78,.88,50,27,50,50,5]])]},
+g37:{d:9,s:[['zone',4,4,28,26,'levé'],['zone',36,4,28,26,'střed'],['zone',68,4,28,26,'pravé'],['home',50,57]],cap:[[0,'„Střed!“'],[.33,'„Levé!“'],[.66,'„Pravé!“']],a:[
+ {t:'c',p:pth([[0,50,50]])},
+ ...[[-4,-2],[4,-2],[-2,3],[3,3]].map(([dx,dy],i)=>{const d=i*.015,L=[18+dx,24+dy],C=[50+dx,24+dy],R=[82+dx,24+dy];return KP([[0,...R],[.02+d,...R],[.15+d,...C],[.35+d,...C],[.48+d,...L],[.68+d,...L],[.81+d,...R],[1,...R]],{t:i%2?'k2':'k'})})]},
+g38:{d:8,s:[['diamond']],cap:[[0,'Kdo bude doma dřív – běžec, nebo míček?'],[.88,'Míček! Teď se vyměníme']],a:[
+ {t:'c',p:pth([[0,40,48]])},KP([[0,74,31]],{t:'k2'}),KP([[0,52,9]],{t:'k2'}),KP([[0,26,31]],{t:'k2'}),KP([[0,54,59]],{t:'k2'}),
+ KP(around(.02,.96)),
+ BALL([[.02,.16,40,47,73,32,5],[.2,.4,73,32,52,11,7],[.44,.64,52,11,27,32,7],[.68,.88,27,32,53,57,7]],{show:[.02,.96]})]},
+g39:{d:8,s:[['rect',6,6,88,50],['zone',80,22,13,18],['txt',86.5,19,'kapitán']],cap:[[0,'S míčkem stůj, přihraj volnému'],[.9,'Doručeno kapitánovi = bod!']],a:[
+ KP([[0,14,20]]),KP([[0,32,42]]),KP([[0,52,22]]),KP([[0,70,40]]),KP([[0,87,31]]),
+ K_(Wd(42,30,6,10,1,2,0),{t:'k2'}),K_(Wd(62,30,6,10,2,1,1),{t:'k2'}),K_(Wd(76,31,3,9,1,1,2),{t:'k2'}),
+ BALL([[.02,.18,14,20,32,42,6],[.25,.42,32,42,52,22,6],[.5,.66,52,22,70,40,6],[.74,.9,70,40,87,31,6]],{show:[.02,.97]})]},
+g40:{d:9,s:[['diamond'],['bucket',50,36],['hoop',42,58,3]],cap:[[0,'Odpal z tee a běž kolem met'],[.48,'Míček v kbelíku: STOP! Bod za každou metu']],a:[
+ KP([[0,38,20]],{t:'k2'}),KP([[0,66,16]],{t:'k2'}),KP([[0,30,42]],{t:'k2'}),
+ KP([[0,47,56],[.12,47,56],[.16,44,57],[.36,72,34],[.5,62,23],[.75,62,23],[.95,47,56],[1,47,56]]),{t:'swing',x:48,y:56,at:[[.02,.09]],to:[42,58,.14]},
+ BALL([[.08,.24,50,55,38,20,10],[.32,.48,38,20,50,36,6]],{show:[.08,.95]})]},
+g41:{d:9,s:[['diamond']],cap:[[0,'Krokodýli „snědí“ kutálený míček'],[.5,'Běžci zatím obíhají mety']],a:[
+ {t:'c',p:pth([[0,50,36]])},KP([[0,67,34]]),KP([[0,50,17]]),KP([[0,33,34]]),KP([[0,50,51]]),
+ KP(around(0,.48),{t:'k2'}),KP(around(.5,.98),{t:'k2'}),
+ BALL([[.02,.14,50,38,65,34,0],[.18,.28,65,34,50,38,5],[.34,.46,50,38,50,19,0],[.5,.6,50,19,50,38,5],[.66,.78,50,38,35,34,0],[.82,.92,35,34,50,38,5]])]},
 /* cviky */
 d01:{d:4,s:[['big',78,30,'C']],cap:[[0,'Dva prstíky nahoře, palec dole'],[.5,'Ukaž céčko!']],fig:loopP([[0,pz({ball:1,rs:30,re:60})],[.4,pz({ball:1,rs:30,re:60})],[.6,pz({ball:1,rs:120,re:40})],[.9,pz({ball:1,rs:120,re:40})]])},
 d02:{d:3.5,cap:[[0,'Koleno dole, rukavice míří'],[.45,'Ruka letí nahoru jako letadlo'],[.7,'…a plácne do kolena']],
@@ -458,6 +581,24 @@ d15:{d:5,s:[['diamond']],cap:[[0,'Běž!'],[.35,'Zpátky!'],[.65,'Stůj (ruka na
 d16:{d:5,s:[['diamond']],cap:[[0,'Běžec běží na první – kam hodím?']],a:[{t:'c',p:pth([[0,50,50]])},KP([[0,40,26]]),KP([[0,72,34]],{t:'k2'}),
  KP([[0,50,56],[.3,50,56],[.7,72,36],[1,72,36]],{t:'x'}),BALL([[.05,.3,50,48,41,27,0],[.38,.58,41,27,71,34,6]])]},
 d17:{d:3,cap:[[0,'Pilka, kolena, rukavice dolů'],[.5,'Hop-hop!']],fig:loopP([[0,STAND],[.3,READY],[.55,pz(Object.assign({},READY,{y:40}))],[.65,READY],[.75,pz(Object.assign({},READY,{y:40,x:42}))],[.85,pz(Object.assign({},READY,{x:42}))]])},
+d18:{d:5,s:[['line',86,6,86,56],['txt',92,32,'zeď']],cap:[[0,'Hoď o zeď…'],[.5,'…a chyť oběma rukama']],a:[
+ KP([[0,58,20]]),KP([[0,58,42]],{t:'k2'}),
+ BALL([[0,.2,60,20,85,20,5],[.2,.45,85,20,60,20,8],[.5,.7,60,20,85,20,5],[.7,.95,85,20,60,20,8]]),
+ BALL([[.1,.3,60,42,85,42,5],[.3,.55,85,42,60,42,8],[.6,.8,60,42,85,42,5],[.8,1,85,42,60,42,8]])]},
+d19:{d:10,s:[['tee',52,52],['tee',58,52],['tee',64,52]],cap:[[0,'Míček blíž k tělu'],[.333,'Uprostřed'],[.667,'Dál od těla – najdi ho!']],
+ fig:loopP([0,1,2].flatMap(i=>{const c=i/3;return[[c,BAT.st],[c+.12,BAT.load],[c+.2,BAT.hit],[c+.26,BAT.fin],[c+.31,BAT.st]]})),
+ a:[52,58,64].map((x,i)=>{const c=i/3;return BALL([[c,c+.2,x,47,x,47,0],[c+.2,c+.29,x,47,96,26,6]],{show:[c,c+.31]})})},
+d20:{d:8,s:[['tee',58,52]],cap:[[0,'Velký míč = jistý zásah'],[.5,'Pak menší míček']],
+ fig:loopP([0,1].flatMap(i=>{const c=i/2;return[[c,BAT.st],[c+.2,BAT.load],[c+.3,BAT.hit],[c+.38,BAT.fin],[c+.46,BAT.st]]})),
+ a:[BALL([[0,.3,58,44.8,58,44.8,0],[.3,.42,58,44.8,96,38,4]],{show:[0,.46],r:3.2}),BALL([[.5,.8,58,47,58,47,0],[.8,.9,58,47,96,26,6]],{show:[.5,.96]})]},
+d21:{d:10,s:[['diamond']],cap:[[0,'Poskoky na první'],[.24,'Žabka: snožmo na druhou'],[.48,'Krab: bokem na třetí'],[.72,'Sprint domů!']],a:[
+ (()=>{const P=around(0,.96);return K_(t=>{const p=kfAt(P,t),s=Math.min(3,Math.floor(t/.24)),u=(t%.24)/.24;return[p[0],p[1],s===0?3*Math.abs(Math.sin(u*Math.PI*7)):s===1?6*Math.abs(Math.sin(u*Math.PI*3)):0]})})(),
+ KP([[0,42,60]]),KP([[0,37,60]])]},
+d22:{d:12,s:[['diamond'],['dash',50,56,94,12],['dash',50,56,6,12]],cap:[[0,'Běžec dřív = SAFE (ruce do stran)'],[.33,'Míček dřív = AUT (pěst nahoru)'],[.68,'Mezi čarami = FÉR'],[.84,'Za čarou = FAUL']],a:[
+ {t:'c',p:pth([[0,58,60]])},KP([[0,41,30]]),KP([[0,75,31]]),
+ KP([[0,50,56],[.03,50,56],[.2,72,34],[.3,72,34],[.36,50,56],[.4,50,56],[.6,72,34],[.66,72,34],[.72,50,56],[1,50,56]],{t:'k2'}),
+ BALL([[.06,.26,42,30,73,32,5]],{show:[.06,.32]}),BALL([[.4,.5,42,30,73,32,5]],{show:[.4,.66]}),
+ BALL([[.7,.8,50,54,38,24,8]],{show:[.7,.83]}),BALL([[.86,.96,50,54,88,46,6]],{show:[.86,1]})]},
 /* organizace */
 r01:{d:5,cap:[[0,'Všichni do kruhu k trenérovi']],a:[{t:'c',p:pth([[0,50,31]])},...ring(50,31,14,6).map(([x,y],i)=>KP([[0,10+i*15,i%2?10:54],[.5,x,y],[1,x,y]]))]},
 r02:{d:5,cap:[[0,'Běháme…'],[.5,'Ruka nahoře = ticho, všichni ke mně']],a:[{t:'c',p:pth([[0,50,31]])},...[0,1,2,3,4].map(i=>K_(t=>{const w=Wd(50,31,34,20,1,2,i*1.3)(Math.min(t,.5)*2);if(t<.5)return w;const u=Math.min(1,(t-.5)/.25),q=ring(50,31,9,5)[i];return[w[0]+(q[0]-w[0])*u,w[1]+(q[1]-w[1])*u,0]}))]},
@@ -471,6 +612,13 @@ r06:{d:5,cap:[[0,'Co se ti dnes povedlo?'],[.6,'Ruce doprostřed: Eagles!']],a:[
 r07:{d:6,cap:[[0,'Sahám na špičky'],[.5,'Ruce nahoru, protáhnout']],fig:loopP([[0,STAND],[.25,pz({lean:70,ls:0,le:0,rs:0,re:0,glove:0})],[.45,pz({lean:70,ls:0,le:0,rs:0,re:0,glove:0})],[.6,STAND],[.75,pz({ls:180,le:0,rs:-180,re:0,glove:0})],[.9,pz({ls:180,le:0,rs:-180,re:0,glove:0})]])},
 r08:{d:6,s:[['bucket',50,52]],cap:[[0,'Kdo uklidí dřív? Tři, dva, jedna…']],a:[...[[20,15],[80,15],[30,35],[70,35]].flatMap(([x,y],i)=>[KP([[0,50,48],[.4,x,y],[.45,x,y],[.85,50,48],[1,50,48]],{t:i%2?'k2':'k'}),BALL([[.42,.85,x+1,y,51,49,0]])])]},
 r09:{d:3,cap:[[0,'Rukavice zívá: otevřít…'],[.5,'…zavřít!']],fig:loopP([[0,pz({ls:90,le:-40})],[.5,pz({ls:90,le:20})]])},
+r10:{d:10,s:[['ring',48,52,10],['home',48,55],['dash',4,45,32,45],['hoop',35,58,3],['txt',48,40,'kruh pálkaře']],cap:[[0,'V kruhu jen pálkař a trenér'],[.18,'Po švihu pálka do obruče'],[.5,'Čekáme za čarou, pálka jen na povel']],a:[
+ {t:'c',p:pth([[0,56,47]])},
+ ...[0,1,2,3].map(i=>{const S=[[46,52],[28,40],[20,40],[12,40]],p=[];for(let j=0;j<4;j++){const s=(i-j+4)%4,n=(s+3)%4,t=j*.25;p.push([t+.001,...S[s]],[t+.17,...S[s]]);if(s===0)p.push([t+.2,35,56]);p.push([t+.25,...S[n]])}return KP(p,{t:i%2?'k2':'k'})}),
+ ...[0,1,2,3].map(j=>({t:'swing',x:47,y:52,at:[[j*.25+.04,j*.25+.11]],show:[j*.25+.01,j*.25+.17]}))]},
+r11:{d:8,s:[['bucket',50,52]],cap:[[0,'Hledej poklad v trávě'],[.6,'Do kbelíku a nahlas počítáme: jedna, dvě…']],a:[
+ ...[[18,14],[82,18],[28,40],[74,40]].flatMap(([bx,by],i)=>{const pk=.3+i*.06,bk=.62+i*.07,mx=(50+bx)/2+(i%2?10:-10),my=(48+by)/2;
+  return[KP([[0,44+i*4,46],[.15,mx,my],[pk,bx,by],[pk+.05,bx,by],[bk,44+i*4,47],[1,44+i*4,46]],{t:i%2?'k2':'k'}),BALL([[0,pk+.05,bx+1.5,by,bx+1.5,by,0],[pk+.05,bk,bx+1.5,by,50,52,0]])]})]},
 /* dovednostní rutiny */
 s01:{d:9,cap:[[0,'1 Ukaž psovi míček'],[.2,'2 Z kolena'],[.45,'3–4 Krok a hod („fotbalový kop“)'],[.75,'5 Zhoupni a pal']],
  fig:loopP([[0,THR.ready],[.1,THR.back],[.18,THR.ready],[.22,pz(Object.assign({},KNEEL,{ls:95,le:0,rs:-115,re:-35,ball:1}))],[.3,pz(Object.assign({},KNEEL,{lean:25,ls:30,le:40,rs:-262,re:0}))],[.38,pz(Object.assign({},KNEEL,{lean:35,ls:-10,le:60,rs:-345,re:0}))],
@@ -524,7 +672,7 @@ function animate(box,id){
  sv('rect',{x:0,y:0,width:100,height:62,rx:3,fill:'var(--sunk)'},svg);
  const gs=sv('g',{},svg);drawStatic(gs,sp.s);
  const acts=(sp.a||[]).map(a=>{const g=sv('g',{},svg);let el={g};
-  if(a.t==='b'){el.sh=sv('ellipse',{rx:1.1,ry:.6,fill:'var(--ink)','fill-opacity':.25},g);el.c=sv('circle',{r:1.15,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':.35},g)}
+  if(a.t==='b'){const br=a.r||1.15;el.sh=sv('ellipse',{rx:br*.95,ry:br*.52,fill:'var(--ink)','fill-opacity':.25},g);el.c=sv('circle',{r:br,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':.35},g)}
   else if(a.t==='c'){el.c=sv('rect',{width:4.6,height:4.6,x:-2.3,y:-2.3,rx:.8,fill:'var(--ink)'},g);const t=sv('text',{y:1.2,'text-anchor':'middle','font-size':3.2,fill:'var(--bg)','font-weight':700},g);t.textContent='T'}
   else if(a.t==='spin'||a.t==='link'||a.t==='swing')el.l=sv('line',{stroke:a.t==='spin'?'var(--ball)':a.t==='link'?'var(--ball)':'var(--muted)','stroke-width':a.t==='spin'?1.4:a.t==='link'?1.2:1.3,'stroke-linecap':'round'},g);
   else if(a.t==='cone'){el.up=sv('polygon',{points:'0,-2.2 -1.7,1.4 1.7,1.4',fill:'var(--ball)',stroke:'var(--ball-ink)','stroke-width':.3},g);el.dn=sv('rect',{x:-2,y:-.8,width:4,height:1.6,rx:.4,fill:'var(--ball)',stroke:'var(--ball-ink)','stroke-width':.3},g)}
@@ -546,7 +694,7 @@ function animate(box,id){
    if(a.t==='cone'){const d=(a.down||[]).some(([s,e])=>t>=s&&t<e);el.g.setAttribute('transform',`translate(${a.x} ${a.y})`);el.up.style.display=d?'none':'';el.dn.style.display=d?'':'none';return}
    if(a.t==='dot'){el.g.setAttribute('transform',`translate(${a.x} ${a.y})`);return}
    const [x,y,z]=pos(a,t);
-   if(a.t==='b'){el.sh.setAttribute('cx',x);el.sh.setAttribute('cy',y+.6);el.c.setAttribute('cx',x);el.c.setAttribute('cy',y-(z||0)*.6);el.c.setAttribute('r',1.15+(z||0)*.03);return}
+   if(a.t==='b'){el.sh.setAttribute('cx',x);el.sh.setAttribute('cy',y+(a.r||1.15)*.52);el.c.setAttribute('cx',x);el.c.setAttribute('cy',y-(z||0)*.6);el.c.setAttribute('r',(a.r||1.15)+(z||0)*.03);return}
    el.g.setAttribute('transform',`translate(${x} ${y-(z||0)*.3})`);
    if(el.c&&a.t!=='c'){const ty=(a.to&&t>=a.at)?a.to:a.t;el.c.setAttribute('fill',ty==='k2'?'var(--team2)':ty==='x'?'var(--warn)':'var(--field)')}
   });
