@@ -1199,6 +1199,10 @@ setInterval(tick,250);
 async function lock(on){if(on&&S.pref.wake===false)on=false;try{if(on&&navigator.wakeLock&&!wl)wl=await navigator.wakeLock.request('screen');else if(!on&&wl){await wl.release();wl=null}}catch(e){wl=null}}
 
 /* ===== Hry a cviky ===== */
+/* obrázky ze Sbírky her Eagles U7 2026 (číslo = strana hry ve sbírce); webová verze má složku img/ */
+const GIMG={},GIMGV={},gImg=n=>'img/hra'+String(n).padStart(2,'0')+'.jpg';
+[['g01',1],['g02',2],['g03',3],['g04',4],['g06',5],['g07',6],['g08',7],['g09',8],['g25',11],['g19',12],['g20',13],['g28',14],['g21',16],['g26',17],['g27',18],['g22',21],['g23',23],['g24',24],['g15',26],['g05',27],['g30',28],['g29',29],['g31',30]].forEach(([id,n])=>GIMG[id]=gImg(n));
+[['g07',9],['g08',10],['g01',15],['g03',19],['g24',20],['g31',22],['g05',25],['g06',31]].forEach(([id,n])=>GIMGV[id]=gImg(n));
 function vLib(){
  const L=S.lib;
  return `<section class="card">
@@ -1221,11 +1225,12 @@ function openAct(id){const a=ACT[id];if(!a)return;
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="${esc(a.n)}">
   <div class="sumline"><span class="kb ${a.k}">${KINDS[a.k]} · ${CATS[a.c]||''}</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <h2>${esc(a.n)}</h2>
+  ${GIMG[a.id]?`<img class="gimg" src="${GIMG[a.id]}" alt="Obrázek ke hře ${esc(a.n)}" loading="lazy">`:''}
   ${AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}
   <div class="dl">
    <div><span class="label">${a.k==='game'?'Jak se hraje':'Jak na to'}</span><p>${esc(a.d)}</p></div>
    ${a.steps?`<div><span class="label">Kroky rutiny</span>${stepsHtml(a)}</div>`:''}
-   ${a.va?`<div><span class="label">Varianta</span><p>${esc(a.va)}</p></div>`:''}
+   ${a.va?`<div><span class="label">Varianta${a.v?' – '+esc(a.v):''}</span>${GIMGV[a.id]?`<img class="gimg" src="${GIMGV[a.id]}" alt="Obrázek k variantě ${esc(a.v||'')}" loading="lazy">`:''}<p>${esc(a.va)}</p></div>`:''}
    ${a.kid?`<div><span class="label">Řekni dětem</span><p>${esc(a.kid)}</p></div>`:''}
    <div><span class="label">Rozvíjí</span><p>${esc(a.dev||'')}</p></div>
    <div><span class="label">Pomůcky</span>${gearOf(a).length?`<div class="row" style="gap:6px">${gearOf(a).map(g=>`<span class="chip">${esc(g)}</span>`).join('')}</div>`:'<p>bez pomůcek</p>'}${a.gn?`<p class="small muted">${esc(a.gn)}</p>`:''}</div>

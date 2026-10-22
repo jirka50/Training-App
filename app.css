@@ -131,6 +131,7 @@ p{margin:0}
  .dip-f span{border-top:.4mm solid #17251c;padding-top:1.5mm;min-width:70mm}
  .dip-f small{color:#4a5a50}
 }
+.gimg{display:block;width:100%;height:auto;border-radius:12px;margin:6px 0 10px;border:1px solid var(--line);background:#fff}
 .kid.sel{outline:3px solid var(--ball);outline-offset:1px}
 .lvl{font:700 11px var(--f-disp);letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 4px;background:var(--sunk);color:var(--muted)}
 .chip.on .lvl{background:rgba(255,255,255,.2);color:inherit}
