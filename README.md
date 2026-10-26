@@ -11,13 +11,17 @@ Plánovač používá **stejnou databázi Firebase jako Baseball Scorekeeper**. 
 
 ## Role
 - **Správce** – přihlásí se svým kódem správce ze Scorekeeperu. Vytváří a mění společný kód pro trenéry.
-- **Trenér** – přihlásí se společným kódem trenérů. Plánuje tréninky, vidí soupisky všech týmů, upravuje úrovně, dovednosti a seznam trenérů.
+- **Trenér s osobním kódem** – každý trenér má vlastní kód, který mu vytvoří správce v Nastavení → Trenéři (Vytvořit kód / Poslat / Nový kód / Zrušit). Vidí jen týmy, u kterých ho správce zaškrtl, v hlavičce má své jméno, uložené tréninky nesou autora (filtr „Moje tréninky“ v Historii) a vzhled a hlasová hlášení se mu ukládají k profilu. Seznam trenérů vidí jen pro čtení.
+- **Trenér se společným kódem** – přechodná možnost, dokud správce společný kód nezruší. Vidí všechny týmy a může upravovat seznam trenérů jako dřív.
 - Kód zapisovatele ze Scorekeeperu do plánovače nepustí a kód trenéra nepustí do Scorekeeperu.
 
 ## Data ve Firebase
 - čte: `teamlist/<tid>`, `teams/<tid>/roster` (spravuje Scorekeeper)
 - píše: `training/season` (aktuální sezóna), `training/ages/<id>` (věkové kategorie), `training/staff`, `training/coaches/<tid>`, `training/kids/<tid>` (úrovně a dovednosti podle čísla dresu), `training/plans/<id>`, `training/tpls/<id>`, `training/custom/<id>`
-- kódy: `pinmap/<kód> = {role:'coach'}`
+- kódy: společný `pinmap/<kód> = {role:'coach'}`, osobní `pinmap/<kód> = {role:'coach', coach:'<id trenéra z training/staff>'}`
+- profil trenéra: `training/prefs/<id trenéra>` (vzhled, hlas, počasí), autor tréninku v `by` uvnitř `training/plans/<id>`
+- historie přihlášení: `logins/<pushId> = {t, uid, role, coach, code (první 4 znaky), dev, kind: login|open}` – zapisuje každý přihlášený jen nový záznam za sebe, čte a maže jen správce (Nastavení → Historie přihlášení, záznamy starší než rok se mažou)
+- omezení na vlastní týmy je jen v zobrazení aplikace; pravidla databáze ho nevynucují, protože seznam trenérů je uložený jako text JSON
 - zápasy: výchozí zápasy (T-ball, Coach pitch, Mini zápas 3 na 3, Všichni odpálí) se jednou zapíšou do `training/custom` i s animací: `zap01–zap04` od verze 1.1 (značka `training/seeds/zapasy`), `zap05–zap12` jako druhá dávka (značka `training/seeds/zapasy2`); značky hlídají, aby se smazané znovu nevracely; T-ball zápas (`zap01`) je sloučený do `zap04` Všichni odpálí, pak střídání – jednorázová úprava se značkou `training/seeds/slouceni-zap01` ho smaže a odkazy v trénincích a šablonách přepíše na `zap04`
 
 ## Zprovoznění

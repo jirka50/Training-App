@@ -1021,7 +1021,7 @@ const S={
  tab:(t=>t==='team'?'set':t)(ls.get('u7-tab','plan')),teamId:ls.get('u7-team',null),
  teams:{},custom:{},plans:{},ready:false,mode:'local',
  draft:Object.assign({week:0,tpl:'',minutes:60,coachSel:{},guests:{},present:{},focus:['hazeni','chytani'],venue:'venku',date:today()},ls.get('u7-draft',{})),
- hist:{fav:false,focus:'all',q:'',sea:true},
+ hist:{fav:false,focus:'all',q:'',sea:true,mine:false},
  tpls:{},tplForm:false,openRate:false,
  pref:Object.assign({theme:'',wake:true,voice:true},ls.get('u7-pref',{})),mv:null,
  plan:ls.get('u7-plan',null),sel:null,lib:{kind:'all',cat:'all',age:'all',q:''},ages:{},gear:{},
@@ -1029,7 +1029,8 @@ const S={
  confirm:null,imp:null,mk:null,addNew:false
 };
 S.draft.date=today();if(!S.draft.coachSel)S.draft.coachSel={};if(!S.draft.guests)S.draft.guests={};
-const savePref=()=>ls.set('u7-pref',S.pref);
+let prefHook=()=>{};
+function savePref(){ls.set('u7-pref',S.pref);prefHook()}
 function applyTheme(init){const r=document.documentElement;const t=S.pref.theme||'';if(t)r.dataset.theme=t;else if(!init)delete r.dataset.theme;const b=document.getElementById('sunBtn');if(b){b.classList.toggle('on',t==='sun');b.setAttribute('aria-pressed',String(t==='sun'))}}
 const saveDraft=()=>ls.set('u7-draft',S.draft);
 /* Víc rozpracovaných tréninků v jednom telefonu: OPEN[id] = {plan, run, gear, at} */
@@ -1762,6 +1763,7 @@ function vHist(){
   ${list.length?`<p class="small">Zaměření posledních ${Math.min(6,list.length)} tréninků: ${FOCUS.filter(f=>cnt[f]).map(f=>CATS[f]+' '+cnt[f]+'×').join(', ')||'–'}${miss.length?`<br><span class="muted">Dlouho se nedělalo: ${miss.map(f=>CATS[f]).join(', ')}</span>`:''}</p>
   <input type="search" id="histq" data-c="histq" placeholder="Hledat podle názvu, hry nebo trenéra" value="${esc(H.q)}" aria-label="Hledat v historii">
   ${SEA().name&&(SEA().from||SEA().to)?`<div class="row"><button class="chip ${H.sea?'on':''}" data-a="hsea" data-v="1">${esc(SEA().name)} · ${list.filter(([,p])=>inSeason(p.date)).length}</button><button class="chip ${!H.sea?'on':''}" data-a="hsea" data-v="0">Všechny sezóny</button></div>`:''}
+  ${ME()?`<div class="row"><button class="chip ${!H.mine?'on':''}" data-a="hmine" data-v="0">Všech trenérů</button><button class="chip ${H.mine?'on':''}" data-a="hmine" data-v="1">Moje tréninky · ${list.filter(([,p])=>p.by===ME()).length}</button></div>`:''}
   <div class="row"><button class="chip ${!H.fav?'on':''}" data-a="hfav" data-v="0">Všechny · ${list.length}</button><button class="chip ${H.fav?'on':''}" data-a="hfav" data-v="1">★ Oblíbené · ${nFav}</button></div>
   <div class="row">${[['all','Všechna zaměření']].concat(FOCUS.map(f=>[f,CATS[f]])).map(([k,l])=>`<button class="chip ${H.focus===k?'on':''}" data-a="hfocus" data-v="${k}">${l}</button>`).join('')}</div>`
   :'<p class="muted">Uložené tréninky se objeví tady. Sestav trénink a klepni na Uložit do historie.</p>'}</section>
@@ -1770,6 +1772,8 @@ function vHist(){
 function histAll(){return Object.entries(S.plans).filter(([,p])=>planTeams(p).includes(S.teamId)).sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''))}
 /* ===== Souhrn uloženého tréninku ===== */
 let sumParents=()=>'';
+/* profil trenéra (webová verze): ME() = id přihlášeného trenéra, byName(id) = jeho jméno */
+let ME=()=>'',byName=()=>'';
 function openSummary(id){const p=S.plans[id];if(!p)return;const sh=$('#sheet'),G=p.groups||[],r=p.rate||{};let t=0;
  const its=[...new Set((p.blocks||[]).flatMap(b=>b.items))].map(i=>ACT[i]).filter(a=>a&&a.k!=='routine');
  const cats=[...new Set(its.map(a=>a.c).filter(c=>FOCUS.includes(c)))],up=Object.values(r).filter(v=>v>0).length,down=Object.values(r).filter(v=>v<0).length;
@@ -1790,10 +1794,10 @@ function openSummary(id){const p=S.plans[id];if(!p)return;const sh=$('#sheet'),G
  sh.hidden=false;sh.dataset.id=''}
 function renderHistList(){
  const el=$('#histList');if(!el)return;const H=S.hist,q=H.q.trim().toLowerCase();
- const seaOn=H.sea&&SEA().name&&(SEA().from||SEA().to),all=histAll(),list=all.filter(([,p])=>(!seaOn||inSeason(p.date))&&(!H.fav||p.fav)&&(H.focus==='all'||(p.focus||[]).includes(H.focus)||(p.blocks||[]).some(b=>b.items.some(i=>ACT[i]&&ACT[i].c===H.focus)))&&(!q||(planTitle(p)+' '+(p.coaches||[]).join(' ')+' '+(p.blocks||[]).map(b=>b.items.map(actName).join(' ')).join(' ')).toLowerCase().includes(q)));
+ const seaOn=H.sea&&SEA().name&&(SEA().from||SEA().to),all=histAll(),list=all.filter(([,p])=>(!seaOn||inSeason(p.date))&&(!H.fav||p.fav)&&(!H.mine||!ME()||p.by===ME())&&(H.focus==='all'||(p.focus||[]).includes(H.focus)||(p.blocks||[]).some(b=>b.items.some(i=>ACT[i]&&ACT[i].c===H.focus)))&&(!q||(planTitle(p)+' '+(p.coaches||[]).join(' ')+' '+(p.blocks||[]).map(b=>b.items.map(actName).join(' ')).join(' ')).toLowerCase().includes(q)));
  if(!all.length){el.innerHTML='';return}
  el.innerHTML=(list.length?'':`<p class="muted" style="text-align:center">Žádný trénink neodpovídá filtru.${H.fav?' Hvězdičkou ☆ u tréninku ho přidáš do oblíbených.':''}</p>`)+list.map(([id,p])=>`<section class="card"><div class="sumline"><h3>${esc(planTitle(p))}${p.name?` <span class="muted" style="font-weight:500">· ${fmtDate(p.date)}</span>`:''} · ${p.minutes} min${p.week?` <span class="lvl">týden ${p.week}</span>`:''}${p.season&&p.season!==SEA().name?` <span class="lvl">${esc(p.season)}</span>`:''}${p.rate&&Object.keys(p.rate).length?' <span class="lvl">zhodnoceno</span>':''}</h3><button class="ib star ${p.fav?'on':''}" data-a="fav" data-v="${esc(id)}" aria-pressed="${!!p.fav}" aria-label="${p.fav?'Odebrat z oblíbených':'Přidat do oblíbených'}">${p.fav?'★':'☆'}</button></div>
-  <p class="small muted">${planTeams(p).length>1?'společně s '+planTeams(p).filter(t=>t!==S.teamId).map(t=>esc(tName(t))).join(', ')+' · ':''}${(p.present||[]).length} dětí · ${(p.coaches||[]).map(esc).join(', ')}${(p.focus||[]).length?' · '+(p.focus||[]).map(f=>CATS[f]).join(', '):''}</p>
+  <p class="small muted">${planTeams(p).length>1?'společně s '+planTeams(p).filter(t=>t!==S.teamId).map(t=>esc(tName(t))).join(', ')+' · ':''}${(p.present||[]).length} dětí · ${(p.coaches||[]).map(esc).join(', ')}${p.by&&byName(p.by)?' · připravil(a) '+esc(byName(p.by)):''}${(p.focus||[]).length?' · '+(p.focus||[]).map(f=>CATS[f]).join(', '):''}</p>
   <p class="small">${(p.blocks||[]).map(b=>b.items.map(actName).join(' + ')).join(' → ')}</p>
   ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="hsum" data-v="${esc(id)}">Souhrn</button><button class="btn ghost sm" data-a="load" data-v="${esc(id)}">Otevřít</button><button class="btn ghost sm" data-a="dup" data-v="${esc(id)}">Použít znovu</button><button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button></div>`}
  </section>`).join('')
@@ -1883,7 +1887,7 @@ const actions={
  impno:()=>{S.imp=null;render(true)},
  load:v=>{parkCurrent();S.plan=clone(S.plans[v]);S.draft.name=S.plan.name||'';S.draft.week=S.plan.week||0;S.draft.teamsSel=planTeams(S.plan).filter(t=>S.teams[t]);S.draft.minutes=S.plan.minutes;selectCoachesByNames(S.plan.coaches||[]);S.draft.date=S.plan.date;saveDraft();savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();actions.tab('train')},
  dup:v=>{parkCurrent();const p=clone(S.plans[v]);S.draft.teamsSel=planTeams(p).filter(t=>S.teams[t]);p.teams=selTeams();p.team=p.teams[0];p.id=uid();p.date=today();p.present=presentKeys();p.coaches=coachNames();S.plan=p;S.draft.date=p.date;const cc=coachCount();p.groups=makeGroups(p.present,cc>=2?cc:1,S.draft.mix!==false);fitBlocks();saveDraft();savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();actions.tab('train')},
- hfav:v=>{S.hist.fav=v==='1';render(true)},
+ hfav:v=>{S.hist.fav=v==='1';render(true)},hmine:v=>{S.hist.mine=v==='1';render(true)},
  hfocus:v=>{S.hist.focus=v;render(true)},
  fav:async v=>{const p=clone(S.plans[v]);if(!p)return;p.fav=!p.fav;try{await Store.put('plans',v,p);if(S.plan&&S.plan.id===v){S.plan.fav=p.fav;savePlan()}toast(p.fav?'Přidáno do oblíbených.':'Odebráno z oblíbených.')}catch(e){}},
  askplan:v=>{S.confirm='p_'+v;render(true)},
