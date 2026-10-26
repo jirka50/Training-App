@@ -142,7 +142,10 @@ p{margin:0}
 .psteps button{font-size:16px}
 .linkbtn{border:0;background:none;padding:0;color:var(--field);text-decoration:underline;font:inherit;cursor:pointer}
 .clock .bmin{display:block;font:500 12px/1.2 var(--f-body);color:var(--muted);margin-top:2px}
-.clock .bedit{margin-top:6px;width:34px;height:30px;font-size:18px}
+.blk{position:relative}
+.blk>.bbody{padding-right:46px}
+.blk>.bedit{position:absolute;top:8px;right:0;width:38px;height:34px;font-size:18px}
+.blk.ed>.bedit{right:8px}
 .blk.ed{background:var(--sunk);border-radius:12px;padding:8px;margin:0 -8px}
 .card.fold{padding:0}
 .foldh{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;width:100%;background:none;border:0;padding:14px 16px;text-align:left;color:var(--ink);font:inherit;cursor:pointer}

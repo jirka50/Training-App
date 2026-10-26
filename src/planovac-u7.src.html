@@ -147,7 +147,10 @@ p{margin:0}
 .psteps button{font-size:16px}
 .linkbtn{border:0;background:none;padding:0;color:var(--field);text-decoration:underline;font:inherit;cursor:pointer}
 .clock .bmin{display:block;font:500 12px/1.2 var(--f-body);color:var(--muted);margin-top:2px}
-.clock .bedit{margin-top:6px;width:34px;height:30px;font-size:18px}
+.blk{position:relative}
+.blk>.bbody{padding-right:46px}
+.blk>.bedit{position:absolute;top:8px;right:0;width:38px;height:34px;font-size:18px}
+.blk.ed>.bedit{right:8px}
 .blk.ed{background:var(--sunk);border-radius:12px;padding:8px;margin:0 -8px}
 .card.fold{padding:0}
 .foldh{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;width:100%;background:none;border:0;padding:14px 16px;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
@@ -1564,7 +1567,7 @@ function vPlanOut(){
   else{const multi=b.items.length>1,per=Math.floor(b.min/b.items.length);
    const note=cm?(G>1?'Všechny skupiny dělají totéž, každá se svým trenérem':'Celý tým spolu'):'';
    body=`${note||multi?`<p class="small muted">${note}${multi?(note?' · ':'')+'asi '+per+' min na každou položku':''}</p>`:''}<div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${multi?si+1:'▶'}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit za jinou náhodně">⟳</button>${PICKABLE.includes(b.type)?`<button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat ze seznamu">☰</button>`:''}${multi?`<button class="ib" data-a="rmitem" data-b="${bi}" data-s="${si}" aria-label="Odebrat z bloku">✕</button>`:''}</span>`:''}</div>`).join('')}</div>${cm&&ed?`<div class="row"><button class="btn ghost sm" data-a="additem" data-b="${bi}">+ Další cvik do bloku</button></div>`:''}`}
-  return `<div class="blk ${ed?'ed':''}"><div class="clock">${start}′<small>${BT[b.type]||b.type}</small><span class="bmin">${b.min} min${b.mode==='st'?' · stanoviště':''}</span><button class="ib bedit" data-a="bedit" data-v="${esc(bk)}" aria-expanded="${ed}" aria-label="${ed?'Hotovo':'Upravit blok'}">${ed?'✓':'⋯'}</button></div><div class="bbody">${ed?seg:''}${body}${ed?ctr:''}</div></div>`
+  return `<div class="blk ${ed?'ed':''}"><div class="clock">${start}′<small>${BT[b.type]||b.type}</small><span class="bmin">${b.min} min${b.mode==='st'?' · stanoviště':''}</span></div><div class="bbody">${ed?seg:''}${body}${ed?ctr:''}</div><button class="ib bedit" data-a="bedit" data-v="${esc(bk)}" aria-expanded="${ed}" aria-label="${ed?'Hotovo':'Upravit blok'}">${ed?'✓':'⋯'}</button></div>`
  }).join('');
  let h=`<section class="card" id="planCard">
   <div class="sumline"><h2 style="flex:1 1 100%">${esc(planTitle(p))}</h2><span class="total ${total!==p.minutes?'bad':''}">${p.age?p.age+' · ':''}${total} / ${p.minutes} min</span></div>
