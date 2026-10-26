@@ -56,7 +56,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 @media (max-width:420px){.menu-btn .cur{display:none}}
 main{display:grid;gap:16px;padding-top:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:14px;min-width:0}
-h2{font:700 24px/1.1 var(--f-disp);text-transform:uppercase;letter-spacing:.03em;margin:0;text-wrap:balance}
+h2{font:700 20px/1.15 var(--f-disp);text-transform:uppercase;letter-spacing:.02em;margin:0;text-wrap:balance}
 h3{font:700 19px/1.15 var(--f-disp);text-transform:uppercase;letter-spacing:.03em;margin:0}
 p{margin:0}
 .label{font:600 13px/1.2 var(--f-disp);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
@@ -215,7 +215,25 @@ table.mx th{font:600 14px var(--f-disp);letter-spacing:.05em;text-transform:uppe
 /* field mode */
 .now{display:grid;gap:10px;text-align:center;justify-items:center}
 .timer{font:700 clamp(72px,24vw,132px)/1 var(--f-disp);font-variant-numeric:tabular-nums;letter-spacing:.01em}
-.timer.over{color:var(--warn)}
+.timer{border-radius:18px;padding:2px 22px;transition:background .3s,color .3s}
+.timer.ok{background:var(--field);color:var(--field-ink)}
+.timer.last{background:var(--ball);color:#1b1b12}
+.timer.over{background:var(--warn);color:#fff}
+.prog[data-st=last] i{background:var(--ball)}
+.prog[data-st=over] i{background:var(--warn)}
+.now-l,.now-r{display:grid;gap:10px;justify-items:center;width:100%}
+.fbar{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:64px minmax(0,1fr) 64px 64px;gap:8px;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--bg) 18%);margin-top:4px}
+.fb{height:64px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 24px/1 var(--f-disp)}
+.fb.main{background:var(--field);color:var(--field-ink);border:0;font-size:26px;text-transform:uppercase;letter-spacing:.04em}
+.fb.main.run{background:var(--surface);color:var(--ink);border:2px solid var(--field)}
+.fb:disabled{opacity:.35}
+@media (orientation:landscape) and (max-height:540px){
+ .now{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:start;text-align:left}
+ .now-l{position:sticky;top:8px}
+ .timer{font-size:clamp(64px,26vh,120px)}
+ .fbar{grid-template-columns:72px minmax(0,1fr) 72px 72px;max-width:640px;margin-inline:auto}
+ .fb{height:56px}
+}
 .prog{height:10px;width:100%;background:var(--sunk);border-radius:99px;overflow:hidden}
 .prog i{display:block;height:100%;background:var(--ball);width:0}
 .now .aname{font-size:28px;text-align:center}
@@ -1611,21 +1629,23 @@ function vField(){
  else{const a=ACT[b.items[s.item]],G=nG(S.plan);mid=`${G>1&&MODEABLE.includes(b.type)?`<p class="small">Všechny skupiny dělají totéž: ${S.plan.groups.map((g,gi)=>GL[gi]+' – '+esc(S.plan.coaches[gi]||'')).join(', ')}</p>`:''}<button class="aname" data-a="open" data-v="${a?a.id:''}">${esc(a?a.n:'')}</button>${a&&AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}${a&&a.kid?`<div class="cue"><span class="label">Řekni dětem</span><br>${esc(a.kid)}</div>`:''}${a&&a.steps?`<div class="cue"><span class="label">Kroky</span>${stepsHtml(a)}</div>`:''}${a?`<div class="cue small">${esc(a.d)}</div>`:''}`}
  const nx=st[S.run.i+1];
  return bar+`<section class="card now">
-  <span class="label">${esc(planTitle(S.plan))} · ${BT[b.type]||''} · ${at}′–${at+s.min}′ z ${S.plan.minutes}′</span>
+  <div class="now-l"><span class="label">${esc(planTitle(S.plan))} · ${BT[b.type]||''} · ${at}′–${at+s.min}′ z ${S.plan.minutes}′</span>
   <div class="timer" id="timer">${s.min}:00</div>
   <div class="prog"><i id="prog"></i></div>
-  <div class="row" style="justify-content:center">
-   <button class="ib" data-a="prev" aria-label="Předchozí" ${S.run.i===0?'disabled':''}>◀</button>
-   <button class="btn ${S.run.running?'ghost':''}" data-a="startstop">${S.run.running?'Pauza':(S.run.left!=null?'Pokračovat':'Start')}</button>
-   <button class="btn ghost sm" data-a="plus1">+1 min</button>
-   <button class="ib" data-a="next" aria-label="Další" ${S.run.i>=st.length-1?'disabled':''}>▶</button>
-  </div>
+  ${nx?`<p class="small muted">Další: <b>${esc(stepTitle(nx))}</b> · ${nx.min} min</p>`:'<p class="small muted">Poslední blok tréninku</p>'}</div>
+  <div class="now-r">
   <label class="row small"><input type="checkbox" id="auto" data-c="auto" ${S.run.auto?'checked':''}> Po skončení času automaticky na další blok</label>
   <label class="row small"><input type="checkbox" id="voice" data-c="voice" ${S.pref.voice!==false?'checked':''}> Hlásit střídání nahlas${window.speechSynthesis?'':' (tento prohlížeč neumí)'}</label>
   ${mid}
   ${S.plan.groups.flat().length?'<div class="row" style="justify-content:center"><button class="btn ghost sm" data-a="mkopen">✓ Kdo co zvládl</button></div>':''}
-  ${nx?`<p class="small muted">Další: <b>${esc(stepTitle(nx))}</b> · ${nx.min} min</p>`:'<p class="small muted">Poslední blok tréninku</p><button class="btn ball" data-a="rateopen">Zhodnotit trénink</button>'}
+  ${nx?'':'<button class="btn ball" data-a="rateopen">Zhodnotit trénink</button>'}</div>
  </section>
+ <div class="fbar" role="group" aria-label="Ovládání časovače">
+  <button class="fb" data-a="prev" aria-label="Předchozí blok" ${S.run.i===0?'disabled':''}>◀</button>
+  <button class="fb main ${S.run.running?'run':''}" data-a="startstop">${S.run.running?'❚❚ Pauza':(S.run.left!=null?'▶ Pokračovat':'▶ Start')}</button>
+  <button class="fb" data-a="plus1" aria-label="Přidat minutu">+1′</button>
+  <button class="fb" data-a="next" aria-label="Další blok" ${S.run.i>=st.length-1?'disabled':''}>▶</button>
+ </div>
  <section class="card"><h2>Průběh</h2><div class="steps">${st.map((x,i)=>{let a2=0;for(let j=0;j<i;j++)a2+=st[j].min;return `<button class="stp ${i===S.run.i?'cur':i<S.run.i?'done':''}" data-a="goto" data-v="${i}"><span>${a2}′</span><span>${esc(stepTitle(x))}</span><span>${x.min}′</span></button>`}).join('')}</div></section>`
 }
 let actx=null,beeped=false,wl=null;
@@ -1657,7 +1677,7 @@ function tick(force){
  if(S.run.running&&ms<=60000&&ms>0&&warnedFor!==S.run.i&&s.min>=2){warnedFor=S.run.i;say('Ještě minuta.')}
  const el=$('#timer'),pr=$('#prog');if(!el)return;
  const neg=ms<0,a=Math.abs(ms),m=Math.floor(a/60000),sec=Math.floor(a%60000/1000);
- el.textContent=(neg?'+':'')+m+':'+String(sec).padStart(2,'0');el.classList.toggle('over',neg);
+ el.textContent=(neg?'+':'')+m+':'+String(sec).padStart(2,'0');el.classList.toggle('over',neg);el.classList.toggle('last',!neg&&ms<=60000);el.classList.toggle('ok',S.run.running&&ms>60000);if(pr)pr.parentNode.dataset.st=neg?'over':ms<=60000?'last':'ok';
  if(pr)pr.style.width=Math.min(100,Math.max(0,100-ms/(s.min*600)))+'%'
 }
 setInterval(tick,250);
