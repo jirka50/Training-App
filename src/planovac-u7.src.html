@@ -523,6 +523,10 @@ const A=[
  va:'Místo posunu bokem lze střídat sprint, běh pozpátku nebo vysoká kolena. Pro starší místo dřepu klik nebo angličák.',
  kid:'„Bokem ke kuželu, ťuk, bokem zpátky – chyť a hoď!“',
  link:'https://www.dugoutcaptain.com/drill/two-cone-agility-drill/',lt:'Dugout Captain – Two Cone Agility Drill'},
+{id:'d25',k:'drill',n:'Krokodýlí tlama od trenéra',c:'chytani',e:1,min:6,kids:2,st:1,gear:['Měkké míčky', 'Rukavice'],gn:'koš míčků pro trenéra',
+ dev:'chytání přízemních míčů, postoj, souhra obou rukou',
+ d:'Děti stojí v řadě vedle sebe s rozestupy 1,5–2 m, trenér stojí 3–4 m před nimi a kutálí míček po zemi postupně každému v řadě. Chytající má rukavici otevřenou u země („spodní čelist“) a druhou ruku nad ní („horní čelist“). Po chycení tlama zaklapne a dítě míček vrátí trenérovi. Postupně ze stoje a z větší dálky.',
+ kid:'„Krokodýl má tlamu dole u země, a když míček přijde – ham!“'},
 /* --- RUTINY --- */
 {id:'r01',k:'routine',n:'Nástup a pozdrav',c:'rutina',slot:'start',min:3,kids:1,gear:[],
  dev:'struktura tréninku, pozornost',
@@ -878,6 +882,10 @@ d24:(()=>{const L=(a,b,u)=>a+(b-a)*u,MX=50,MY=28,CX=50,CY=52;
  return{d:12,s:[['cone',26,28],['cone',74,28],['ring',MX,MY,3.6],['txt',MX,22.5,'střed'],['dash',29,33.5,71,33.5]],
   cap:[[0,'Posun bokem ke kuželu, nohy se nekříží'],[.11,'Dotkni se kuželu'],[.15,'Bokem zpátky doprostřed'],[.28,'Chyť míček od trenéra'],[.36,'Hoď ho zpátky'],[.43,'Dřep (starší: klik nebo angličák)'],[.5,'Teď k druhému kuželu'],[.61,'Dotkni se kuželu'],[.65,'Bokem zpátky doprostřed'],[.78,'Chyť míček od trenéra'],[.86,'Hoď ho zpátky'],[.93,'Dřep a znovu od začátku']],
   a:[{t:'c',p:pth([[0,CX,CY]])},K_(kid),{t:'b',f:ball}]}})(),
+d25:(()=>{const X=[18,34,50,66,82],Y=20,CX=50,CY=50,n=X.length,seg=[];
+ X.forEach((x,i)=>{const t=i/n,d=1/n;seg.push([t+.02*d,t+.45*d,CX,CY-2,x,Y+2,0],[t+.6*d,t+.95*d,x,Y+2,CX,CY-2,6])});
+ return{d:10,cap:[[0,'Trenér kutálí míček po zemi postupně každému v řadě'],[.5,'Krokodýlí tlama: rukavice dole – ham! – a míček zpět']],
+  a:[{t:'c',p:pth([[0,CX,CY]])},...X.map(x=>KP([[0,x,Y]])),BALL(seg)]}})(),
 /* organizace */
 r01:{d:5,cap:[[0,'Všichni do kruhu k trenérovi']],a:[{t:'c',p:pth([[0,50,31]])},...ring(50,31,14,6).map(([x,y],i)=>KP([[0,10+i*15,i%2?10:54],[.5,x,y],[1,x,y]]))]},
 r02:{d:5,cap:[[0,'Běháme…'],[.5,'Ruka nahoře = ticho, všichni ke mně']],a:[{t:'c',p:pth([[0,50,31]])},...[0,1,2,3,4].map(i=>K_(t=>{const w=Wd(50,31,34,20,1,2,i*1.3)(Math.min(t,.5)*2);if(t<.5)return w;const u=Math.min(1,(t-.5)/.25),q=ring(50,31,9,5)[i];return[w[0]+(q[0]-w[0])*u,w[1]+(q[1]-w[1])*u,0]}))]},
