@@ -294,8 +294,8 @@ function whoTeams(){let t=(WHO.teams||[]).filter(x=>S.teams[x]);if(!t.length&&S.
 function vWho(){
  if(!team())return noTeam();const den='';const sel=whoTeams(),all=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs'));
  const n=sel.reduce((s,t)=>s+(S.teams[t].players||[]).length,0),nf=sel.reduce((s,t)=>s+(S.teams[t].players||[]).filter(p=>photoOf(t,p)).length,0);
- return den+`<section class="card who-f"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>
-  <div class="row" style="gap:6px">${all.length>1?all.map(([id,x])=>{const on=sel.includes(id);return `<button class="chip sm ${on?'on':''}" data-a="whot" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join(''):''}
+ return den+`<section class="card who-f"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>${n&&!nf?'<p class="small muted">Zatím tu nejsou fotky. Klepni na dítě a dej <b>Vyfotit nebo nahrát fotku</b> – fotka se ukáže i ve Scorekeeperu a ve skupinách na tréninku.</p>':''}
+  <div class="row hs" style="gap:6px">${all.length>1?all.map(([id,x])=>{const on=sel.includes(id);return `<button class="chip sm ${on?'on':''}" data-a="whot" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join(''):''}
    <div class="seg sm" role="group" aria-label="Velikost fotek" style="margin-left:auto">${[['s','S','Malé'],['m','M','Střední'],['l','L','Velké']].map(([k,l,t])=>`<button data-a="whosz" data-v="${k}" class="${WHO.size===k?'on':''}" title="${t}" aria-label="${t}">${l}</button>`).join('')}</div></div></section>
  ${sel.map(tid=>{const ps=S.teams[tid].players||[];return `${sel.length>1?`<h3 class="who-h">${esc(tName(tid))} · ${ps.length}</h3>`:''}
   ${ps.length?`<div class="who-grid ${WHO.size}">${ps.map(p=>{const img=photoOf(tid,p);return `<button class="who" data-a="whoopen" data-v="${esc(K(tid,p.num))}" aria-label="${esc(dn(p))}${noNum(p.num)?'':', číslo '+esc(p.num)}">
@@ -349,6 +349,7 @@ async function exportXls(tids){if(!tids.length)return;toast('Připravuji soubor�
  const ws=X.utils.json_to_sheet(rows,{header:(multi?['Tým']:[]).concat(['Jméno','Kategorie','Úroveň'])});ws['!cols']=(multi?[{wch:24}]:[]).concat([{wch:28},{wch:11},{wch:11}]);
  X.utils.book_append_sheet(wb,ws,multi?'Všechny týmy':safeSheet(tName(tids[0])));
  X.writeFile(wb,(tids.length>1?'Týmy':tName(tids[0])).replace(/[\\/:*?"<>|]/g,' ')+' – '+today()+'.xlsx')}
+seaHint=()=>W.role==='admin'&&!SEA().name?`<div class="hint"><span class="small">📅 <b>Nastav sezónu</b> – aplikace pak sama předvyplní datum dalšího tréninku, týden plánu a čas pro počasí.</span><button class="btn ghost sm" data-a="tab" data-v="set">Nastavit</button></div>`:'';
 function legacyDel(tid,keys){const m=Object.assign({},W.raw.photos[tid]||{});keys.forEach(k=>{if(m[k]){delete m[k];Web.write('photos/'+tid+'/'+k,null)}});W.raw.photos[tid]=m;phCache()}
 function photoSet(tid,num,img){const R=rosterOf(tid),p=R.players.find(x=>String(x.num)===String(num));if(!p)return;if(img)p.photo=img;else delete p.photo;rosterSave(tid,R);legacyDel(tid,[phKey(num)])}
 function migratePhotos(tid){if(!W.loaded['r_'+tid]||!W.loaded['p_'+tid]||!W.raw.roster[tid])return;const m=W.raw.photos[tid]||{},keys=Object.keys(m);if(!keys.length)return;

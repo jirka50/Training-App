@@ -1043,7 +1043,7 @@ function attStats(tid){const ps=plOf(tid),seaOn=!!(SEA().from||SEA().to),pl=Obje
  const cnt={};pl.forEach(p=>(p.present||[]).forEach(k=>{const x=normKey(k,p);cnt[x]=(cnt[x]||0)+1}));
  const byNum={},names={};ps.forEach(p=>{names[nameKey(p.name)]=p.num});pl.forEach(p=>(p.present||[]).forEach(k=>{const x=kid(k,p);if(x.tid===tid&&!ps.some(q=>q.num===x.num)&&x.name&&names[nameKey(x.name)])byNum[names[nameKey(x.name)]]=(byNum[names[nameKey(x.name)]]||0)+1}));
  return{total:pl.length,of:num=>(cnt[K(tid,num)]||0)+(byNum[num]||0)}}
-function vAtt(){const tid=S.teamId,a=attStats(tid),ps=players();if(!a.total)return `<section class="card"><h2>Docházka</h2><p class="small muted">Zatím tu není žádný uložený trénink${SEA().name?' v sezóně '+esc(SEA().name):''}. Počítají se tréninky uložené do Historie.</p></section>`;
+function vAtt(){const tid=S.teamId,a=attStats(tid),ps=players();if(!a.total)return emptyCard('📊','Docházka','Zatím tu není žádný uložený trénink'+(SEA().name?' v sezóně '+esc(SEA().name):'')+'. Docházka se počítá z tréninků uložených do Historie: sestav trénink, na konci ho ulož a tady uvidíš, kdo jak chodí.',[['Naplánovat trénink','tab','plan',1]]);
  const rows=ps.map(p=>({p,n:a.of(p.num)})).sort((x,y)=>y.n-x.n||(x.p.name||'').localeCompare(y.p.name||'','cs'));
  return `<section class="card"><div class="sumline"><h2>Docházka</h2><span class="small muted">${SEA().name?esc(SEA().name)+' · ':''}${a.total} ${a.total===1?'trénink':a.total<5?'tréninky':'tréninků'}</span></div>
   <div class="att">${rows.map(({p,n})=>`<button class="attrow" data-a="kid" data-v="${esc(p.num)}"><span>${noNum(p.num)?'':'<b>'+esc(p.num)+'</b> '}${esc(dn(p))}</span><span class="pbar"><i style="width:${Math.round(100*n/a.total)}%"></i></span><span class="small">${n}/${a.total}</span></button>`).join('')}</div>
@@ -1055,7 +1055,7 @@ function vKids(){
   <p class="small muted">Klepni na dítě a odškrtni, co už zvládá. Podle počtu dovedností aplikace navrhne úroveň: do 4 Orlíci, 5–9 Orli, od 10 Orliska.</p>
   <div class="dl">${FOCUS.map(f=>`<div class="sumline"><span>${CATS[f]}</span><span class="small muted">${pc[f]} %</span></div><div class="pbar"><i style="width:${pc[f]}%"></i></div>`).join('')}</div>
   ${w?`<div class="row"><span class="small">Nejslabší oblast: <b>${CATS[w]}</b></span><button class="btn ghost sm" data-a="kidfocus" data-v="${w}">Zaměřit příští trénink</button></div>`:''}</section>
- <section class="card"><h2>Děti · ${ps.length}</h2>${ps.length?`<div class="lib-list">${ps.map(p=>{const n=skOf(p).length,sg=lvlFor(n);return `<button class="item" data-a="kid" data-v="${esc(p.num)}"><h3>${noNum(p.num)?'':esc(p.num)+' · '}${esc(dn(p))}${badgesOf(p).length?` <span class="bdg" title="${esc(badgesOf(p).map(bName).join(', '))}">${badgesOf(p).map(bIcon).join('')}</span>`:''}</h3><span class="kb ${p.lvl?'game':'routine'}">${LVL[p.lvl]||'bez úrovně'}</span><span class="meta">${kidAge(S.teamId,p)} · <span class="pbar"><i style="width:${Math.round(100*n/SK.length)}%"></i></span>${n} z ${SK.length} dovedností${n&&p.lvl!==sg?' · návrh: '+LVL[sg]:''}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná. Děti přidáš v záložce Tým.</p>'}</section>
+ <section class="card"><h2>Děti · ${ps.length}</h2>${ps.length?`<div class="lib-list">${ps.map(p=>{const n=skOf(p).length,sg=lvlFor(n);return `<button class="item" data-a="kid" data-v="${esc(p.num)}"><h3>${noNum(p.num)?'':esc(p.num)+' · '}${esc(dn(p))}${badgesOf(p).length?` <span class="bdg" title="${esc(badgesOf(p).map(bName).join(', '))}">${badgesOf(p).map(bIcon).join('')}</span>`:''}</h3><span class="kb ${p.lvl?'game':'routine'}">${LVL[p.lvl]||'bez úrovně'}</span><span class="meta">${kidAge(S.teamId,p)} · <span class="pbar"><i style="width:${Math.round(100*n/SK.length)}%"></i></span>${n} z ${SK.length} dovedností${n&&p.lvl!==sg?' · návrh: '+LVL[sg]:''}</span></button>`}).join('')}</div>`:`<p class="muted">Soupiska je prázdná. Děti přidáš v záložce Tým.</p>${hasTab('team')?'<div class="row"><button class="btn sm" data-a="tab" data-v="team">Přidat děti</button></div>':''}`}</section>
  ${vAtt()}
  ${ps.length?`<section class="card"><h2>Diplomy</h2><p class="small muted">Diplom pro každé dítě: jméno, fotka, odznaky a co už umí. Vytiskne se na A4 na šířku, v dialogu tisku jde uložit i jako PDF.</p><button class="btn" data-a="dipall">🖨 Diplomy pro celý tým (${ps.length})</button>
   <p class="small muted">Odznaky: ${FOCUS.map(f=>BADGE[f][0]+' '+BADGE[f][1]+' – všechny dovednosti v oblasti '+CATS[f].toLowerCase()).join(' · ')} · ⭐ Hvězda týmu – všech ${SK.length} dovedností.</p></section>`:''}`}
@@ -1096,6 +1096,7 @@ function nextTraining(from){const s=SEA();let d=new Date((s.from&&s.from>from?s.
 function applySched(iso){const sc=schedAt(iso);if(sc.winter){S.draft.venue=sc.venue||'hala';if(sc.minutes&&TPL[sc.minutes]){S.draft.minutes=sc.minutes;S.draft.tpl=''}}}
 function seasonWeek(date){const st=SEA().plan;if(!st||!date)return 0;const n=Math.floor((new Date(date+'T12:00')-new Date(st+'T12:00'))/(7*864e5))+1;return n>=1&&n<=SEASON.length?n:0}
 const dowShort=iso=>DOW[new Date(iso+'T12:00').getDay()].toLowerCase();
+let seaHint=()=>'';
 function vSeaHead(){const s=SEA();if(!s.name)return '';const d=S.draft,nx=nextTraining(today()),wk=seasonWeek(d.date);
  const out=s.to&&today()>s.to,pre=s.from&&today()<s.from;
  return `<p class="small sea">📅 <b>${esc(s.name)}</b>${pre?' začíná '+fmtDate(s.from):out?' skončila '+fmtDate(s.to):''}${wk?' · týden '+wk+' z '+SEASON.length:''}${inWinter(d.date)?' · ❄ zimní příprava':''}${nx?` · příští trénink ${dowShort(nx)} ${fmtDate(nx)}${schedAt(nx).time?' v '+esc(schedAt(nx).time):''}${schedAt(nx).winter&&!inWinter(d.date)?' (zimní příprava)':''}`:''}${nx&&d.date!==nx?` <button class="btn ghost sm" data-a="seanext" data-v="${nx}">Naplánovat na ${dowShort(nx)} ${fmtDate(nx).replace(/ \d{4}$/,'')}</button>`:''}</p>`}
@@ -1173,6 +1174,9 @@ function render(force){
 }
 document.addEventListener('focusout',()=>setTimeout(()=>{if(pend)render()},0));
 
+/* prázdný stav: ikona, nadpis, krátký návod a tlačítka [popis, akce, hodnota, hlavní?] */
+const hasTab=t=>TABS.some(x=>x[0]===t);
+function emptyCard(ico,title,text,btns){return `<section class="card empty">${ico?`<div class="em-ico" aria-hidden="true">${ico}</div>`:''}<h2>${title}</h2><p class="muted">${text}</p>${(btns||[]).length?`<div class="row">${btns.filter(Boolean).map(([l,a,v,main])=>`<button class="btn ${main?'':'ghost'} sm" data-a="${a}"${v!=null?` data-v="${esc(v)}"`:''}>${l}</button>`).join('')}</div>`:''}</section>`}
 function noTeam(){return `<section class="card empty"><h2>Zatím žádný tým</h2><p class="muted">${S.ready?(W.coachId?'Zatím ti nebyl přidělen žádný tým. Požádej správce, aby tě u týmu zaškrtl.':'Týmy zakládá správce ve Scorekeeperu. Jakmile tam budou, objeví se tady.'):'Načítám sestavu…'}</p></section>`}
 
 function vPlan(){
@@ -1185,8 +1189,8 @@ function vPlan(){
  const per=nC>1&&pr.length?splitText(pr.length,nC):'';
  let h=`<section class="card">
   <div class="sumline"><h2>Nový trénink</h2><span class="muted small">${st.map(t=>esc(tName(t))).join(' + ')}</span></div>
-  ${vSeaHead()}
-  ${all.length>1?`<div class="field"><span class="label">Týmy na tréninku</span><div class="row">${all.map(([id,x])=>{const on=st.includes(id);return `<button class="chip ${on?'on':''}" data-a="tsel" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)} · ${(x.players||[]).length}</button>`}).join('')}</div>${mt?'<span class="small muted">Společný trénink: děti i trenéři ze všech vybraných týmů.</span>':''}</div>`:''}
+  ${vSeaHead()||seaHint()}
+  ${all.length>1?`<div class="field"><span class="label">Týmy na tréninku</span><div class="row hs">${all.map(([id,x])=>{const on=st.includes(id);return `<button class="chip ${on?'on':''}" data-a="tsel" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)} · ${(x.players||[]).length}</button>`}).join('')}</div>${mt?'<span class="small muted">Společný trénink: děti i trenéři ze všech vybraných týmů.</span>':''}</div>`:''}
   <div class="grid2">
    <div class="field"><span class="label">Název tréninku (nepovinný)</span><input type="text" id="tr_name" data-c="trname" value="${esc(d.name||'')}" placeholder="např. Házení a mety"></div>
    <div class="field"><span class="label">Datum</span><input type="date" id="pdate" data-c="date" value="${esc(d.date)}"></div>
@@ -1197,10 +1201,10 @@ function vPlan(){
   ${vSeason()}
   <div class="field"><span class="label">Délka tréninku</span><div class="seg">${Object.keys(TPL).map(m=>`<button data-a="min" data-v="${m}" class="${!d.tpl&&+m===d.minutes?'on':''}">${m} min</button>`).join('')}</div></div>
   ${vTplPick()}
-  <div class="field"><span class="label">Zaměření dovedností</span><div class="row">${FOCUS.map(f=>`<button class="chip ${d.focus.includes(f)?'on':''}" data-a="focus" data-v="${f}" aria-pressed="${d.focus.includes(f)}">${CATS[f]}</button>`).join('')}</div>${(()=>{const w=weakest(st);return w&&!d.focus.includes(w)?`<span class="small muted">Podle dovedností dětí je nejslabší ${CATS[w].toLowerCase()}. <button class="btn ghost sm" data-a="focus" data-v="${w}">Přidat</button></span>`:''})()}</div>
+  <div class="field"><span class="label">Zaměření dovedností</span><div class="row hs">${FOCUS.map(f=>`<button class="chip ${d.focus.includes(f)?'on':''}" data-a="focus" data-v="${f}" aria-pressed="${d.focus.includes(f)}">${CATS[f]}</button>`).join('')}</div>${(()=>{const w=weakest(st);return w&&!d.focus.includes(w)?`<span class="small muted">Podle dovedností dětí je nejslabší ${CATS[w].toLowerCase()}. <button class="btn ghost sm" data-a="focus" data-v="${w}">Přidat</button></span>`:''})()}</div>
   <div class="field"><div class="sumline"><span class="label">Trenéři · přijde ${nC}${cs.length?' z '+cs.length:''}</span>${cs.length?`<span class="row"><button class="btn ghost sm" data-a="call">Všichni</button><button class="btn ghost sm" data-a="cnone">Nikdo</button></span>`:''}</div>
    ${cs.length?`<div class="kids">${cs.map(c=>{const on=sel.includes(c.key);return `<button class="chip coach ${on?'on':'off'}" data-a="ctog" data-v="${esc(c.key)}" aria-pressed="${on}">${esc(c.name)}</button>`}).join('')}${gs.map((g,i)=>`<button class="chip coach on" data-a="gdel" data-v="${i}" aria-label="Odebrat hosta ${esc(g)}">${esc(g)} <span class="guest">host ✕</span></button>`).join('')}</div>`
-    :`<p class="small muted">${mt?'Vybrané týmy':'Tým'} zatím nemají uložené trenéry. Přidej je v Nastavení, nebo sem zapiš hosta.</p>${gs.length?`<div class="kids">${gs.map((g,i)=>`<button class="chip coach on" data-a="gdel" data-v="${i}" aria-label="Odebrat hosta ${esc(g)}">${esc(g)} <span class="guest">host ✕</span></button>`).join('')}</div>`:''}`}
+    :`<p class="small muted">${mt?'Vybrané týmy':'Tým'} zatím nemají uložené trenéry. Přidej je v Nastavení, nebo sem zapiš hosta. <button class="btn ghost sm" data-a="tab" data-v="set">Nastavení</button></p>${gs.length?`<div class="kids">${gs.map((g,i)=>`<button class="chip coach on" data-a="gdel" data-v="${i}" aria-label="Odebrat hosta ${esc(g)}">${esc(g)} <span class="guest">host ✕</span></button>`).join('')}</div>`:''}`}
    ${vBorrow()}
    <form id="addGuest" class="row"><input type="text" id="g_name" placeholder="Host na tento trénink" aria-label="Jméno hostujícího trenéra" style="flex:1 1 180px;width:auto"><button class="btn ghost sm" type="submit">Přidat</button></form>
    <span class="muted small">${nC>1?'Dovednosti ve skupinách: '+per:nC===1?'Jeden trenér: dovednosti dělají všechny děti spolu':'Bez trenéra se počítá s jedním trenérem a všemi dětmi spolu'}</span>
@@ -1219,7 +1223,7 @@ function splitText(k,n){const b=Math.floor(k/n),r=k%n,out=[];for(let i=0;i<n;i++
 
 function vTrain(){
  const bar=vOpenBar();
- if(!S.plan)return bar+`<section class="card empty"><h2>Zatím žádný trénink</h2><p class="muted">Vyber v Plánování délku, týmy, trenéry a přítomné děti a klepni na Sestavit trénink. Nebo otevři uložený trénink z Historie.</p><div class="row" style="justify-content:center"><button class="btn" data-a="tab" data-v="plan">Naplánovat</button><button class="btn ghost" data-a="tab" data-v="hist">Historie</button></div></section>`;
+ if(!S.plan)return bar+`<section class="card empty"><div class="em-ico" aria-hidden="true">📋</div><h2>Zatím žádný trénink</h2><p class="muted">Vyber v Plánování délku, týmy, trenéry a přítomné děti a klepni na Sestavit trénink. Nebo otevři uložený trénink z Historie.</p><div class="row" style="justify-content:center"><button class="btn" data-a="tab" data-v="plan">Naplánovat</button><button class="btn ghost" data-a="tab" data-v="hist">Historie</button></div></section>`;
  const saved=!!S.plans[S.plan.id];
  return bar+vPlanOut()+`<section class="card">${saved&&S.confirm!=='replan'?`<div class="row" style="margin-bottom:8px"><button class="btn ghost" data-a="pclose">✓ Zavřít trénink</button><span class="small muted">Uložený je v Historii.</span></div>`:''}${S.confirm==='replan'?`<p><b>Zahodit tento trénink a naplánovat nový?</b></p><p class="small muted">${saved?'V Historii zůstane uložená verze.':'Trénink není uložený v Historii, smaže se úplně.'} Nastavení v Plánování (týmy, trenéři, docházka) zůstane.</p>
   <div class="row"><button class="btn danger" data-a="replango">Ano, naplánovat znovu</button><button class="btn ghost" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn ghost" data-a="replan">↺ Naplánovat znovu</button></div>`}</section>`
@@ -1318,7 +1322,7 @@ function steps(){const p=S.plan;if(!p)return[];const out=[];
 function stepTitle(s){const b=S.plan.blocks[s.bi];if(s.r!=null)return 'Stanoviště · rotace '+(s.r+1)+'/'+s.rot;return actName(b.items[s.item])}
 function vField(){
  const bar=vOpenBar();
- if(!S.plan)return bar+ `<section class="card empty"><h2>Žádný plán</h2><p class="muted">Sestav trénink v Plánování nebo otevři uložený z Historie.</p><button class="btn" data-a="tab" data-v="plan">Naplánovat</button></section>`;
+ if(!S.plan)return bar+ `<section class="card empty"><div class="em-ico" aria-hidden="true">⏱</div><h2>Žádný plán</h2><p class="muted">Sestav trénink v Plánování nebo otevři uložený z Historie.</p><button class="btn" data-a="tab" data-v="plan">Naplánovat</button></section>`;
  const st=steps();if(S.run.i>=st.length)S.run.i=Math.max(0,st.length-1);
  const s=st[S.run.i];if(!s)return `<section class="card empty"><h2>Plán je prázdný</h2></section>`;
  const b=S.plan.blocks[s.bi];let at=0;for(let i=0;i<S.run.i;i++)at+=st[i].min;
@@ -1390,9 +1394,9 @@ function vLib(){
  return `<section class="card">
   <div class="sumline"><h2>Hry a cviky</h2><button class="btn ghost sm" data-a="newact">+ Vlastní</button></div>
   <input type="search" id="libq" data-c="libq" placeholder="Hledat hru, cvik nebo pomůcku" value="${esc(L.q)}" aria-label="Hledat">
-  <div class="row">${[['all','Vše'],['game','Hry'],['drill','Cviky'],['seq','Rutiny'],['routine','Organizace']].map(([k,l])=>`<button class="chip ${L.kind===k?'on':''}" data-a="lk" data-v="${k}">${l}</button>`).join('')}</div>
-  <div class="row">${[['all','Každý věk'],['U6','Pro U6'],['U7','Pro U7']].map(([k,l])=>`<button class="chip ${L.age===k?'on':''}" data-a="la" data-v="${k}">${l}</button>`).join('')}</div>
-  <div class="row">${[['all','Všechny oblasti']].concat(Object.entries(CATS)).filter(([k])=>k!=='rutina').map(([k,l])=>`<button class="chip ${L.cat===k?'on':''}" data-a="lc" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="row hs">${[['all','Vše'],['game','Hry'],['drill','Cviky'],['seq','Rutiny'],['routine','Organizace']].map(([k,l])=>`<button class="chip ${L.kind===k?'on':''}" data-a="lk" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="row hs">${[['all','Každý věk'],['U6','Pro U6'],['U7','Pro U7']].map(([k,l])=>`<button class="chip ${L.age===k?'on':''}" data-a="la" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="row hs">${[['all','Všechny oblasti']].concat(Object.entries(CATS)).filter(([k])=>k!=='rutina').map(([k,l])=>`<button class="chip ${L.cat===k?'on':''}" data-a="lc" data-v="${k}">${l}</button>`).join('')}</div>
  </section><div class="lib-list" id="libList"></div>`
 }
 function renderLibList(){
@@ -1400,7 +1404,7 @@ function renderLibList(){
  const list=acts().filter(a=>(L.kind==='all'||a.k===L.kind)&&(L.age==='all'||agOf(a).includes(L.age))&&(L.cat==='all'||a.c===L.cat||(a.t||[]).includes(L.cat))&&(!q||(a.n+' '+(a.v||'')+' '+gearText(a)+' '+(a.gn||'')+' '+(a.dev||'')).toLowerCase().includes(q)))
   .sort((a,b)=>a.k.localeCompare(b.k)||a.n.localeCompare(b.n,'cs'));
  const el=$('#libList');if(!el)return;
- el.innerHTML=list.length?`<p class="small muted">${list.length} položek</p>`+list.map(a=>`<button class="item" data-a="open" data-v="${a.id}"><h3>${esc(a.n)}${a.v?` <span class="muted" style="font-weight:500">/ ${esc(a.v)}</span>`:''}</h3><span class="kb ${a.k}">${KINDS[a.k]}</span><span class="meta"><b class="ag">${agTxt(a)}</b> · ${CATS[a.c]||''} · ${a.min} min${a.kids>1?' · od '+a.kids+' dětí':''}${a.st?' · na stanoviště':''}${a.custom?' · vlastní':''}${rateBadge(a.id)}<br>${esc(gearText(a))}</span></button>`).join(''):'<p class="muted">Nic nenalezeno.</p>'
+ el.innerHTML=list.length?`<p class="small muted">${list.length} položek</p>`+list.map(a=>`<button class="item" data-a="open" data-v="${a.id}"><h3>${esc(a.n)}${a.v?` <span class="muted" style="font-weight:500">/ ${esc(a.v)}</span>`:''}</h3><span class="kb ${a.k}">${KINDS[a.k]}</span><span class="meta"><b class="ag">${agTxt(a)}</b> · ${CATS[a.c]||''} · ${a.min} min${a.kids>1?' · od '+a.kids+' dětí':''}${a.st?' · na stanoviště':''}${a.custom?' · vlastní':''}${rateBadge(a.id)}<br>${esc(gearText(a))}</span></button>`).join(''):`<section class="card empty"><div class="em-ico" aria-hidden="true">🔍</div><h2>Nic nenalezeno</h2><p class="muted">Žádná hra ani cvik neodpovídá ${L.q.trim()?'hledání „'+esc(L.q.trim())+'“ a ':''}vybraným filtrům.</p><div class="row"><button class="btn sm" data-a="libreset">Zrušit filtry</button><button class="btn ghost sm" data-a="newact">+ Přidat vlastní</button></div></section>`
 }
 function openAct(id){const a=ACT[id];if(!a)return;
  const sh=$('#sheet');
@@ -1463,8 +1467,8 @@ function vHist(){
   ${SEA().name&&(SEA().from||SEA().to)?`<div class="row"><button class="chip ${H.sea?'on':''}" data-a="hsea" data-v="1">${esc(SEA().name)} · ${list.filter(([,p])=>inSeason(p.date)).length}</button><button class="chip ${!H.sea?'on':''}" data-a="hsea" data-v="0">Všechny sezóny</button></div>`:''}
   ${ME()?`<div class="row"><button class="chip ${!H.mine?'on':''}" data-a="hmine" data-v="0">Všech trenérů</button><button class="chip ${H.mine?'on':''}" data-a="hmine" data-v="1">Moje tréninky · ${list.filter(([,p])=>p.by===ME()).length}</button></div>`:''}
   <div class="row"><button class="chip ${!H.fav?'on':''}" data-a="hfav" data-v="0">Všechny · ${list.length}</button><button class="chip ${H.fav?'on':''}" data-a="hfav" data-v="1">★ Oblíbené · ${nFav}</button></div>
-  <div class="row">${[['all','Všechna zaměření']].concat(FOCUS.map(f=>[f,CATS[f]])).map(([k,l])=>`<button class="chip ${H.focus===k?'on':''}" data-a="hfocus" data-v="${k}">${l}</button>`).join('')}</div>`
-  :'<p class="muted">Uložené tréninky se objeví tady. Sestav trénink a klepni na Uložit do historie.</p>'}</section>
+  <div class="row hs">${[['all','Všechna zaměření']].concat(FOCUS.map(f=>[f,CATS[f]])).map(([k,l])=>`<button class="chip ${H.focus===k?'on':''}" data-a="hfocus" data-v="${k}">${l}</button>`).join('')}</div>`
+  :`<div class="em-ico" aria-hidden="true">📚</div><p class="muted">Uložené tréninky se objeví tady. Sestav trénink a na konci klepni na <b>Uložit do historie</b>. Pak tu najdeš souhrn, hodnocení a můžeš trénink použít znovu.</p><div class="row"><button class="btn sm" data-a="tab" data-v="plan">Naplánovat trénink</button></div>`}</section>
  <div id="histList" style="display:grid;gap:16px"></div>`
 }
 function histAll(){return Object.entries(S.plans).filter(([,p])=>planTeams(p).includes(S.teamId)).sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''))}
@@ -1494,7 +1498,7 @@ function renderHistList(){
  const el=$('#histList');if(!el)return;const H=S.hist,q=H.q.trim().toLowerCase();
  const seaOn=H.sea&&SEA().name&&(SEA().from||SEA().to),all=histAll(),list=all.filter(([,p])=>(!seaOn||inSeason(p.date))&&(!H.fav||p.fav)&&(!H.mine||!ME()||p.by===ME())&&(H.focus==='all'||(p.focus||[]).includes(H.focus)||(p.blocks||[]).some(b=>b.items.some(i=>ACT[i]&&ACT[i].c===H.focus)))&&(!q||(planTitle(p)+' '+(p.coaches||[]).join(' ')+' '+(p.blocks||[]).map(b=>b.items.map(actName).join(' ')).join(' ')).toLowerCase().includes(q)));
  if(!all.length){el.innerHTML='';return}
- el.innerHTML=(list.length?'':`<p class="muted" style="text-align:center">Žádný trénink neodpovídá filtru.${H.fav?' Hvězdičkou ☆ u tréninku ho přidáš do oblíbených.':''}</p>`)+list.map(([id,p])=>`<section class="card"><div class="sumline"><h3>${esc(planTitle(p))}${p.name?` <span class="muted" style="font-weight:500">· ${fmtDate(p.date)}</span>`:''} · ${p.minutes} min${p.week?` <span class="lvl">týden ${p.week}</span>`:''}${p.season&&p.season!==SEA().name?` <span class="lvl">${esc(p.season)}</span>`:''}${p.rate&&Object.keys(p.rate).length?' <span class="lvl">zhodnoceno</span>':''}</h3><button class="ib star ${p.fav?'on':''}" data-a="fav" data-v="${esc(id)}" aria-pressed="${!!p.fav}" aria-label="${p.fav?'Odebrat z oblíbených':'Přidat do oblíbených'}">${p.fav?'★':'☆'}</button></div>
+ el.innerHTML=(list.length?'':`<section class="card empty"><h2>Nic nenalezeno</h2><p class="muted">Žádný trénink neodpovídá filtru.${H.fav?' Hvězdičkou ☆ u tréninku ho přidáš do oblíbených.':''}</p><div class="row"><button class="btn sm" data-a="hreset">Zrušit filtry</button></div></section>`)+list.map(([id,p])=>`<section class="card"><div class="sumline"><h3>${esc(planTitle(p))}${p.name?` <span class="muted" style="font-weight:500">· ${fmtDate(p.date)}</span>`:''} · ${p.minutes} min${p.week?` <span class="lvl">týden ${p.week}</span>`:''}${p.season&&p.season!==SEA().name?` <span class="lvl">${esc(p.season)}</span>`:''}${p.rate&&Object.keys(p.rate).length?' <span class="lvl">zhodnoceno</span>':''}</h3><button class="ib star ${p.fav?'on':''}" data-a="fav" data-v="${esc(id)}" aria-pressed="${!!p.fav}" aria-label="${p.fav?'Odebrat z oblíbených':'Přidat do oblíbených'}">${p.fav?'★':'☆'}</button></div>
   <p class="small muted">${planTeams(p).length>1?'společně s '+planTeams(p).filter(t=>t!==S.teamId).map(t=>esc(tName(t))).join(', ')+' · ':''}${(p.present||[]).length} dětí · ${(p.coaches||[]).map(esc).join(', ')}${p.by&&byName(p.by)?' · připravil(a) '+esc(byName(p.by)):''}${(p.focus||[]).length?' · '+(p.focus||[]).map(f=>CATS[f]).join(', '):''}</p>
   <p class="small">${(p.blocks||[]).map(b=>b.items.map(actName).join(' + ')).join(' → ')}</p>
   ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="hsum" data-v="${esc(id)}">Souhrn</button><button class="btn ghost sm" data-a="load" data-v="${esc(id)}">Otevřít</button><button class="btn ghost sm" data-a="dup" data-v="${esc(id)}">Použít znovu</button><button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button></div>`}
@@ -1564,7 +1568,7 @@ const actions={
   else{const ms=remaining();S.run.endAt=Date.now()+ms;S.run.running=true;S.run.left=null;beeped=ms<=0;lock(true);if(ms>=curStep().min*60000-1000)announce()}saveRun();render(true)},
  plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();tick()},
  next:()=>gotoStep(S.run.i+1),prev:()=>gotoStep(S.run.i-1),goto:v=>gotoStep(+v),
- lk:v=>{S.lib.kind=v;render(true)},hsum:v=>openSummary(v),hsumload:v=>{closeSheet();actions.load(v)},hsumpr:v=>{const p=S.plans[v];if(!p)return;closeSheet();printHtml(planPrintHtml(p))},popen:v=>switchPlan(v),pnew:()=>{parkCurrent();S.addNew=true;actions.tab('plan')},pnewno:()=>{S.addNew=false;render(true)},
+ lk:v=>{S.lib.kind=v;render(true)},libreset:()=>{S.lib={kind:'all',cat:'all',age:'all',q:''};render(true)},hreset:()=>{S.hist.fav=false;S.hist.focus='all';S.hist.q='';S.hist.sea=false;render(true);renderHistList()},hsum:v=>openSummary(v),hsumload:v=>{closeSheet();actions.load(v)},hsumpr:v=>{const p=S.plans[v];if(!p)return;closeSheet();printHtml(planPrintHtml(p))},popen:v=>switchPlan(v),pnew:()=>{parkCurrent();S.addNew=true;actions.tab('plan')},pnewno:()=>{S.addNew=false;render(true)},
  pclose:()=>{if(!S.plan)return;const id=S.plan.id;closePlan(id);toast('Trénink zavřen. V Historii zůstává.');if(!S.plan)actions.tab('plan');else render(true)},
  pstale:()=>{openList().filter(e=>stale(e)&&(!S.plan||e.plan.id!==S.plan.id)).forEach(e=>delete OPEN[e.plan.id]);saveOpen();render(true)},
  genadd:()=>{S.addNew=true;generate()},borrow:v=>{S.draft.guests[selKey()]=guests().concat([v]);saveDraft();if(S.tab==='train'&&S.plan)applyCoaches();else render(true);toast(v+' je na tomto tréninku jako host.')},pcoach:v=>{actions.ctog(v);applyCoaches()},pguest:v=>{const k=selKey(),g=guests().slice();g.splice(+v,1);S.draft.guests[k]=g;saveDraft();applyCoaches()},pickit:(v,el)=>openPick(+el.dataset.b,+el.dataset.s),pickset:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(b){b.items[+el.dataset.s]=v;savePlan()}closeSheet();render(true)},replan:()=>{S.confirm='replan';render(true)},replango:()=>{S.confirm=null;if(S.plan){delete OPEN[S.plan.id];saveOpen()}S.plan=null;S.sel=null;S.gear={};S.openRate=false;savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();lock(false);actions.tab('plan');toast('Trénink zahozen. Naplánuj nový.')},patt:v=>pAttToggle(v),hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
@@ -1937,8 +1941,8 @@ function whoTeams(){let t=(WHO.teams||[]).filter(x=>S.teams[x]);if(!t.length&&S.
 function vWho(){
  if(!team())return noTeam();const den='';const sel=whoTeams(),all=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs'));
  const n=sel.reduce((s,t)=>s+(S.teams[t].players||[]).length,0),nf=sel.reduce((s,t)=>s+(S.teams[t].players||[]).filter(p=>photoOf(t,p)).length,0);
- return den+`<section class="card who-f"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>
-  <div class="row" style="gap:6px">${all.length>1?all.map(([id,x])=>{const on=sel.includes(id);return `<button class="chip sm ${on?'on':''}" data-a="whot" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join(''):''}
+ return den+`<section class="card who-f"><div class="sumline"><h2>Kdo je kdo</h2><span class="small muted">${n} dětí · ${nf} s fotkou</span></div>${n&&!nf?'<p class="small muted">Zatím tu nejsou fotky. Klepni na dítě a dej <b>Vyfotit nebo nahrát fotku</b> – fotka se ukáže i ve Scorekeeperu a ve skupinách na tréninku.</p>':''}
+  <div class="row hs" style="gap:6px">${all.length>1?all.map(([id,x])=>{const on=sel.includes(id);return `<button class="chip sm ${on?'on':''}" data-a="whot" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join(''):''}
    <div class="seg sm" role="group" aria-label="Velikost fotek" style="margin-left:auto">${[['s','S','Malé'],['m','M','Střední'],['l','L','Velké']].map(([k,l,t])=>`<button data-a="whosz" data-v="${k}" class="${WHO.size===k?'on':''}" title="${t}" aria-label="${t}">${l}</button>`).join('')}</div></div></section>
  ${sel.map(tid=>{const ps=S.teams[tid].players||[];return `${sel.length>1?`<h3 class="who-h">${esc(tName(tid))} · ${ps.length}</h3>`:''}
   ${ps.length?`<div class="who-grid ${WHO.size}">${ps.map(p=>{const img=photoOf(tid,p);return `<button class="who" data-a="whoopen" data-v="${esc(K(tid,p.num))}" aria-label="${esc(dn(p))}${noNum(p.num)?'':', číslo '+esc(p.num)}">
@@ -1992,6 +1996,7 @@ async function exportXls(tids){if(!tids.length)return;toast('Připravuji soubor�
  const ws=X.utils.json_to_sheet(rows,{header:(multi?['Tým']:[]).concat(['Jméno','Kategorie','Úroveň'])});ws['!cols']=(multi?[{wch:24}]:[]).concat([{wch:28},{wch:11},{wch:11}]);
  X.utils.book_append_sheet(wb,ws,multi?'Všechny týmy':safeSheet(tName(tids[0])));
  X.writeFile(wb,(tids.length>1?'Týmy':tName(tids[0])).replace(/[\\/:*?"<>|]/g,' ')+' – '+today()+'.xlsx')}
+seaHint=()=>W.role==='admin'&&!SEA().name?`<div class="hint"><span class="small">📅 <b>Nastav sezónu</b> – aplikace pak sama předvyplní datum dalšího tréninku, týden plánu a čas pro počasí.</span><button class="btn ghost sm" data-a="tab" data-v="set">Nastavit</button></div>`:'';
 function legacyDel(tid,keys){const m=Object.assign({},W.raw.photos[tid]||{});keys.forEach(k=>{if(m[k]){delete m[k];Web.write('photos/'+tid+'/'+k,null)}});W.raw.photos[tid]=m;phCache()}
 function photoSet(tid,num,img){const R=rosterOf(tid),p=R.players.find(x=>String(x.num)===String(num));if(!p)return;if(img)p.photo=img;else delete p.photo;rosterSave(tid,R);legacyDel(tid,[phKey(num)])}
 function migratePhotos(tid){if(!W.loaded['r_'+tid]||!W.loaded['p_'+tid]||!W.raw.roster[tid])return;const m=W.raw.photos[tid]||{},keys=Object.keys(m);if(!keys.length)return;
