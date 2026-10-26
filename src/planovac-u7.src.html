@@ -512,6 +512,17 @@ const A=[
  dev:'pochopení pravidel: aut, safe, fér a faul; rozhodování, pozornost',
  d:'Trenér ukazuje situace a děti rozhodují. Běžec doběhne na metu dřív než míček do rukavice polaře: všichni ukážou SAFE (ruce do stran). Míček je v rukavici na metě dřív: AUT (pěst nahoru). Pak trenér kutálí nebo odpálí míček a děti hlásí FÉR (míček v poli mezi čarami, skok dopředu) nebo FAUL (mimo čáru, skok dozadu). Děti se střídají v roli běžce a polaře.',
  kid:'„Safe? Ruce do stran! Aut? Pěst nahoru! Fér skok dopředu, faul skok dozadu.“'},
+{id:'d23',k:'drill',n:'Přenášení míčků bokem',c:'chytani',t:['warm'],e:3,min:6,kids:1,st:1,gear:['Kužely', 'Měkké míčky'],gn:'2 kužely 3–4 m od sebe, u prvního 3–5 míčků; pro závod dvě řady',
+ dev:'přesun bokem bez křížení nohou, nízký postoj polaře, sebrání míče oběma rukama, obratnost',
+ d:'Dva kužely 3–4 m od sebe, u prvního leží 3–5 míčků. Dítě stojí v postoji polaře, u prvního kuželu sebere míček nízko oběma rukama („krokodýlí tlama“), posunem bokem (nohy se nekříží) ho odnese k druhému kuželu, položí ho a druhým bokem se vrací pro další. Až přenese všechny, nosí je stejně zpátky. Pro starší a šikovnější lze přidat třetí kužel.',
+ va:'Závod dvou řad vedle sebe: vyhrává řada, která dřív přenese všechny míčky. Nebo dítě míček u druhého kuželu nepoloží, ale přendá do rukavice a teprve pak položí.',
+ kid:'„Krab nosí vajíčka: bokem, nízko a nohy se nekříží!“'},
+{id:'d24',k:'drill',n:'Dva kužely',c:'chytani',t:['warm'],e:3,min:6,kids:1,st:1,gear:['Kužely', 'Měkké míčky'],gn:'2 kužely 3–4 m od středu; měkký nebo tenisový míček',
+ dev:'přesun bokem, změna směru, chytání po pohybu, hod na trenéra, obratnost',
+ d:'Upravený Two Cone Agility Drill pro U7. Dva kužely 3–4 m na každou stranu od středu, trenér stojí 3–4 m před středem s míčkem. Dítě vyrazí ze středu posunem bokem k jednomu kuželu, dotkne se ho a stejně se vrátí doprostřed. Tam chytí míček od trenéra, hodí ho zpět a udělá dřep. Pak totéž k druhému kuželu. 15–20 sekund nebo 2–3 kola na dítě, pak jde na konec řady.',
+ va:'Místo posunu bokem lze střídat sprint, běh pozpátku nebo vysoká kolena. Pro starší místo dřepu klik nebo angličák.',
+ kid:'„Bokem ke kuželu, ťuk, bokem zpátky – chyť a hoď!“',
+ link:'https://www.dugoutcaptain.com/drill/two-cone-agility-drill/',lt:'Dugout Captain – Two Cone Agility Drill'},
 /* --- RUTINY --- */
 {id:'r01',k:'routine',n:'Nástup a pozdrav',c:'rutina',slot:'start',min:3,kids:1,gear:[],
  dev:'struktura tréninku, pozornost',
@@ -853,6 +864,20 @@ d22:{d:12,s:[['diamond'],['dash',50,56,94,12],['dash',50,56,6,12]],cap:[[0,'Bě�
  KP([[0,50,56],[.03,50,56],[.2,72,34],[.3,72,34],[.36,50,56],[.4,50,56],[.6,72,34],[.66,72,34],[.72,50,56],[1,50,56]],{t:'k2'}),
  BALL([[.06,.26,42,30,73,32,5]],{show:[.06,.32]}),BALL([[.4,.5,42,30,73,32,5]],{show:[.4,.66]}),
  BALL([[.7,.8,50,54,38,24,8]],{show:[.7,.83]}),BALL([[.86,.96,50,54,88,46,6]],{show:[.86,1]})]},
+d23:(()=>{const P=1/3,L=(a,b,u)=>a+(b-a)*u,mv=(s,a,b)=>s<a?0:s>b?1:ez((s-a)/(b-a));
+ const lane=(y,cA,cB,ph)=>{const kx=t=>{const s=((t+ph)%1*3)%1;return s<.42?L(cA,cB,mv(s,.08,.42)):L(cB,cA,mv(s,.55,.9))},moving=t=>{const s=((t+ph)%1*3)%1;return(s>.08&&s<.42)||(s>.55&&s<.9)};
+  const kid=t=>[kx(t),y,moving(t)?Math.abs(Math.sin(t*TAU*30))*2.2:0],pa=[[cA-6,y-5],[cA-6,y-9],[cA-9.5,y-7]],pb=[[cB+6,y-5],[cB+6,y-9],[cB+9.5,y-7]];
+  return{kid,balls:[0,1,2].map(i=>({t:'b',f:t=>{const tt=(t+ph)%1,t0=i*P+.08*P,t1=i*P+.45*P;if(tt<t0)return[...pa[2-i],0];if(tt>t1)return[...pb[i],0];const k=kid(t);return[k[0],k[1]-3,3+k[2]]}}))}};
+ const A=lane(31,22,78,0),B=lane(53,22,78,.06),caps=[];[0,1,2].forEach(k=>caps.push([k*P,'Seber míček nízko, oběma rukama'],[k*P+.03,'Bokem ke kuželu – nohy se nekříží'],[k*P+.145,'Polož míček u kuželu'],[k*P+.18,'Druhým bokem zpátky pro další']));
+ return{d:12,s:[['cone',22,22],['cone',78,22],['cone',22,44],['cone',78,44],['txt',22,15,'seber'],['txt',78,15,'polož'],['dash',6,38,94,38]],cap:caps,a:[K_(A.kid),...A.balls,K_(B.kid,{t:'k2'}),...B.balls]}})(),
+d24:(()=>{const L=(a,b,u)=>a+(b-a)*u,MX=50,MY=28,CX=50,CY=52;
+ const kid=t=>{const h=t<.5?0:1,s=(t%.5),tx=h?28.5:71.5;let x=MX,mov=false;
+  if(s<.11){x=L(MX,tx,ez(s/.11));mov=true}else if(s<.15){x=tx+(h?-1:1)*Math.sin((s-.11)/.04*Math.PI)*1.2}else if(s<.27){x=L(tx,MX,ez((s-.15)/.12));mov=true}
+  const sq=s>.43&&s<.5?Math.sin((s-.43)/.07*Math.PI):0;return[x,MY+sq*1.5,mov?Math.abs(Math.sin(t*TAU*34))*2:0]};
+ const ball=t=>{const s=t%.5;if(s>=.28&&s<.35){const u=(s-.28)/.07;return[L(CX+1,MX,u),L(CY-2,MY+1.5,u),8*4*u*(1-u)]}if(s>=.35&&s<.37)return[MX,MY+1.5,0];if(s>=.37&&s<.43){const u=(s-.37)/.06;return[L(MX,CX+1,u),L(MY+1.5,CY-2,u),8*4*u*(1-u)]}return[CX+3,CY-1,0]};
+ return{d:12,s:[['cone',26,28],['cone',74,28],['ring',MX,MY,3.6],['txt',MX,22.5,'střed'],['dash',29,33.5,71,33.5]],
+  cap:[[0,'Posun bokem ke kuželu, nohy se nekříží'],[.11,'Dotkni se kuželu'],[.15,'Bokem zpátky doprostřed'],[.28,'Chyť míček od trenéra'],[.36,'Hoď ho zpátky'],[.43,'Dřep (starší: klik nebo angličák)'],[.5,'Teď k druhému kuželu'],[.61,'Dotkni se kuželu'],[.65,'Bokem zpátky doprostřed'],[.78,'Chyť míček od trenéra'],[.86,'Hoď ho zpátky'],[.93,'Dřep a znovu od začátku']],
+  a:[{t:'c',p:pth([[0,CX,CY]])},K_(kid),{t:'b',f:ball}]}})(),
 /* organizace */
 r01:{d:5,cap:[[0,'Všichni do kruhu k trenérovi']],a:[{t:'c',p:pth([[0,50,31]])},...ring(50,31,14,6).map(([x,y],i)=>KP([[0,10+i*15,i%2?10:54],[.5,x,y],[1,x,y]]))]},
 r02:{d:5,cap:[[0,'Běháme…'],[.5,'Ruka nahoře = ticho, všichni ke mně']],a:[{t:'c',p:pth([[0,50,31]])},...[0,1,2,3,4].map(i=>K_(t=>{const w=Wd(50,31,34,20,1,2,i*1.3)(Math.min(t,.5)*2);if(t<.5)return w;const u=Math.min(1,(t-.5)/.25),q=ring(50,31,9,5)[i];return[w[0]+(q[0]-w[0])*u,w[1]+(q[1]-w[1])*u,0]}))]},
