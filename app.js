@@ -1209,7 +1209,7 @@ function vPlan2(){const {d,st,mt,pr,cs,sel,gs,all,nAll,nC,per}=planCtx();return 
   ${vSeason()}
   <div class="field"><span class="label">Délka tréninku</span><div class="seg">${Object.keys(TPL).map(m=>`<button data-a="min" data-v="${m}" class="${!d.tpl&&+m===d.minutes?'on':''}">${m} min</button>`).join('')}</div></div>
   <div class="field"><span class="label">Zaměření dovedností</span><div class="row hs">${FOCUS.map(f=>`<button class="chip ${d.focus.includes(f)?'on':''}" data-a="focus" data-v="${f}" aria-pressed="${d.focus.includes(f)}">${CATS[f]}</button>`).join('')}</div>${(()=>{const w=weakest(st);return w&&!d.focus.includes(w)?`<span class="small muted">Podle dovedností dětí je nejslabší ${CATS[w].toLowerCase()}. <button class="btn ghost sm" data-a="focus" data-v="${w}">Přidat</button></span>`:''})()}</div>
-  <div class="field"><button class="btn ghost sm" data-a="pmore" aria-expanded="${!!S.pmore}">${S.pmore?'▴':'▾'} Další možnosti</button></div>
+  <div class="field"><button class="btn ghost sm" data-a="pmore" aria-expanded="${!!S.pmore}">Další možnosti<span class="chev" aria-hidden="true">${S.pmore?'▴':'▾'}</span></button></div>
   ${S.pmore?`<div class="grid2">
    <div class="field"><span class="label">Název tréninku (nepovinný)</span><input type="text" id="tr_name" data-c="trname" value="${esc(d.name||'')}" placeholder="např. Házení a mety"></div>
   </div>${vTplPick()}`:''}
@@ -1296,7 +1296,7 @@ function pAttToggle(key){const p=S.plan;if(!p)return;const x=kid(key,p),nk=K(x.t
 /* sbalitelné karty v Tréninku (stav si pamatuje telefon) */
 let FOLD=ls.get('u7-fold',{})||{};
 function foldCard(key,title,summary,html){if(!FOLD[key])return `<section class="card fold"><button class="foldh" data-a="fold" data-v="${key}" aria-expanded="false"><span class="fh">${title}</span><span class="fs small muted">${summary}</span><span class="chev" aria-hidden="true">▾</span></button></section>`;
- return html.replace('<h2>',`<h2 class="fold-t" data-a="fold" data-v="${key}" role="button" tabindex="0" aria-expanded="true"><span class="chev" aria-hidden="true">▴</span> `)}
+ return html.replace('<h2>',`<h2 class="fold-t" data-a="fold" data-v="${key}" role="button" tabindex="0" aria-expanded="true"><span class="chev" aria-hidden="true">▴</span>`)}
 function vGroups(){
  const p=S.plan,cc=coachCount(),stb=p.blocks.filter(b=>b.mode==='st');
  const changed=JSON.stringify(p.present.map(k=>normKey(k,p)).sort())!==JSON.stringify(presentKeys().slice().sort())||nG(p)!==(cc>=2?cc:1);const mt=planTeams(p).length>1;

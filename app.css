@@ -151,8 +151,15 @@ p{margin:0}
 .foldh{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;width:100%;background:none;border:0;padding:14px 16px;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
 .foldh .fh{font:700 20px/1.15 var(--f-disp);text-transform:uppercase;letter-spacing:.02em}
 .foldh .fs{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.foldh .chev,.fold-t .chev{color:var(--muted);font-size:16px}
-.fold-t{cursor:pointer}
+.chev{display:inline-grid;place-items:center;flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:var(--surface);border:2px solid var(--field);color:var(--field);font:700 20px/1 var(--f-body);text-transform:none;letter-spacing:0}
+.foldh:hover .chev,.fold-t:hover .chev{background:var(--field);color:var(--field-ink)}
+.fold-t{cursor:pointer;display:flex;align-items:center;gap:10px}
+.fold-t .chev{order:2}
+.btn .chev{width:26px;height:26px;font-size:15px;border-width:1.5px;margin-left:6px;vertical-align:middle}
+details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:'▾';display:inline-grid;place-items:center;flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:2px solid var(--field);color:var(--field);font:700 20px/1 var(--f-body)}
+details[open]>summary::after{content:'▴'}
 .kid.sel{outline:3px solid var(--ball);outline-offset:1px}
 .lvl{font:700 11px var(--f-disp);letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 4px;background:var(--sunk);color:var(--muted)}
 .chip.on .lvl{background:rgba(255,255,255,.2);color:inherit}

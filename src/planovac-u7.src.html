@@ -156,8 +156,15 @@ p{margin:0}
 .foldh{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;width:100%;background:none;border:0;padding:14px 16px;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
 .foldh .fh{font:700 20px/1.15 var(--f-disp);text-transform:uppercase;letter-spacing:.02em}
 .foldh .fs{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.foldh .chev,.fold-t .chev{color:var(--muted);font-size:16px}
-.fold-t{cursor:pointer}
+.chev{display:inline-grid;place-items:center;flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:var(--surface);border:2px solid var(--field);color:var(--field);font:700 20px/1 var(--f-body);text-transform:none;letter-spacing:0}
+.foldh:hover .chev,.fold-t:hover .chev{background:var(--field);color:var(--field-ink)}
+.fold-t{cursor:pointer;display:flex;align-items:center;gap:10px}
+.fold-t .chev{order:2}
+.btn .chev{width:26px;height:26px;font-size:15px;border-width:1.5px;margin-left:6px;vertical-align:middle}
+details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:'▾';display:inline-grid;place-items:center;flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:2px solid var(--field);color:var(--field);font:700 20px/1 var(--f-body)}
+details[open]>summary::after{content:'▴'}
 .kid.sel{outline:3px solid var(--ball);outline-offset:1px}
 .lvl{font:700 11px var(--f-disp);letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 4px;background:var(--sunk);color:var(--muted)}
 .chip.on .lvl{background:rgba(255,255,255,.2);color:inherit}
@@ -1522,7 +1529,7 @@ function vPlan2(){const {d,st,mt,pr,cs,sel,gs,all,nAll,nC,per}=planCtx();return 
   ${vSeason()}
   <div class="field"><span class="label">Délka tréninku</span><div class="seg">${Object.keys(TPL).map(m=>`<button data-a="min" data-v="${m}" class="${!d.tpl&&+m===d.minutes?'on':''}">${m} min</button>`).join('')}</div></div>
   <div class="field"><span class="label">Zaměření dovedností</span><div class="row hs">${FOCUS.map(f=>`<button class="chip ${d.focus.includes(f)?'on':''}" data-a="focus" data-v="${f}" aria-pressed="${d.focus.includes(f)}">${CATS[f]}</button>`).join('')}</div>${(()=>{const w=weakest(st);return w&&!d.focus.includes(w)?`<span class="small muted">Podle dovedností dětí je nejslabší ${CATS[w].toLowerCase()}. <button class="btn ghost sm" data-a="focus" data-v="${w}">Přidat</button></span>`:''})()}</div>
-  <div class="field"><button class="btn ghost sm" data-a="pmore" aria-expanded="${!!S.pmore}">${S.pmore?'▴':'▾'} Další možnosti</button></div>
+  <div class="field"><button class="btn ghost sm" data-a="pmore" aria-expanded="${!!S.pmore}">Další možnosti<span class="chev" aria-hidden="true">${S.pmore?'▴':'▾'}</span></button></div>
   ${S.pmore?`<div class="grid2">
    <div class="field"><span class="label">Název tréninku (nepovinný)</span><input type="text" id="tr_name" data-c="trname" value="${esc(d.name||'')}" placeholder="např. Házení a mety"></div>
   </div>${vTplPick()}`:''}
@@ -1609,7 +1616,7 @@ function pAttToggle(key){const p=S.plan;if(!p)return;const x=kid(key,p),nk=K(x.t
 /* sbalitelné karty v Tréninku (stav si pamatuje telefon) */
 let FOLD=ls.get('u7-fold',{})||{};
 function foldCard(key,title,summary,html){if(!FOLD[key])return `<section class="card fold"><button class="foldh" data-a="fold" data-v="${key}" aria-expanded="false"><span class="fh">${title}</span><span class="fs small muted">${summary}</span><span class="chev" aria-hidden="true">▾</span></button></section>`;
- return html.replace('<h2>',`<h2 class="fold-t" data-a="fold" data-v="${key}" role="button" tabindex="0" aria-expanded="true"><span class="chev" aria-hidden="true">▴</span> `)}
+ return html.replace('<h2>',`<h2 class="fold-t" data-a="fold" data-v="${key}" role="button" tabindex="0" aria-expanded="true"><span class="chev" aria-hidden="true">▴</span>`)}
 function vGroups(){
  const p=S.plan,cc=coachCount(),stb=p.blocks.filter(b=>b.mode==='st');
  const changed=JSON.stringify(p.present.map(k=>normKey(k,p)).sort())!==JSON.stringify(presentKeys().slice().sort())||nG(p)!==(cc>=2?cc:1);const mt=planTeams(p).length>1;
