@@ -1332,21 +1332,23 @@ function vField(){
  else{const a=ACT[b.items[s.item]],G=nG(S.plan);mid=`${G>1&&MODEABLE.includes(b.type)?`<p class="small">Všechny skupiny dělají totéž: ${S.plan.groups.map((g,gi)=>GL[gi]+' – '+esc(S.plan.coaches[gi]||'')).join(', ')}</p>`:''}<button class="aname" data-a="open" data-v="${a?a.id:''}">${esc(a?a.n:'')}</button>${a&&AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}${a&&a.kid?`<div class="cue"><span class="label">Řekni dětem</span><br>${esc(a.kid)}</div>`:''}${a&&a.steps?`<div class="cue"><span class="label">Kroky</span>${stepsHtml(a)}</div>`:''}${a?`<div class="cue small">${esc(a.d)}</div>`:''}`}
  const nx=st[S.run.i+1];
  return bar+`<section class="card now">
-  <span class="label">${esc(planTitle(S.plan))} · ${BT[b.type]||''} · ${at}′–${at+s.min}′ z ${S.plan.minutes}′</span>
+  <div class="now-l"><span class="label">${esc(planTitle(S.plan))} · ${BT[b.type]||''} · ${at}′–${at+s.min}′ z ${S.plan.minutes}′</span>
   <div class="timer" id="timer">${s.min}:00</div>
   <div class="prog"><i id="prog"></i></div>
-  <div class="row" style="justify-content:center">
-   <button class="ib" data-a="prev" aria-label="Předchozí" ${S.run.i===0?'disabled':''}>◀</button>
-   <button class="btn ${S.run.running?'ghost':''}" data-a="startstop">${S.run.running?'Pauza':(S.run.left!=null?'Pokračovat':'Start')}</button>
-   <button class="btn ghost sm" data-a="plus1">+1 min</button>
-   <button class="ib" data-a="next" aria-label="Další" ${S.run.i>=st.length-1?'disabled':''}>▶</button>
-  </div>
+  ${nx?`<p class="small muted">Další: <b>${esc(stepTitle(nx))}</b> · ${nx.min} min</p>`:'<p class="small muted">Poslední blok tréninku</p>'}</div>
+  <div class="now-r">
   <label class="row small"><input type="checkbox" id="auto" data-c="auto" ${S.run.auto?'checked':''}> Po skončení času automaticky na další blok</label>
   <label class="row small"><input type="checkbox" id="voice" data-c="voice" ${S.pref.voice!==false?'checked':''}> Hlásit střídání nahlas${window.speechSynthesis?'':' (tento prohlížeč neumí)'}</label>
   ${mid}
   ${S.plan.groups.flat().length?'<div class="row" style="justify-content:center"><button class="btn ghost sm" data-a="mkopen">✓ Kdo co zvládl</button></div>':''}
-  ${nx?`<p class="small muted">Další: <b>${esc(stepTitle(nx))}</b> · ${nx.min} min</p>`:'<p class="small muted">Poslední blok tréninku</p><button class="btn ball" data-a="rateopen">Zhodnotit trénink</button>'}
+  ${nx?'':'<button class="btn ball" data-a="rateopen">Zhodnotit trénink</button>'}</div>
  </section>
+ <div class="fbar" role="group" aria-label="Ovládání časovače">
+  <button class="fb" data-a="prev" aria-label="Předchozí blok" ${S.run.i===0?'disabled':''}>◀</button>
+  <button class="fb main ${S.run.running?'run':''}" data-a="startstop">${S.run.running?'<i>❚❚</i>Pauza':(S.run.left!=null?'<i>▶</i>Dál':'<i>▶</i>Start')}</button>
+  <button class="fb" data-a="plus1" aria-label="Přidat minutu">+1′</button>
+  <button class="fb" data-a="next" aria-label="Další blok" ${S.run.i>=st.length-1?'disabled':''}>▶</button>
+ </div>
  <section class="card"><h2>Průběh</h2><div class="steps">${st.map((x,i)=>{let a2=0;for(let j=0;j<i;j++)a2+=st[j].min;return `<button class="stp ${i===S.run.i?'cur':i<S.run.i?'done':''}" data-a="goto" data-v="${i}"><span>${a2}′</span><span>${esc(stepTitle(x))}</span><span>${x.min}′</span></button>`}).join('')}</div></section>`
 }
 let actx=null,beeped=false,wl=null;
@@ -1378,7 +1380,7 @@ function tick(force){
  if(S.run.running&&ms<=60000&&ms>0&&warnedFor!==S.run.i&&s.min>=2){warnedFor=S.run.i;say('Ještě minuta.')}
  const el=$('#timer'),pr=$('#prog');if(!el)return;
  const neg=ms<0,a=Math.abs(ms),m=Math.floor(a/60000),sec=Math.floor(a%60000/1000);
- el.textContent=(neg?'+':'')+m+':'+String(sec).padStart(2,'0');el.classList.toggle('over',neg);
+ el.textContent=(neg?'+':'')+m+':'+String(sec).padStart(2,'0');el.classList.toggle('over',neg);el.classList.toggle('last',!neg&&ms<=60000);el.classList.toggle('ok',S.run.running&&ms>60000);if(pr&&pr.parentNode&&pr.parentNode.dataset)pr.parentNode.dataset.st=neg?'over':ms<=60000?'last':'ok';
  if(pr)pr.style.width=Math.min(100,Math.max(0,100-ms/(s.min*600)))+'%'
 }
 setInterval(tick,250);
