@@ -1169,8 +1169,8 @@ function vParents(){return `<section class="card"><div class="sumline"><h2>Pro r
  <textarea id="parentsTxt" rows="14">${esc(parentsText(S.plan))}</textarea>${parentsPub()}</section>`}
 
 /* ===== Vykreslení ===== */
-const MENU=[['Trénink',['plan','train','field','hist']],['Tým',['team','who','kids']],['Knihovna',['lib']],['Nastavení',['set']]];
-const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['team','Tým'],['who','Kdo je kdo'],['kids','Dovednosti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení']];
+const MENU=[['Trénink',['plan','train','field','hist']],['Tým',['team','who','kids']],['Knihovna',['lib']],['Nastavení',['set','help']]];
+const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['team','Tým'],['who','Kdo je kdo'],['kids','Dovednosti'],['lib','Hry a cviky'],['hist','Historie'],['set','Nastavení'],['help','Návod']];
 let pend=false;
 function render(force){
  if(PARENT){renderParentPage();return}
@@ -1184,7 +1184,7 @@ function render(force){
  $('#teamSel').innerHTML=ts.length?ts.map(([id,t])=>`<option value="${esc(id)}" ${id===S.teamId?'selected':''}>${esc(t.name||'Tým')}</option>`).join(''):'<option>Žádný tým</option>';
  $('#teamSel').disabled=!ts.length;$('#teamSel').hidden=ts.length<2;
  RS=rateStats();
- const v={plan:vPlan,train:vTrain,field:vField,team:vTeam,who:vWho,kids:vKids,lib:vLib,set:vSet,hist:vHist}[S.tab]||vPlan;
+ const v={plan:vPlan,train:vTrain,field:vField,team:vTeam,who:vWho,help:vHelp,kids:vKids,lib:vLib,set:vSet,hist:vHist}[S.tab]||vPlan;
  $('#view').innerHTML=v();mountAnims($('#view'));
  if(S.tab==='lib')renderLibList();
  if(S.tab==='hist')renderHistList();
@@ -1965,6 +1965,79 @@ document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.datase
  else if(c==='wtname'){const v=el.value.trim(),tid=S.teamId,R=rosterOf(tid);R.name=v;rosterSave(tid,R);if(v&&W.role==='admin'){W.raw.teamlist[tid]=Object.assign({},W.raw.teamlist[tid],{name:v});Web.compose();Web.write('teamlist/'+tid+'/name',v)}render(true)}});
 
 
+/* ---------- Návod (Menu → Nastavení → Návod) ---------- */
+const HELP=[
+ ['start','Začínáme',`<p>Plánovač pomáhá připravit a odvést trénink baseballu pro děti do 7 let. Týmy a soupisky se berou ze Scorekeeperu, takže stačí jedna sada dětí pro obě aplikace.</p>
+<ol><li><b>Přihlášení:</b> zadej svůj osobní kód, který ti dal správce. Kód zapisovatele ze Scorekeeperu tady nefunguje.</li>
+<li><b>Instalace do telefonu:</b> v Safari Sdílet → Přidat na plochu, v Chrome ⋮ → Přidat na plochu / Nainstalovat. Aplikace pak funguje i na hřišti bez signálu, změny se odešlou po připojení.</li>
+<li><b>Menu</b> je vpravo nahoře. Tým přepínáš rozbalovacím seznamem v hlavičce (když jich vidíš víc).</li>
+<li><b>Šipky ▾ / ▴</b> u karet je sbalují a rozbalují. Telefon si pamatuje, co máš sbalené.</li></ol>
+<p class="small muted">S osobním kódem vidíš jen týmy, u kterých tě správce zaškrtl. Vzhled a hlasová hlášení se ukládají k tvému profilu, takže je máš stejné v každém zařízení.</p>`],
+ ['plan','Plánování tréninku',`<p>Nový trénink se skládá ve dvou krocích.</p>
+<h3>1 · Kdo přijde</h3><ul>
+<li><b>Týmy na tréninku:</b> u společného tréninku vyber víc týmů, děti i trenéři se spojí.</li>
+<li><b>Trenéři:</b> klepnutím označ, kdo přijde. Hosta zapíšeš do políčka „Host na tento trénink“. Když máš méně než 2 trenéry, aplikace nabídne půjčit trenéra z jiného týmu.</li>
+<li><b>Skupiny:</b> <b>Auto</b> = každý trenér má svou skupinu. Když zvolíš počet (1, 2, 3…), klepnutím na písmeno A / B / C určíš, který trenér je u které skupiny. U jedné skupiny může být i víc trenérů.</li>
+<li><b>Docházka:</b> klepnutím označ přítomné děti (Všichni / Nikdo pro rychlé označení).</li></ul>
+<h3>2 · Co trénovat</h3><ul>
+<li><b>Datum a prostor</b> (venku / hala). U data se ukáže předpověď počasí.</li>
+<li><b>Věková kategorie</b> U6 / U7 – vybírají se jen hry vhodné pro daný věk.</li>
+<li><b>Sezónní plán:</b> týden plánu přidá povinné hry toho týdne.</li>
+<li><b>Délka tréninku</b> a <b>Zaměření dovedností</b> (házení, chytání, odpal, běh po metách, pozornost a hra). Aplikace upozorní na nejslabší oblast dětí.</li>
+<li><b>Další možnosti:</b> název tréninku a vlastní šablona struktury.</li></ul>
+<p>Klepni na <b>Sestavit trénink</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
+ ['train','Úpravy tréninku',`<p>V záložce <b>Trénink</b> vidíš celý plán po blocích a můžeš ho upravit před odchodem na hřiště.</p><ul>
+<li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
+<li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
+<li>Pod plánem přidáš hru, pauzu na pití nebo jiný blok. Součet minut se hlídá nahoře u názvu.</li>
+<li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
+<li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
+<li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
+<li>Dole: <b>Spustit na hřišti</b>, <b>Uložit do historie</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
+ ['field','Na hřišti',`<ul>
+<li>Velký <b>časovač</b> odpočítává aktuální blok. Barva ukazuje, kolik času zbývá. Na šířku je časovač vlevo a stanoviště vpravo.</li>
+<li>Lišta dole: <b>◀ ▶</b> předchozí / další blok, <b>Start / Pauza</b>, <b>+1 min</b> a zkrácení / prodloužení.</li>
+<li>„Po skončení času automaticky na další blok“ a „Hlásit střídání nahlas“ – telefon sám ohlásí změnu. Hlas a tempo řeči nastavíš v Nastavení.</li>
+<li>U stanovišť tabulka ukazuje, která skupina je kde a který trenér stanoviště vede. Na písknutí se skupiny posunou, trenéři zůstávají.</li>
+<li>U hry vidíš animaci, „Řekni dětem“ a kroky. Klepnutím na název otevřeš celý popis.</li>
+<li><b>✓ Kdo co zvládl</b> – rovnou na hřišti odškrtáš dovednosti dětem.</li>
+<li>Na konci <b>Zhodnotit trénink</b>: 👍 / 👎 u her (generátor pak osvědčené hry vybírá častěji) a poznámka.</li>
+<li><b>☀</b> v hlavičce zapne režim na slunce s vysokým kontrastem.</li></ul>`],
+ ['par','Rodiče a WhatsApp',`<p>V Tréninku i v Historii je karta <b>Pro rodiče</b>.</p><ul>
+<li><b>WhatsApp / Kopírovat:</b> hotový text o tom, co děti hrály, co to rozvíjí, co je nového, tip na doma a tvůj vzkaz.</li>
+<li><b>Zveřejnit pro rodiče:</b> trénink se objeví na veřejné stránce týmu <b>Eagles na tréninku</b> (bez jmen a fotek dětí). Odkaz pošli rodičům jednou, další tréninky se tam přidají samy. U společného tréninku vybereš, pro které týmy.</li>
+<li><b>Stáhnout</b> trénink ze stránky kdykoli odebere.</li></ul>`],
+ ['hist','Historie',`<ul>
+<li>Všechny uložené tréninky týmu. Nahoře vidíš zaměření posledních tréninků a co se dlouho nedělalo.</li>
+<li>Hledání podle názvu, hry nebo trenéra, filtr sezóny, ★ oblíbené a <b>Moje tréninky</b>.</li>
+<li><b>Souhrn</b> ukáže trénink bez otevírání (i text pro rodiče a tisk). <b>Otevřít</b> ho načte do Tréninku včetně skupin, <b>Použít znovu</b> ho zopakuje s dnešní docházkou a trenéry.</li></ul>`],
+ ['team','Tým, Kdo je kdo, Dovednosti',`<ul>
+<li><b>Tým:</b> soupiska se jmény a čísly (stejná jako ve Scorekeeperu), úroveň dítěte (Orlíci / Orli / Orliska), přidání a odebrání dítěte, přidělení čísla dresu.</li>
+<li><b>Kdo je kdo:</b> fotky dětí, aby noví trenéři poznali jména. Fotka se ukládá i do Scorekeeperu.</li>
+<li><b>Dovednosti:</b> klepni na dítě a odškrtni, co zvládá. Podle počtu dovedností aplikace navrhne úroveň. Za celou oblast dítě dostane odznak, za všechno ⭐ Hvězdu týmu. Uvidíš i docházku za sezónu.</li>
+<li><b>Diplomy:</b> pro jedno dítě nebo celý tým, tisk na A4 na šířku nebo uložení jako PDF.</li>
+<li><b>Věková kategorie</b> U6 / U7 jde nastavit u každého dítěte zvlášť.</li></ul>`],
+ ['lib','Hry a cviky',`<ul>
+<li>Knihovna všech her, cviků, rutin a organizačních bloků s animacemi. Filtry podle druhu, věku a oblasti, hledání i podle pomůcky.</li>
+<li>V detailu najdeš popis, „Řekni dětem“, kroky, pomůcky, varianty a odkaz na video.</li>
+<li><b>+ Vlastní</b> přidá vlastní hru nebo cvik, uvidí ji všichni trenéři.</li></ul>`],
+ ['set','Nastavení',`<ul>
+<li><b>Vzhled</b> (podle telefonu, světlý, tmavý, na slunce), <b>hlas hlášení</b> a <b>tempo řeči</b>, <b>místo pro počasí</b>.</li>
+<li><b>Sezóna:</b> název, termín, tréninkové dny a čas, zimní příprava. Podle ní se předvyplní datum dalšího tréninku a týden plánu. Mění ji správce.</li>
+<li><b>Šablony tréninku:</b> vlastní struktura bloků (třeba „90 min hala“), vybíráš ji v Plánování → Další možnosti.</li>
+<li><b>Trenéři</b> tvých týmů a <b>Účet</b> s odhlášením.</li></ul>`],
+ ['admin','Pro správce',`<ul>
+<li>Přihlášení kódem správce ze Scorekeeperu.</li>
+<li><b>Trenéři:</b> u každého zaškrtni týmy, kde trénuje. <b>Vytvořit kód</b> vyrobí osobní kód, <b>Poslat</b> ho pošle trenérovi, <b>Nový kód</b> starý zneplatní, <b>Zrušit</b> přístup vypne.</li>
+<li><b>Společný kód pro trenéry</b> je přechodný – až mají všichni osobní kód, zruš ho.</li>
+<li><b>Historie přihlášení:</b> kdo a kdy se přihlásil a z jakého zařízení.</li>
+<li><b>Týmy:</b> přehled týmů a export soupisek do Excelu. V záložce Tým přesun dítěte do jiného týmu (⇄). Nové týmy se zakládají ve Scorekeeperu.</li>
+<li><b>Sezóna:</b> nastavuje ji jen správce a platí pro všechny trenéry. Na konci sezóny „Začít novou sezónu“.</li></ul>`]];
+const HOPEN=new Set(['start']);
+function vHelp(){return `<section class="card"><h2>Návod</h2><p class="small muted">Jak plánovač používat. Klepnutím na kapitolu ji rozbalíš.</p></section>`+
+ HELP.filter(([k])=>k!=='admin'||W.role==='admin').map(([k,t,h])=>`<section class="card help"><details data-h="${k}" ${HOPEN.has(k)?'open':''}><summary><h2>${t}</h2></summary><div class="help-b">${h}</div></details></section>`).join('')+
+ `<section class="card"><div class="row"><button class="btn" data-a="tab" data-v="plan">Naplánovat trénink</button><button class="btn ghost" data-a="tab" data-v="lib">Hry a cviky</button></div></section>`}
+document.addEventListener('toggle',e=>{const d=e.target;if(!d||!d.dataset||!d.dataset.h)return;if(d.open)HOPEN.add(d.dataset.h);else HOPEN.delete(d.dataset.h)},true);
 /* ---------- Kdo je kdo: fotka je u hráče v soupisce (player.photo), stejně jako ve Scorekeeperu.
    Starší fotky z plánovače (photos/<tid>/<číslo>) se jednou přesunou do soupisky. ---------- */
 let phT=null;const phCache=()=>{clearTimeout(phT);phT=setTimeout(()=>ls.set('u7w-photos',W.raw.photos),800)};

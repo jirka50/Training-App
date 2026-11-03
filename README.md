@@ -4,6 +4,8 @@ Plánování tréninků baseballu pro děti do 7 let: hry, cviky a rutiny s anim
 
 Plánovač používá **stejnou databázi Firebase jako Baseball Scorekeeper**. Týmy a soupisky (jména a čísla dresů) se berou ze Scorekeeperu, tréninková data se ukládají do samostatné části `training/`.
 
+Návod pro trenéry je přímo v aplikaci: Menu → Nastavení → Návod (text je v `src/web.js`, pole `HELP`). Při změně funkcí ho aktualizuj.
+
 ## Soubory
 - `index.html`, `app.js`, `app.css` – aplikace
 - `manifest.json`, `sw.js`, `icon*.png`, `apple-touch-icon.png`, `favicon-32x32.png` – instalace na plochu telefonu a práce bez signálu

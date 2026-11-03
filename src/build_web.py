@@ -27,8 +27,10 @@ R("'Založ tým a přidej děti a trenéry v Nastavení, nebo tam nahraj soubor 
 R("'Načítám sestavu…'}</p>${S.ready?'<button class=\"btn\" data-a=\"tab\" data-v=\"set\">Otevřít nastavení</button>':''}", "'Načítám sestavu…'}</p>")
 R("Přidej děti v Nastavení.</p>", "Děti přidáš v záložce Tým.</p>", 2)
 R("const MENU=[['Trénink',['plan','train','field','hist']],['Tým',['kids']],","const MENU=[['Trénink',['plan','train','field','hist']],['Tým',['team','who','kids']],")
+R("['Nastavení',['set']]];","['Nastavení',['set','help']]];")
+R("['set','Nastavení']];","['set','Nastavení'],['help','Návod']];")
 R("['kids','Dovednosti'],","['team','Tým'],['who','Kdo je kdo'],['kids','Dovednosti'],")
-R("const v={plan:vPlan,train:vTrain,field:vField,kids:vKids,","const v={plan:vPlan,train:vTrain,field:vField,team:vTeam,who:vWho,kids:vKids,")
+R("const v={plan:vPlan,train:vTrain,field:vField,kids:vKids,","const v={plan:vPlan,train:vTrain,field:vField,team:vTeam,who:vWho,help:vHelp,kids:vKids,")
 boot = "applyTheme(true);syncLine();Store.start();"
 R(boot, open(webjs, encoding='utf-8').read() + "\n" + boot)
 
