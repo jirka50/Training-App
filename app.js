@@ -1174,7 +1174,8 @@ const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti']
 let pend=false;
 function render(force){
  if(PARENT){renderParentPage();return}
- if(!W.role){renderLogin();return}
+ if(!W.role){if(HELPQ){HELPQ=false;W.guestHelp=true}renderLogin();return}
+ if(HELPQ){HELPQ=false;S.tab='help'}
  const ae=document.activeElement;
  if(!force&&ae&&ae.closest&&ae.closest('#view')&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&!['checkbox','button','file'].includes(ae.type)){pend=true;return}
  pend=false;
@@ -1831,7 +1832,7 @@ const Web={
  ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c]))S.ready=true},
  logout(msg){try{if(W.fb&&W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(e){}
   W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.denied={};W.seen={};W.loaded={};W.pins=null;
-  try{[WKEY,ME_KEY,'u7w-prefts'].forEach(k=>localStorage.removeItem(k))}catch(e){}W.role=null;W.code=null;W.coachId=null;W.logins=null;W.lgFilter='';W.msg=msg||'';S.ready=false;S.mode='local';render()}
+  try{[WKEY,ME_KEY,'u7w-prefts'].forEach(k=>localStorage.removeItem(k))}catch(e){}W.role=null;W.code=null;W.coachId=null;W.logins=null;W.lgFilter='';W.guestHelp=false;W.msg=msg||'';S.ready=false;S.mode='local';render()}
 };
 
 /* ---------- přihlášení ---------- */
@@ -1894,11 +1895,13 @@ function renderParentPage(){$('#tabs').innerHTML='';const ts=$('#teamSel');if(ts
 const PEXP={};
 function renderLogin(){
  $('#tabs').innerHTML='';const ts=$('#teamSel');ts.innerHTML='';ts.disabled=true;ts.hidden=true;
+ if(W.guestHelp){$('#view').innerHTML=`<section class="card"><button class="btn ghost sm" data-a="ghelp" data-v="0">← Přihlášení</button></section>`+vHelp();return}
  $('#view').innerHTML=`<section class="card login"><h2>Přihlášení</h2>
   <p class="small muted">Zadej svůj osobní kód, který ti dal správce (nebo společný kód trenérů). Správce se přihlašuje svým kódem ze Scorekeeperu.</p>
   <form id="wLogin" class="dl"><div class="field"><span class="label">Kód</span><input type="text" id="w_code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="např. K4PX-7QMR"></div>
   <div class="row"><button class="btn" type="submit" ${W.busy?'disabled':''}>${W.busy?'Přihlašuji…':'Přihlásit'}</button></div></form>
-  ${W.msg?`<p class="warnnote">${esc(W.msg)}</p>`:''}</section>`}
+  ${W.msg?`<p class="warnnote">${esc(W.msg)}</p>`:''}</section>
+  <section class="card"><div class="sumline"><span class="small muted">Nevíš si rady? Návod se dá přečíst i bez přihlášení.</span><button class="btn ghost sm" data-a="ghelp" data-v="1">📖 Návod</button></div></section>`}
 async function doLogin(){const code=normCode($('#w_code').value);if(code.replace('-','').length<8){W.msg='Zadej celý kód.';return render(true)}
  W.busy=true;W.msg='';render(true);
  try{const p=await claim(code);W.busy=false;W.role=p.role;W.code=code;W.coachId=p.coach||null;ls.set(WKEY,{code,role:p.role,coach:p.coach||''});
@@ -2055,9 +2058,12 @@ const HELP=[
 <li><b>Týmy:</b> přehled týmů a export soupisek do Excelu. V záložce Tým přesun dítěte do jiného týmu (⇄). Nové týmy se zakládají ve Scorekeeperu.</li>
 <li><b>Sezóna:</b> nastavuje ji jen správce a platí pro všechny trenéry. Na konci sezóny „Začít novou sezónu“.</li></ul>`]];
 const HOPEN=new Set(['start']);
-function vHelp(){return `<section class="card"><h2>Návod</h2><p class="small muted">Jak plánovač používat. Klepnutím na kapitolu ji rozbalíš.</p></section>`+
+/* návod bez přihlášení: tlačítko na přihlašovací stránce nebo odkaz s ?navod */
+let HELPQ=(()=>{try{return new URLSearchParams(location.search).has('navod')}catch(e){return false}})();
+const helpUrl=()=>location.origin+location.pathname+'?navod';
+function vHelp(){return `<section class="card"><h2>Návod</h2><p class="small muted">Jak plánovač používat. Klepnutím na kapitolu ji rozbalíš.</p><div class="row"><button class="btn ghost sm" data-a="wcopy" data-v="${esc(helpUrl())}">Kopírovat odkaz na návod</button></div><p class="small muted">Odkaz otevře návod i bez přihlášení, můžeš ho poslat novým trenérům.</p></section>`+
  HELP.filter(([k])=>k!=='admin'||W.role==='admin').map(([k,t,h])=>`<section class="card help"><details data-h="${k}" ${HOPEN.has(k)?'open':''}><summary><h2>${t}</h2></summary><div class="help-b">${h}</div></details></section>`).join('')+
- `<section class="card"><div class="row"><button class="btn" data-a="tab" data-v="plan">Naplánovat trénink</button><button class="btn ghost" data-a="tab" data-v="lib">Hry a cviky</button></div></section>`}
+ (W.role?`<section class="card"><div class="row"><button class="btn" data-a="tab" data-v="plan">Naplánovat trénink</button><button class="btn ghost" data-a="tab" data-v="lib">Hry a cviky</button></div></section>`:`<section class="card"><div class="row"><button class="btn" data-a="ghelp" data-v="0">Přihlásit se</button></div></section>`)}
 document.addEventListener('toggle',e=>{const d=e.target;if(!d||!d.dataset||!d.dataset.h)return;if(d.open)HOPEN.add(d.dataset.h);else HOPEN.delete(d.dataset.h)},true);
 /* ---------- Kdo je kdo: fotka je u hráče v soupisce (player.photo), stejně jako ve Scorekeeperu.
    Starší fotky z plánovače (photos/<tid>/<číslo>) se jednou přesunou do soupisky. ---------- */
@@ -2259,6 +2265,7 @@ Object.assign(actions,{
  wxreset:()=>{const h=wxPref().h;S.pref.wx={h};savePref();WX.at=0;render(true)},
  wlogout:()=>Web.logout(''),
  wpinnew:()=>newCoachPin(),wpindrop:()=>dropCoachPins(),
+ ghelp:v=>{W.guestHelp=v==='1';render(true);window.scrollTo(0,0)},
  wcopy:async v=>{try{await navigator.clipboard.writeText(v);toast('Odkaz zkopírován.')}catch(e){toast(v)}},
  wrdel:v=>{const tid=S.teamId,R=rosterOf(tid);R.players=R.players.filter(p=>String(p.num)!==v);rosterSave(tid,R);W.rmsg='';render(true)},
  wrass:v=>{W.assign=v;W.rmove=null;W.rmsg='';render(true);const f=$('#w_assnum');if(f&&f.focus)f.focus()},wrassno:()=>{W.assign=null;render(true)},
