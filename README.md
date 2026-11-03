@@ -23,6 +23,7 @@ Návod pro trenéry je přímo v aplikaci: Menu → Nastavení → Návod (text 
 - kódy: společný `pinmap/<kód> = {role:'coach'}`, osobní `pinmap/<kód> = {role:'coach', coach:'<id trenéra z training/staff>'}`
 - profil trenéra: `training/prefs/<id trenéra>` (vzhled, hlas, počasí), autor tréninku v `by` uvnitř `training/plans/<id>`
 - historie přihlášení: `logins/<pushId> = {t, uid, role, coach, code (první 4 znaky), dev, kind: login|open}` – zapisuje každý přihlášený jen nový záznam za sebe, čte a maže jen správce (Nastavení → Historie přihlášení, záznamy starší než rok se mažou)
+- návštěvy stránky pro rodiče: `views/<tid>/<pushId> = {t, uid, dev}` – zapíše anonymně každé otevření odkazu `?rodice=<tid>` (nejvýš jednou za 10 minut na zařízení, jen pro existující tým), čte a maže jen správce (Nastavení → Návštěvy stránky pro rodiče: různá zařízení za 30 min / hodinu / 24 h / 7 a 30 dní, záznamy starší než 90 dní se mažou)
 - omezení na vlastní týmy je jen v zobrazení aplikace; pravidla databáze ho nevynucují, protože seznam trenérů je uložený jako text JSON
 - zápasy: výchozí zápasy (T-ball, Coach pitch, Mini zápas 3 na 3, Všichni odpálí) se jednou zapíšou do `training/custom` i s animací: `zap01–zap04` od verze 1.1 (značka `training/seeds/zapasy`), `zap05–zap12` jako druhá dávka (značka `training/seeds/zapasy2`); značky hlídají, aby se smazané znovu nevracely; T-ball zápas (`zap01`) je sloučený do `zap04` Všichni odpálí, pak střídání – jednorázová úprava se značkou `training/seeds/slouceni-zap01` ho smaže a odkazy v trénincích a šablonách přepíše na `zap04`
 

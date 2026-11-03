@@ -1691,6 +1691,7 @@ try{const hv=document.getElementById('hver');if(hv)hv.textContent=verTxt()}catch
    WEBOVÁ VERZE · Firebase Realtime Database sdílená se Scorekeeperem
    Role: správce (kód správce ze Scorekeeperu) · trenér (osobní kód pinmap/<kód>={role:'coach',coach:<id ze staff>},
          vidí jen své týmy; nebo společný kód bez pole coach, vidí všechny týmy)
+   Návštěvy stránky pro rodiče: views/<tid>/<pushId> = {t,uid,dev} · zapisuje kdokoli, čte jen správce
    Historie přihlášení: logins/<pushId> = {t,uid,role,coach,code(4 znaky),dev,kind} · čte jen správce
    Čte:  teamlist/<tid> · teams/<tid>/roster  (spravuje Scorekeeper)
    Píše: training/staff (trenéři a jejich týmy) · training/kids/<tid> · training/{plans,custom,tpls}/<id>
@@ -1742,6 +1743,25 @@ function vLogins(){if(W.logins===null){W.logins=undefined;loadLogins()}
   ${list.length?`<div class="lglist">${show.map(x=>`<div class="lgrow"><span class="lgt">${lgTime(x.t)}</span><span><b>${esc(lgWho(x))}</b> · ${x.kind==='login'?'přihlášení kódem':'otevření aplikace'}<br><span class="small muted">${esc(x.dev||'')}${x.code?' · kód '+esc(x.code)+'-••••':''}</span></span></div>`).join('')}</div>
   ${list.length>show.length?`<div class="row"><button class="btn ghost sm" data-a="lgmore">Zobrazit další (${list.length-show.length})</button></div>`:''}`:'<p class="small">Zatím žádný záznam.</p>'}`}</section>`}
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.c==='lgf'){W.lgFilter=e.target.value;W.lgMore=false;render(true)}});
+
+/* ---------- návštěvy stránky pro rodiče: views/<tid>/<pushId> = {t,uid,dev} · zapisuje kdokoli (anonymně), čte jen správce ---------- */
+async function loadViews(){if(!W.fb||W.role!=='admin')return;W.vwErr='';
+ try{W.views=(await W.fb.db.ref('views').once('value')).val()||{}}
+ catch(e){W.views={};W.vwErr=isPerm(e)?'Návštěvy zatím nejde načíst: ve Firebase je potřeba vložit nová pravidla (database.rules.json).':'Návštěvy se nepodařilo načíst.'}
+ render(true);
+ /* úklid: záznamy starší než 90 dní */
+ const old=Date.now()-90*864e5,u={};Object.entries(W.views||{}).forEach(([tid,v])=>Object.entries(v||{}).forEach(([id,x])=>{if(!x||!x.t||x.t<old)u[tid+'/'+id]=null}));
+ if(Object.keys(u).length)W.fb.db.ref('views').update(u).catch(()=>{})}
+function vViews(){if(W.views===undefined){W.views=null;loadViews()}
+ const V=W.views,now=Date.now(),win=[['30 min',30*60e3],['hodina',3600e3],['24 h',864e5],['7 dní',7*864e5],['30 dní',30*864e5]];
+ const uniq=(arr,ms)=>new Set(arr.filter(x=>x.t>=now-ms).map(x=>x.uid)).size;
+ const rows=V?Object.entries(V).map(([tid,v])=>{const a=Object.values(v||{}).filter(x=>x&&x.t);const last=a.reduce((m,x)=>Math.max(m,x.t),0);return {tid,a,last}}).filter(r=>r.a.length).sort((a,b)=>b.last-a.last):[];
+ return `<section class="card"><div class="sumline"><h2>Návštěvy stránky pro rodiče</h2><button class="btn ghost sm" data-a="vwload">Obnovit</button></div>
+  <p class="small muted">Počet různých zařízení, která otevřela odkaz pro rodiče (stejné zařízení se započítá nejvýš jednou za 10 minut). Vidí jen správce, záznamy starší než 90 dní se mažou.</p>
+  ${W.vwErr?`<p class="warnnote">${esc(W.vwErr)}</p>`:''}
+  ${V===null?'<p class="small muted">Načítám…</p>':rows.length?`<div style="overflow-x:auto"><table class="mx"><tr><th>Tým</th>${win.map(w=>`<th>${w[0]}</th>`).join('')}<th>Naposledy</th></tr>${rows.map(r=>`<tr><td>${esc(tName(r.tid))}</td>${win.map(w=>`<td>${uniq(r.a,w[1])}</td>`).join('')}<td class="small">${lgTime(r.last)}</td></tr>`).join('')}</table></div>`:'<p class="small">Zatím žádná návštěva.</p>'}</section>`}
+async function logView(){const k='u7w-view-'+PARENT;if(Date.now()-(+ls.get(k,0)||0)<10*60e3)return;
+ try{const uid=await signIn();await W.fb.db.ref('views/'+PARENT).push({t:firebase.database.ServerValue.TIMESTAMP,uid,dev:devLabel()});ls.set(k,Date.now())}catch(e){}}
 
 /* ---------- připojení ---------- */
 function fbInit(){if(W.fb)return W.fb;if(typeof firebase==='undefined'){W.msg='Nepodařilo se načíst připojení. Zkontroluj internet a obnov stránku.';return null}
@@ -1857,6 +1877,7 @@ async function shareWA(t){if(!t)return;if(navigator.share){try{await navigator.s
  const u='https://wa.me/?text='+encodeURIComponent(t);try{window.open(u,'_blank','noopener')}catch(e){location.href=u}}
 const P={tid:PARENT,list:null,err:false};
 function parentBoot(){applyTheme();syncLine();const f=fbInit();if(!f){renderParentPage();return}
+ logView();
  f.db.ref('public/'+PARENT+'/training').on('value',s=>{const v=s.val()||{};P.list=Object.entries(v).map(([id,x])=>Object.assign({id,ts:x&&x.ts},PJ(x)||{})).filter(x=>x.date).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);renderParentPage()},()=>{P.err=true;renderParentPage()});
  f.db.ref('teamlist/'+PARENT).once('value').then(s=>{const v=s.val();if(v&&v.name){P.name=v.name;renderParentPage()}}).catch(()=>{});renderParentPage()}
 function renderParentPage(){$('#tabs').innerHTML='';const ts=$('#teamSel');if(ts){ts.innerHTML='';ts.hidden=true}const sy=$('#sync');if(sy)sy.textContent=P.name||'Pro rodiče';const PT='Eagles na tréninku',br=$('.brand');if(br&&br.firstChild&&br.firstChild.nodeType===3)br.firstChild.nodeValue=PT;document.title=PT+(P.name?' · '+P.name:'');
@@ -2210,7 +2231,7 @@ function vSet(){
   ${Object.keys(S.teams).length?`<div class="row">${Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'')).map(([id,x])=>`<button class="chip ${id===S.teamId?'on':''}" data-a="team" data-v="${esc(id)}">${esc(x.name)} · ${(x.players||[]).length}</button>`).join('')}</div>`:`<p class="muted">${S.ready?'Ve Scorekeeperu zatím není žádný tým.':'Načítám týmy…'}</p>`}
   <p class="small muted">Týmy jsou společné se Scorekeeperem. Soupisku upravíš v záložce Tým, nový tým založíš ve Scorekeeperu.</p>
   ${Object.keys(S.teams).length?`<div class="field"><span class="label">Export do Excelu</span><div class="row"><button class="btn ghost sm" data-a="xlsone">⬇ ${esc(team()?team().name:'')}</button>${Object.keys(S.teams).length>1?'<button class="btn ghost sm" data-a="xlsall">⬇ Všechny týmy</button>':''}</div><span class="small muted">Jméno, kategorie a úroveň dětí. Všechny týmy = jeden list se sloupcem Tým.</span></div>`:''}</section>`;
- if(adm)h+=vSeaSet()+vLogins()+'<h2 class="sect">Trenéři a aplikace</h2>';
+ if(adm)h+=vSeaSet()+vLogins()+vViews()+'<h2 class="sect">Trenéři a aplikace</h2>';
  if(t)h+=vStaff();
  h+=`${tplList().length?`<section class="card"><h2>Šablony tréninku</h2><div class="dl">${tplList().map(([id,tp])=>`<div class="sumline"><span><b>${esc(tp.name)}</b> · ${tplMin(tp)} min<br><span class="small muted">${tp.blocks.map(b=>BT[b.type]||b.type).join(' → ')}</span></span>${S.confirm==='t_'+id?`<span class="row"><button class="btn danger sm" data-a="tpldel" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></span>`:`<button class="ib" data-a="tplask" data-v="${esc(id)}" aria-label="Smazat šablonu ${esc(tp.name)}">✕</button>`}</div>`).join('')}</div></section>`:''}
  <section class="card"><h2>Aplikace v tomto telefonu</h2>
@@ -2250,7 +2271,7 @@ Object.assign(actions,{
  stteam:(v,el)=>{const list=clone(staffList()),c=list.find(x=>x.id===v),t=el.dataset.t;if(!c)return;c.teams=c.teams||[];const i=c.teams.indexOf(t);if(i>=0)c.teams.splice(i,1);else c.teams.push(t);staffSave(list)},
  stdel:v=>{W.sdel=v;render(true)},stdelno:()=>{W.sdel=null;render(true)},stdelgo:v=>{W.sdel=null;if(W.role==='admin')dropPersonalPin(v,true);staffSave(clone(staffList()).filter(c=>c.id!==v));toast('Trenér odebrán.')},
  pinnew:v=>newPersonalPin(v),pinsend:v=>sendPin(v),pindrop:v=>{W.pdel=v;render(true)},pindropno:()=>{W.pdel=null;render(true)},pindropgo:v=>dropPersonalPin(v),
- lgload:()=>{W.logins=undefined;render(true);loadLogins()},lgmore:()=>{W.lgMore=true;render(true)}
+ lgload:()=>{W.logins=undefined;render(true);loadLogins()},vwload:()=>{W.views=null;render(true);loadViews()},lgmore:()=>{W.lgMore=true;render(true)}
 });
 
 applyTheme(true);syncLine();Store.start();
