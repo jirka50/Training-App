@@ -1682,7 +1682,7 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.run.running)lock(true)});
 
 /* Verze aplikace: při každém vydání zvýšit APP_VERSION a datum (stejně jako ve Scorekeeperu). */
-const APP_VERSION='1.2',APP_DATE='2026-10-20';
+const APP_VERSION='1.3',APP_DATE='2026-11-03';
 const verTxt=()=>'verze '+APP_VERSION;
 const DEN_NAME={teamlist:'seznam týmů',teams:'soupisky',training:'tréninková data',photos:'fotky'};
 const deniedKey=p=>p.split('/')[0];
