@@ -111,6 +111,19 @@
           }
         }
       }
+    },
+    "views": {
+      ".read": "auth != null && root.child('claims').child(auth.uid).exists() && root.child('pinmap').child(root.child('claims').child(auth.uid).val()).child('role').val() === 'admin'",
+      ".write": "auth != null && root.child('claims').child(auth.uid).exists() && root.child('pinmap').child(root.child('claims').child(auth.uid).val()).child('role').val() === 'admin'",
+      "$tid": {
+        "$vid": {
+          ".write": "auth != null && !data.exists() && newData.exists() && root.child('teamlist').child($tid).exists()",
+          ".validate": "newData.hasChildren(['t','uid']) && newData.child('t').val() === now && newData.child('uid').val() === auth.uid && (!newData.child('dev').exists() || (newData.child('dev').isString() && newData.child('dev').val().length < 80))",
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
     }
   }
 }
