@@ -176,7 +176,7 @@ const P={tid:PARENT,list:null,err:false};
 function parentBoot(){applyTheme();syncLine();const f=fbInit();if(!f){renderParentPage();return}
  f.db.ref('public/'+PARENT+'/training').on('value',s=>{const v=s.val()||{};P.list=Object.entries(v).map(([id,x])=>Object.assign({id,ts:x&&x.ts},PJ(x)||{})).filter(x=>x.date).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);renderParentPage()},()=>{P.err=true;renderParentPage()});
  f.db.ref('teamlist/'+PARENT).once('value').then(s=>{const v=s.val();if(v&&v.name){P.name=v.name;renderParentPage()}}).catch(()=>{});renderParentPage()}
-function renderParentPage(){$('#tabs').innerHTML='';const ts=$('#teamSel');if(ts){ts.innerHTML='';ts.hidden=true}const sy=$('#sync');if(sy)sy.textContent='Pro rodiče'+(P.name?' · '+P.name:'');
+function renderParentPage(){$('#tabs').innerHTML='';const ts=$('#teamSel');if(ts){ts.innerHTML='';ts.hidden=true}const sy=$('#sync');if(sy)sy.textContent=P.name||'Pro rodiče';const PT='Eagles na tréninku',br=$('.brand');if(br&&br.firstChild&&br.firstChild.nodeType===3)br.firstChild.nodeValue=PT;document.title=PT+(P.name?' · '+P.name:'');
  const L=P.list,team=P.name||(L&&L[0]&&L[0].teams&&L[0].teams[0])||'';
  $('#view').innerHTML=`<section class="card par-h">${dipLogo?`<img src="${dipLogo}" alt="Eagles">`:''}<div><h2>Co děláme na trénincích</h2><p class="small muted">${esc(team)}${L&&L[0]&&L[0].season?' · '+esc(L[0].season):''}</p></div></section>`+
   (P.err?'<p class="warnnote">Stránku se nepodařilo načíst. Zkontroluj odkaz od trenéra.</p>':L==null?'<p class="muted">Načítám…</p>':!L.length?'<section class="card"><p class="muted">Trenéři sem zatím žádný trénink nezveřejnili.</p></section>':
