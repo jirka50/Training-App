@@ -845,6 +845,24 @@ function coachSelIds(){const all=coachPool().map(c=>c.key);const s=S.draft.coach
 const guests=()=>S.draft.guests[selKey()]||[];
 function coachNames(){const sel=coachSelIds();const out=coachPool().filter(c=>sel.includes(c.key)).map(c=>c.name).concat(guests());return out.length?out:['Trenér']}
 const coachCount=()=>coachNames().length;
+/* skupiny: Auto = každý trenér má svou skupinu; ručně = zvolený počet skupin a kdo je u které (S.draft.grp[selKey()]={n,at:{jméno:index}}) */
+const gCfg=()=>{const g=S.draft.grp&&S.draft.grp[selKey()];return g&&g.n>=1?g:null};
+function groupPlan(){const names=coachNames(),c=gCfg();
+ if(!c){const G=names.length>=2?names.length:1;return{G,gco:G>1?names.map(n=>[n]):[names.filter(n=>n!=='Trenér')]}}
+ const real=names.filter(n=>n!=='Trenér'),G=Math.min(GL.length,c.n),gco=Array.from({length:G},()=>[]),at=c.at||{},ok=n=>at[n]!=null&&at[n]<G;
+ real.filter(ok).forEach(n=>gco[at[n]].push(n));
+ real.filter(n=>!ok(n)).forEach(n=>{let gi=0;gco.forEach((g,i)=>{if(g.length<gco[gi].length)gi=i});gco[gi].push(n)});
+ return{G,gco}}
+/* trenéři u skupiny i (starší tréninky bez p.gco: jeden trenér na skupinu podle pořadí) */
+const gCo=(p,i)=>p&&p.gco?(p.gco[i]||[]).join(' + '):(p&&p.coaches||[])[i]||'';
+function restoreGrp(p){const k=selKey(),g=S.draft.grp||(S.draft.grp={});if(p&&p.gman&&p.gco){const at={};p.gco.forEach((x,i)=>x.forEach(n=>at[n]=i));g[k]={n:p.gco.length,at}}else delete g[k]}
+function vGrpCfg(live){const gp=groupPlan(),c=gCfg(),names=coachNames().filter(n=>n!=='Trenér'),pr=live&&S.plan?(S.plan.present||[]).length:presentKeys().length,max=Math.min(GL.length,Math.max(4,names.length+1));
+ return `<div class="field gcfg"><span class="label">Skupiny</span><div class="seg sm" role="group" aria-label="Počet skupin"><button data-a="gn" data-v="0" class="${!c?'on':''}" aria-pressed="${!c}">Auto</button>${Array.from({length:max},(_,i)=>i+1).map(n=>`<button data-a="gn" data-v="${n}" class="${c&&c.n===n?'on':''}" aria-pressed="${!!(c&&c.n===n)}">${n}</button>`).join('')}</div>
+  <span class="small muted">${!c?(gp.G>1?'Auto: každý trenér má svou skupinu.':'Auto: jedna skupina, všechny děti spolu.'):gp.G>1?'Počet skupin volíš ty. Klepnutím na písmeno určíš, u které skupiny trenér bude.':'Jedna skupina, všechny děti spolu.'}${gp.G>1&&pr?' Dovednosti ve skupinách: '+splitText(pr,gp.G)+'.':''}</span>
+  ${c&&gp.G>1&&names.length?`<div class="gasg">${names.map(n=>{const gi=gp.gco.findIndex(g=>g.includes(n));return `<div class="gasg-r"><span>${esc(n)}</span><div class="seg sm" role="group" aria-label="Skupina pro ${esc(n)}">${gp.gco.map((g,i)=>`<button data-a="gat" data-v="${i}" data-n="${esc(n)}" class="${gi===i?'on':''}" aria-pressed="${gi===i}">${GL[i]}</button>`).join('')}</div></div>`}).join('')}</div>`:''}
+  ${gp.G>1?`<span class="small">${gp.gco.map((g,i)=>`<b>${GL[i]}</b> ${g.length?esc(g.join(' + ')):'bez trenéra'}`).join(' · ')}</span>`:''}
+  ${gp.G>1&&gp.gco.some(g=>!g.length)?`<p class="warnnote">Skupina ${gp.gco.map((g,i)=>g.length?'':GL[i]).filter(Boolean).join(', ')} nemá trenéra.</p>`:''}</div>`}
+const grpChanged=()=>{if(S.tab==='train'&&S.plan)applyCoaches();else render(true)};
 /* trenéři z jiných týmů (kategorií) k zapůjčení, když jsou na tréninku méně než 2 trenéři */
 const realCoaches=()=>coachSelIds().length+guests().length;
 function borrowPool(){const sel=selTeams(),have=new Set(coachPool().map(c=>c.name.toLowerCase()).concat(guests().map(g=>g.toLowerCase()))),out=[],seen=new Set();
@@ -859,7 +877,7 @@ const kidAge=(tid,p)=>AGES.includes(p&&p.ag)?p.ag:teamAge(tid);
 const autoAge=()=>{const ts=selTeams();if(ts.some(t=>teamAge(t)==='U6'))return'U6';const pr=presentKeys().map(k=>kid(k));return pr.length&&pr.every(x=>kidAge(x.tid,plOf(x.tid).find(q=>q.num===x.num))==='U6')?'U6':'U7'};
 const dAge=()=>{const a=(S.draft.ageBy||{})[selKey()];return AGES.includes(a)?a:AGES.includes(S.draft.age)?S.draft.age:''};
 const draftAge=()=>dAge()||autoAge();
-function ctx(p){const d=S.draft;return{age:(p&&p.age)||draftAge(),kids:presentKeys().length,coaches:coachCount(),venue:d.venue,focus:d.focus.length?d.focus:FOCUS.slice(),recent:recentIds(),used:new Set()}}
+function ctx(p){const d=S.draft;return{age:(p&&p.age)||draftAge(),kids:presentKeys().length,coaches:coachCount(),groups:groupPlan().G,venue:d.venue,focus:d.focus.length?d.focus:FOCUS.slice(),recent:recentIds(),used:new Set()}}
 function fits(a,c,kids){if(c.age&&!agOf(a).includes(c.age))return false;if((a.kids||1)>(kids==null?c.kids:kids))return false;if(a.out&&c.venue==='hala')return false;if((a.co||1)>c.coaches)return false;return true}
 function score(a,c,cat){let s=Math.random()*1.5;const tags=[a.c].concat(a.t||[]);
  if(cat){if(a.c===cat)s+=4;else if(tags.includes(cat))s+=2}
@@ -880,11 +898,11 @@ const pools={
  drink:c=>acts().filter(a=>a.k==='routine'&&a.slot==='drink'),
  end:c=>acts().filter(a=>a.k==='routine'&&a.slot==='end')
 };
-function groupSize(c){return Math.max(1,Math.floor(c.kids/Math.max(1,c.coaches)))}
+function groupSize(c){return Math.max(1,Math.floor(c.kids/Math.max(1,c.groups||c.coaches)))}
 function pickStations(c,n){const size=groupSize(c),out=[];for(let i=0;i<n;i++){const cat=c.focus[i%c.focus.length];const pool=pools.station(c,size).filter(a=>!c.used.has(a.id));const a=best(pool,c,cat)||best(pools.station(c,1).filter(a=>!c.used.has(a.id)),c,cat);if(a)out.push(a.id)}return out}
 function generate(){
  const prevId=S.plan&&S.plan.id;parkCurrent();
- const c=ctx();const blocks=[],G=c.coaches>=2?c.coaches:1;RS=rateStats();
+ const c=ctx(),gp=groupPlan();const blocks=[],G=gp.G;RS=rateStats();
  if(!c.kids){toast('Označ aspoň jedno přítomné dítě.');return}
  const tp=S.draft.tpl&&S.tpls[S.draft.tpl],struct=tp?tp.blocks.map(b=>[b.type,+b.min||5,b.mode]):TPL[S.draft.minutes];
  const wk=S.draft.week?SEASON[S.draft.week-1]:null,must=(wk?wk.must:[]).filter(id=>ACT[id]&&agOf(ACT[id]).includes(c.age));must.forEach(id=>c.used.add(id));
@@ -910,7 +928,7 @@ function generate(){
   if(b.items.length)blocks.push(b)
  });
  const names=coachNames();
- const ts=selTeams();S.plan={id:uid(),name:(S.draft.name||'').trim()||(wk?'Týden '+S.draft.week+': '+wk.n:''),week:S.draft.week||0,team:ts[0],teams:ts,date:S.draft.date,minutes:tp?tplMin(tp):S.draft.minutes,age:c.age,season:SEA().name||'',coaches:names,focus:S.draft.focus.slice(),venue:S.draft.venue,present:presentKeys(),blocks,groups:makeGroups(presentKeys(),G,S.draft.mix!==false)};
+ const ts=selTeams();S.plan={id:uid(),name:(S.draft.name||'').trim()||(wk?'Týden '+S.draft.week+': '+wk.n:''),week:S.draft.week||0,team:ts[0],teams:ts,date:S.draft.date,minutes:tp?tplMin(tp):S.draft.minutes,age:c.age,season:SEA().name||'',coaches:names,gco:gp.gco,gman:!!gCfg(),focus:S.draft.focus.slice(),venue:S.draft.venue,present:presentKeys(),blocks,groups:makeGroups(presentKeys(),G,S.draft.mix!==false)};
  if(tp)S.plan.blocks.forEach((b,i)=>{const want=(tp.blocks[i]||{}).mode;if(want&&MODEABLE.includes(b.type)&&want!==(b.mode==='st'?'st':'same')&&!(want==='st'&&nG(S.plan)<2))setMode(b,want)});
  S.gear={};S.openRate=false;S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();if(prevId&&!S.addNew&&prevId!==S.plan.id){delete OPEN[prevId]}const added=S.addNew&&prevId;S.addNew=false;savePlan();actions.tab('train');toast(added?'Další trénink sestaven. Přepínáš nahoře.':'Trénink sestaven.')
 }
@@ -930,7 +948,7 @@ const nG=p=>Math.max(1,(p&&p.groups||[]).length);
 const MODEABLE=['warm','skill','skillr','game'];
 /* režim bloku: 'same' = všichni stejné cvičení (ve skupinách se svým trenérem), 'st' = skupiny, každá jinak (rotace) */
 function setMode(b,v){const p=S.plan,G=nG(p);
- if(v==='st'){if(G<2){toast('Stanoviště potřebují aspoň dva trenéry.');return}
+ if(v==='st'){if(G<2){toast('Stanoviště potřebují aspoň dvě skupiny.');return}
   const c=ctx();p.blocks.forEach(x=>{if(x!==b)x.items.forEach(i=>c.used.add(i))});const keep=b.items.filter(id=>ACT[id]&&ACT[id].k!=='routine').slice(0,G);keep.forEach(i=>c.used.add(i));
   for(let i=keep.length;i<G;i++){const a=best(pools.station(c,1).filter(x=>!c.used.has(x.id)),c,c.focus[i%c.focus.length]);if(a)keep.push(a.id)}
   b.items=keep;b.mode='st'}
@@ -1029,13 +1047,13 @@ const short=(t,n)=>{t=String(t||'');return t.length>n?t.slice(0,n).replace(/\s+\
 function planPrintHtml(p){const t0=SEA().time||'',G=p.groups||[],gear=new Map();let m=0;
  p.blocks.forEach(b=>b.items.forEach(id=>{const a=ACT[id];if(a)gearOf(a).forEach(g=>gear.set(g,1))}));
  const blocks=p.blocks.map(b=>{const st=m;m+=b.min;const its=b.items.map(id=>ACT[id]).filter(Boolean);
-  const rot=b.mode==='st'&&G.length>1?(()=>{const ri=rotInfo(b);return `<table class="pr-t"><tr><th>Rotace</th>${G.map((g,gi)=>`<th>Sk. ${GL[gi]}${p.coaches[gi]?' · '+esc(p.coaches[gi]):''}</th>`).join('')}</tr>${Array.from({length:ri.rot},(_,r)=>`<tr><td>${r+1}. · ${ri.rotMin}′</td>${G.map((g,gi)=>`<td>${esc(actName(b.items[(gi+r)%ri.n]))}</td>`).join('')}</tr>`).join('')}</table>`})():'';
+  const rot=b.mode==='st'&&G.length>1?(()=>{const ri=rotInfo(b);return `<table class="pr-t"><tr><th>Rotace</th>${G.map((g,gi)=>`<th>Sk. ${GL[gi]}${gCo(p,gi)?' · '+esc(gCo(p,gi)):''}</th>`).join('')}</tr>${Array.from({length:ri.rot},(_,r)=>`<tr><td>${r+1}. · ${ri.rotMin}′</td>${G.map((g,gi)=>`<td>${esc(actName(b.items[(gi+r)%ri.n]))}</td>`).join('')}</tr>`).join('')}</table>`})():'';
   return `<div class="pr-b"><div class="pr-time">${clk(t0,st)}<small>${b.min} min</small></div><div><div class="pr-h">${esc(BT[b.type]||b.type)}${b.mode==='st'?' · stanoviště':G.length>1&&MODEABLE.includes(b.type)?' · všichni':''}</div>
    ${its.map(a=>`<div class="pr-a"><b>${esc(a.n)}</b> – ${esc(short(a.kid||a.d,140))}</div>`).join('')}${rot}</div></div>`}).join('');
  return `<section class="pr"><div class="pr-top">${dipLogo?`<img src="${dipLogo}" alt="">`:''}<div><h1>${esc(planTitle(p))}</h1><p>${fmtDate(p.date)}${t0?' · '+esc(t0):''} · ${p.minutes} min · ${p.venue==='hala'?'hala':'venku'}${p.age?' · '+p.age:''} · ${planTeams(p).map(t=>esc(tName(t))).join(' + ')}</p>
   <p>Trenéři: ${(p.coaches||[]).map(esc).join(', ')||'–'} · dětí ${(p.present||[]).length}${p.week&&SEASON[p.week-1]?' · sezónní plán, týden '+p.week+': '+esc(SEASON[p.week-1].n):''}</p></div></div>
   ${blocks}
-  ${G.length>1?`<h2>Skupiny</h2><div class="pr-g">${G.map((g,gi)=>`<div><b>Skupina ${GL[gi]}${p.coaches[gi]?' · '+esc(p.coaches[gi]):''}</b><br>${g.map(n=>{const x=kid(n,p);return esc((noNum(x.num)?'':x.num+' ')+(x.dn||x.name||'?'))}).join(', ')}</div>`).join('')}</div>`:''}
+  ${G.length>1?`<h2>Skupiny</h2><div class="pr-g">${G.map((g,gi)=>`<div><b>Skupina ${GL[gi]}${gCo(p,gi)?' · '+esc(gCo(p,gi)):''}</b><br>${g.map(n=>{const x=kid(n,p);return esc((noNum(x.num)?'':x.num+' ')+(x.dn||x.name||'?'))}).join(', ')}</div>`).join('')}</div>`:''}
   <h2>Pomůcky</h2><p class="pr-gear">${[...gear.keys()].sort((a,b)=>a.localeCompare(b,'cs')).map(esc).join(', ')||'bez pomůcek'}</p>
   ${p.note?`<h2>Poznámka</h2><p>${esc(p.note)}</p>`:''}</section>`}
 /* ===== Docházka za sezónu (z tréninků uložených v Historii) ===== */
@@ -1192,8 +1210,9 @@ function vPlan1(){const {d,st,mt,pr,cs,sel,gs,all,nAll,nC,per}=planCtx();return 
     :`<p class="small muted">${mt?'Vybrané týmy':'Tým'} zatím nemají uložené trenéry. Přidej je v Nastavení, nebo sem zapiš hosta. <button class="btn ghost sm" data-a="tab" data-v="set">Nastavení</button></p>${gs.length?`<div class="kids">${gs.map((g,i)=>`<button class="chip coach on" data-a="gdel" data-v="${i}" aria-label="Odebrat hosta ${esc(g)}">${esc(g)} <span class="guest">host ✕</span></button>`).join('')}</div>`:''}`}
    ${vBorrow()}
    <form id="addGuest" class="row"><input type="text" id="g_name" placeholder="Host na tento trénink" aria-label="Jméno hostujícího trenéra" style="flex:1 1 180px;width:auto"><button class="btn ghost sm" type="submit">Přidat</button></form>
-   <span class="muted small">${nC>1?'Dovednosti ve skupinách: '+per:nC===1?'Jeden trenér: dovednosti dělají všechny děti spolu':'Bez trenéra se počítá s jedním trenérem a všemi dětmi spolu'}</span>
-   ${mt&&nC>1?`<label class="row small"><input type="checkbox" id="mix" data-c="mix" ${d.mix!==false?'checked':''}> Promíchat týmy ve skupinách (jinak má každý tým své skupiny)</label>`:''}</div>
+   ${nC?'':'<span class="muted small">Bez trenéra se počítá s jedním trenérem.</span>'}</div>
+  ${vGrpCfg()}
+  <div class="field">${mt&&groupPlan().G>1?`<label class="row small"><input type="checkbox" id="mix" data-c="mix" ${d.mix!==false?'checked':''}> Promíchat týmy ve skupinách (jinak má každý tým své skupiny)</label>`:''}</div>
   <div class="field"><div class="sumline"><span class="label">Docházka · přítomno ${pr.length} z ${nAll}</span><span class="row"><button class="btn ghost sm" data-a="all">Všichni</button><button class="btn ghost sm" data-a="none">Nikdo</button></span></div>
    ${st.map(tid=>{const ps=plOf(tid),po=presentOf(tid);return `${mt?`<div class="sumline"><h3>${esc(tName(tid))} · ${po.length} z ${ps.length}</h3><span class="row"><button class="btn ghost sm" data-a="all" data-v="${esc(tid)}">Všichni</button><button class="btn ghost sm" data-a="none" data-v="${esc(tid)}">Nikdo</button></span></div>`:''}
    ${ps.length?`<div class="kids">${ps.map(p=>{const on=po.includes(p.num);return `<button class="chip kid ${on?'on':'off'}" data-a="att" data-v="${esc(K(tid,p.num))}" aria-pressed="${on}"><b>${esc(numShort(p.num))}</b>${esc(dn(p))}${LVL[p.lvl]?`<span class="lvl">${LVL[p.lvl]}</span>`:''}</button>`}).join('')}</div>`:`<p class="muted small">Soupiska ${esc(tName(tid))} je prázdná. Děti přidáš v záložce Tým.</p>`}`}).join('')}
@@ -1247,10 +1266,10 @@ function vPlanOut(){
    <button class="ib" data-a="rm" data-b="${bi}" aria-label="Odebrat blok">✕</button>
    <select class="btype" data-c="btype" data-b="${bi}" aria-label="Typ bloku">${Object.entries(BT).map(([k,l])=>`<option value="${k}" ${k===b.type?'selected':''}>${l}</option>`).join('')}</select></div>`;
   let body='';const G=nG(p),cm=MODEABLE.includes(b.type),bk=b.id||('b'+bi),ed=S.openBlk!=null&&S.openBlk===bk;
-  const seg=cm?`<div class="seg modeseg" role="group" aria-label="Jak blok proběhne"><button data-a="bmode" data-b="${bi}" data-v="same" class="${b.mode!=='st'?'on':''}" aria-pressed="${b.mode!=='st'}">Všichni</button><button data-a="bmode" data-b="${bi}" data-v="st" class="${b.mode==='st'?'on':''}" aria-pressed="${b.mode==='st'}" ${G<2?'disabled title="Stanoviště potřebují aspoň dva trenéry"':''}>Stanoviště</button></div>`:'';
+  const seg=cm?`<div class="seg modeseg" role="group" aria-label="Jak blok proběhne"><button data-a="bmode" data-b="${bi}" data-v="same" class="${b.mode!=='st'?'on':''}" aria-pressed="${b.mode!=='st'}">Všichni</button><button data-a="bmode" data-b="${bi}" data-v="st" class="${b.mode==='st'?'on':''}" aria-pressed="${b.mode==='st'}" ${G<2?'disabled title="Stanoviště potřebují aspoň dvě skupiny"':''}>Stanoviště</button></div>`:'';
   if(b.mode==='st'){const ri=rotInfo(b);
    body=`<p class="small muted">${ri.n} stanoviště · ${ri.rot}× rotace po ${ri.rotMin} min${ri.rot<ri.n?' · na všechna stanoviště nezbude čas, prodluž blok':''}</p>
-    <div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${si+1} · ${esc(p.coaches[si]||'Trenér '+(si+1))}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit stanoviště ${si+1} náhodně">⟳</button><button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat stanoviště ${si+1} ze seznamu">☰</button></span>`:''}</div>`).join('')}</div>`}
+    <div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${si+1} · ${esc(gCo(p,si)||'Trenér '+(si+1))}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit stanoviště ${si+1} náhodně">⟳</button><button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat stanoviště ${si+1} ze seznamu">☰</button></span>`:''}</div>`).join('')}</div>`}
   else{const multi=b.items.length>1,per=Math.floor(b.min/b.items.length);
    const note=cm?(G>1?'Všechny skupiny dělají totéž, každá se svým trenérem':'Celý tým spolu'):'';
    body=`${note||multi?`<p class="small muted">${note}${multi?(note?' · ':'')+'asi '+per+' min na každou položku':''}</p>`:''}<div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${multi?si+1:'▶'}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit za jinou náhodně">⟳</button>${PICKABLE.includes(b.type)?`<button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat ze seznamu">☰</button>`:''}${multi?`<button class="ib" data-a="rmitem" data-b="${bi}" data-s="${si}" aria-label="Odebrat z bloku">✕</button>`:''}</span>`:''}</div>`).join('')}</div>${cm&&ed?`<div class="row"><button class="btn ghost sm" data-a="additem" data-b="${bi}">+ Další cvik do bloku</button></div>`:''}`}
@@ -1266,7 +1285,7 @@ function vPlanOut(){
  </section>`;
  const nCo=(p.coaches||[]).filter(n=>n!=='Trenér').length,gearN=(()=>{const m=new Set();p.blocks.forEach(b=>b.items.forEach(id=>{const a=ACT[id];if(a)gearOf(a).forEach(g=>m.add(g))}));return m.size})();
  h+=foldCard('att','Docházka',`${(p.present||[]).length} dětí · ${nCo} ${nCo>1&&nCo<5?'trenéři':nCo>=5?'trenérů':'trenér'}`,vAttEdit());
- if(nG(p)>1)h+=foldCard('grp','Skupiny',p.groups.map((g,i)=>GL[i]+' '+esc(p.coaches[i]||'')+' · '+g.length).join(' | '),vGroups());
+ if(nG(p)>1)h+=foldCard('grp','Skupiny',p.groups.map((g,i)=>GL[i]+' '+esc(gCo(p,i))+' · '+g.length).join(' | '),vGroups());
  h+=foldCard('gear','Pomůcky do tašky',`${gearN} položek${Object.values(S.gear||{}).filter(Boolean).length?' · sbaleno '+Object.values(S.gear).filter(Boolean).length:''}`,vGear());
  h+=vRate()+foldCard('par','Pro rodiče',typeof pubOn==='function'&&pubOn(p).length?'✓ zveřejněno na stránce pro rodiče':'shrnutí, WhatsApp, stránka pro rodiče',vParents());
  h+=`<section class="card"><div class="row"><button class="btn" data-a="go">Spustit na hřišti</button><button class="btn ghost" data-a="tab" data-v="plan">Upravit nastavení</button><button class="btn ghost" data-a="save">${S.plans[p.id]?'Uložit změny':'Uložit do historie'}</button><button class="btn ghost" data-a="tplform">Uložit jako šablonu</button><button class="btn ghost" data-a="prplan">🖨 Vytisknout</button></div>
@@ -1283,10 +1302,10 @@ function vAttEdit(){const p=S.plan,ts=planTeams(p),mt=ts.length>1,pr=new Set((p.
   ${(()=>{const cs=coachPool(),sel=coachSelIds(),gs=guests();return `<h3>Trenéři · ${(p.coaches||[]).filter(n=>n!=='Trenér').length}</h3><div class="kids">${cs.map(c=>{const on=sel.includes(c.key);return `<button class="chip coach ${on?'on':'off'}" data-a="pcoach" data-v="${esc(c.key)}" aria-pressed="${on}">${esc(c.name)}</button>`}).join('')}${gs.map((g,i)=>`<button class="chip coach on" data-a="pguest" data-v="${i}" aria-label="Odebrat hosta ${esc(g)}">${esc(g)} <span class="guest">host ✕</span></button>`).join('')}${!cs.length&&!gs.length?'<span class="muted small">Týmy nemají uložené trenéry.</span>':''}</div>
   ${vBorrow()}
   <form id="addGuestT" class="row"><input type="text" id="gt_name" placeholder="Host na tento trénink" aria-label="Jméno hostujícího trenéra" style="flex:1 1 180px;width:auto"><button class="btn ghost sm" type="submit">Přidat</button></form>
-  <p class="small muted">Když se změní počet trenérů, děti se znovu rozdělí do skupin.</p><h3>Děti · ${pr.size} z ${all}</h3>`})()}
+  ${vGrpCfg(true)}<p class="small muted">Když se změní počet skupin, děti se znovu rozdělí.</p><h3>Děti · ${pr.size} z ${all}</h3>`})()}
   ${ts.map(tid=>`${mt?`<h3>${esc(tName(tid))}</h3>`:''}<div class="kids">${sortPl(plOf(tid)).map(x=>{const k=K(tid,x.num),on=pr.has(k);return `<button class="chip kid ${on?'on':'off'}" data-a="patt" data-v="${esc(k)}" aria-pressed="${on}">${kidPh({tid,num:x.num,name:x.name})}<b>${esc(numShort(x.num))}</b>${esc(x.dn||x.name)}</button>`}).join('')||'<span class="muted small">soupiska je prázdná</span>'}</div>`).join('')}</section>`}
-function applyCoaches(){const p=S.plan;if(!p)return;const oldG=nG(p),cc=coachCount(),G=cc>=2?cc:1;p.coaches=coachNames();
- if(G!==oldG){p.groups=makeGroups(p.present,G,S.draft.mix!==false);fitBlocks();S.sel=null;toast(G>1?'Děti rozděleny do '+G+' skupin.':'Jeden trenér: všechny děti spolu.')}savePlan();render(true)}
+function applyCoaches(){const p=S.plan;if(!p)return;const oldG=nG(p),gp=groupPlan(),G=gp.G;p.coaches=coachNames();p.gco=gp.gco;p.gman=!!gCfg();
+ if(G!==oldG){p.groups=makeGroups(p.present,G,S.draft.mix!==false);fitBlocks();S.sel=null;toast(G>1?'Děti rozděleny do '+G+' skupin.':'Jedna skupina: všechny děti spolu.')}savePlan();render(true)}
 function pAttToggle(key){const p=S.plan;if(!p)return;const x=kid(key,p),nk=K(x.tid,x.num),same=k=>normKey(k,p)===nk;p.groups=p.groups&&p.groups.length?p.groups:[[]];
  if((p.present||[]).some(same)){p.present=p.present.filter(k=>!same(k));p.groups=p.groups.map(g=>g.filter(k=>!same(k)));if(S.sel&&same(S.sel))S.sel=null;
   if(S.draft.present[x.tid])S.draft.present[x.tid]=S.draft.present[x.tid].filter(n=>n!==x.num)}
@@ -1298,13 +1317,13 @@ let FOLD=ls.get('u7-fold',{})||{};
 function foldCard(key,title,summary,html){if(!FOLD[key])return `<section class="card fold"><button class="foldh" data-a="fold" data-v="${key}" aria-expanded="false"><span class="fh">${title}</span><span class="fs small muted">${summary}</span><span class="chev" aria-hidden="true">▾</span></button></section>`;
  return html.replace('<h2>',`<h2 class="fold-t" data-a="fold" data-v="${key}" role="button" tabindex="0" aria-expanded="true"><span class="chev" aria-hidden="true">▴</span>`)}
 function vGroups(){
- const p=S.plan,cc=coachCount(),stb=p.blocks.filter(b=>b.mode==='st');
- const changed=JSON.stringify(p.present.map(k=>normKey(k,p)).sort())!==JSON.stringify(presentKeys().slice().sort())||nG(p)!==(cc>=2?cc:1);const mt=planTeams(p).length>1;
- const mx=stb.map(b=>{const ri=rotInfo(b);return `<span class="label">Rozpis · ${esc(BT[b.type]||'')}</span><div class="mx-wrap"><table class="mx"><thead><tr><th>Rotace</th>${p.groups.map((g,gi)=>`<th>Skupina ${GL[gi]}</th>`).join('')}</tr></thead><tbody>${Array.from({length:ri.rot},(_,r)=>`<tr><th>${r+1}.</th>${p.groups.map((g,gi)=>{const si=(gi+r)%ri.n;return `<td>${esc(actName(b.items[si]))}<br><span class="muted small">${esc(p.coaches[si]||'')}</span></td>`}).join('')}</tr>`).join('')}</tbody></table></div>`}).join('');
+ const p=S.plan,stb=p.blocks.filter(b=>b.mode==='st');
+ const changed=JSON.stringify(p.present.map(k=>normKey(k,p)).sort())!==JSON.stringify(presentKeys().slice().sort())||nG(p)!==groupPlan().G;const mt=planTeams(p).length>1;
+ const mx=stb.map(b=>{const ri=rotInfo(b);return `<span class="label">Rozpis · ${esc(BT[b.type]||'')}</span><div class="mx-wrap"><table class="mx"><thead><tr><th>Rotace</th>${p.groups.map((g,gi)=>`<th>Skupina ${GL[gi]}</th>`).join('')}</tr></thead><tbody>${Array.from({length:ri.rot},(_,r)=>`<tr><th>${r+1}.</th>${p.groups.map((g,gi)=>{const si=(gi+r)%ri.n;return `<td>${esc(actName(b.items[si]))}<br><span class="muted small">${esc(gCo(p,si))}</span></td>`}).join('')}</tr>`).join('')}</tbody></table></div>`}).join('');
  return `<section class="card"><div class="sumline"><h2>Skupiny</h2><button class="btn ghost sm" data-a="regroup">Zamíchat a přepočítat</button></div>
   ${changed?'<p class="warnnote">Docházka nebo trenéři se od sestavení změnili. Klepni na Zamíchat a přepočítat.</p>':''}
-  <p class="small muted">Každá skupina má svého trenéra. Klepni na dítě a pak na „Sem“ u jiné skupiny.${stb.length?' U bloků „Stanoviště“ začíná skupina u stanoviště se stejným číslem.':''}</p>
-  <div class="groups">${p.groups.map((g,gi)=>`<div class="grp"><div class="grp-h"><h3>Skupina ${GL[gi]} · ${esc(p.coaches[gi]||'')} · ${g.length}</h3>${S.sel&&!g.includes(S.sel)?`<button class="btn ball sm" data-a="moveto" data-v="${gi}">Sem</button>`:''}</div>
+  <p class="small muted">Počet skupin a jejich trenéry nastavíš v Docházce. Klepni na dítě a pak na „Sem“ u jiné skupiny.${stb.length?' U bloků „Stanoviště“ začíná skupina u stanoviště se stejným číslem.':''}</p>
+  <div class="groups">${p.groups.map((g,gi)=>`<div class="grp"><div class="grp-h"><h3>Skupina ${GL[gi]} · ${esc(gCo(p,gi))} · ${g.length}</h3>${S.sel&&!g.includes(S.sel)?`<button class="btn ball sm" data-a="moveto" data-v="${gi}">Sem</button>`:''}</div>
    <div class="kids">${g.map(n=>{const x=kid(n,p);return `<button class="chip kid ${S.sel===n?'sel':''}" data-a="pick" data-v="${esc(n)}">${kidPh(x)}<b>${esc(numShort(x.num))}</b>${esc(x.dn||x.name||'?')}${mt?`<span class="lvl">${esc(tShort(x.tid))}</span>`:''}</button>`}).join('')||'<span class="muted small">prázdná</span>'}</div></div>`).join('')}</div>
   ${mx}</section>`
 }
@@ -1342,9 +1361,9 @@ function vField(){
  const s=st[S.run.i];if(!s)return `<section class="card empty"><h2>Plán je prázdný</h2></section>`;
  const b=S.plan.blocks[s.bi];let at=0;for(let i=0;i<S.run.i;i++)at+=st[i].min;
  let mid='';
- if(s.r!=null){mid=`<div class="mx-wrap" style="width:100%"><table class="mx"><thead><tr><th>Skupina</th><th>Stanoviště</th><th>Trenér</th></tr></thead><tbody>${S.plan.groups.map((g,gi)=>{const si=(gi+s.r)%b.items.length;return `<tr><th>${GL[gi]} · ${g.length}${faces(g,S.plan)}</th><td><button class="aname" style="font-size:17px" data-a="open" data-v="${b.items[si]}">${esc(actName(b.items[si]))}</button></td><td>${esc(S.plan.coaches[si]||'')}</td></tr>`}).join('')}</tbody></table></div>
+ if(s.r!=null){mid=`<div class="mx-wrap" style="width:100%"><table class="mx"><thead><tr><th>Skupina</th><th>Stanoviště</th><th>Trenér</th></tr></thead><tbody>${S.plan.groups.map((g,gi)=>{const si=(gi+s.r)%b.items.length;return `<tr><th>${GL[gi]} · ${g.length}${faces(g,S.plan)}</th><td><button class="aname" style="font-size:17px" data-a="open" data-v="${b.items[si]}">${esc(actName(b.items[si]))}</button></td><td>${esc(gCo(S.plan,si))}</td></tr>`}).join('')}</tbody></table></div>
   <p class="small muted">${s.r===0?'Skupiny začínají u stanoviště se svým číslem.':'Na písknutí vláček na další stanoviště, trenéři zůstávají.'}</p>`}
- else{const a=ACT[b.items[s.item]],G=nG(S.plan);mid=`${G>1&&MODEABLE.includes(b.type)?`<p class="small">Všechny skupiny dělají totéž: ${S.plan.groups.map((g,gi)=>GL[gi]+' – '+esc(S.plan.coaches[gi]||'')).join(', ')}</p>`:''}<button class="aname" data-a="open" data-v="${a?a.id:''}">${esc(a?a.n:'')}</button>${a&&AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}${a&&a.kid?`<div class="cue"><span class="label">Řekni dětem</span><br>${esc(a.kid)}</div>`:''}${a&&a.steps?`<div class="cue"><span class="label">Kroky</span>${stepsHtml(a)}</div>`:''}${a?`<div class="cue small">${esc(a.d)}</div>`:''}`}
+ else{const a=ACT[b.items[s.item]],G=nG(S.plan);mid=`${G>1&&MODEABLE.includes(b.type)?`<p class="small">Všechny skupiny dělají totéž: ${S.plan.groups.map((g,gi)=>GL[gi]+' – '+esc(gCo(S.plan,gi))).join(', ')}</p>`:''}<button class="aname" data-a="open" data-v="${a?a.id:''}">${esc(a?a.n:'')}</button>${a&&AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}${a&&a.kid?`<div class="cue"><span class="label">Řekni dětem</span><br>${esc(a.kid)}</div>`:''}${a&&a.steps?`<div class="cue"><span class="label">Kroky</span>${stepsHtml(a)}</div>`:''}${a?`<div class="cue small">${esc(a.d)}</div>`:''}`}
  const nx=st[S.run.i+1];
  return bar+`<section class="card now">
   <div class="now-l"><span class="label">${esc(planTitle(S.plan))} · ${BT[b.type]||''} · ${at}′–${at+s.min}′ z ${S.plan.minutes}′</span>
@@ -1377,7 +1396,7 @@ function openMk(){const p=S.plan;if(!p)return;if(!S.mk||!SK.some(x=>x.id===S.mk)
  const has=k=>{const pl=plOf(k.tid).find(q=>q.num===k.num);return skOf(pl).includes(sk.id)};
  const st=s&&s.r!=null?p.blocks[s.bi]:null;let done=0,tot=0;
  const grp=p.groups.map((g,gi)=>{const ks=g.map(n=>Object.assign(kid(n,p),{key:n}));ks.forEach(k=>{tot++;if(has(k))done++});
-  return `<div class="field"><span class="label">Skupina ${GL[gi]}${p.coaches[gi]?' · '+esc(p.coaches[gi]):''}${st?' · '+esc(actName(st.items[(gi+s.r)%st.items.length])):''}</span><div class="kids">${ks.map(k=>`<button class="chip kid mk ${has(k)?'on':''}" data-a="mkkid" data-v="${esc(k.key)}" aria-pressed="${has(k)}">${kidPh(k)}<b>${esc(numShort(k.num))}</b>${esc(k.dn||k.name||'?')}${has(k)?' ✓':''}</button>`).join('')||'<span class="muted small">prázdná</span>'}</div></div>`}).join('');
+  return `<div class="field"><span class="label">Skupina ${GL[gi]}${gCo(p,gi)?' · '+esc(gCo(p,gi)):''}${st?' · '+esc(actName(st.items[(gi+s.r)%st.items.length])):''}</span><div class="kids">${ks.map(k=>`<button class="chip kid mk ${has(k)?'on':''}" data-a="mkkid" data-v="${esc(k.key)}" aria-pressed="${has(k)}">${kidPh(k)}<b>${esc(numShort(k.num))}</b>${esc(k.dn||k.name||'?')}${has(k)?' ✓':''}</button>`).join('')||'<span class="muted small">prázdná</span>'}</div></div>`}).join('');
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Kdo co zvládl"><div class="sumline"><h2>Kdo co zvládl</h2><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <div class="field"><span class="label">Dovednost</span><select id="mk_sk" data-c="mksk">${FOCUS.map(f=>`<optgroup label="${esc(CATS[f])}">${SK.filter(x=>x.c===f).map(x=>`<option value="${x.id}" ${x.id===sk.id?'selected':''}>${esc(x.n)}</option>`).join('')}</optgroup>`).join('')}</select></div>
   <p class="small"><b>${done} z ${tot}</b> dětí na tréninku to zvládá. Klepni na dítě, které to dnes předvedlo; dalším klepnutím značku zrušíš.</p>
@@ -1502,7 +1521,7 @@ function openSummary(id){const p=S.plans[id];if(!p)return;const sh=$('#sheet'),G
   <p class="small">${fmtDate(p.date)} · ${p.minutes} min · ${p.venue==='hala'?'hala':'venku'}${p.age?' · '+p.age:''}${p.season?' · '+esc(p.season):''} · ${planTeams(p).map(t=>esc(tName(t))).join(' + ')}</p>
   <div class="dl">
    <div><span class="label">Docházka</span><p><b>${(p.present||[]).length} dětí</b> · trenéři: ${(p.coaches||[]).map(esc).join(', ')||'–'}</p>
-    ${G.length>1?G.map((g,gi)=>`<p class="small"><b>Skupina ${GL[gi]}${p.coaches[gi]?' · '+esc(p.coaches[gi]):''}:</b> ${kidsTxt(g)}</p>`).join(''):`<p class="small">${kidsTxt(p.present||[])}</p>`}</div>
+    ${G.length>1?G.map((g,gi)=>`<p class="small"><b>Skupina ${GL[gi]}${gCo(p,gi)?' · '+esc(gCo(p,gi)):''}:</b> ${kidsTxt(g)}</p>`).join(''):`<p class="small">${kidsTxt(p.present||[])}</p>`}</div>
    <div><span class="label">Zaměření</span><p>${(p.focus||[]).map(f=>CATS[f]).join(', ')||'–'}${p.week&&SEASON[p.week-1]?` · sezónní plán, týden ${p.week}: ${esc(SEASON[p.week-1].n)}`:''}</p>${cats.length?`<p class="small muted">Procvičené oblasti: ${cats.map(c=>CATS[c]).join(', ')}</p>`:''}</div>
    <div><span class="label">Průběh</span>${(p.blocks||[]).map(b=>{const st=t;t+=b.min;return `<p class="small"><b>${st}′ ${esc(BT[b.type]||b.type)}</b> · ${b.min} min${b.mode==='st'?' · stanoviště':''}<br>${b.items.map(i=>esc(actName(i))+(r[i]>0?' 👍':r[i]<0?' 👎':'')).join(', ')}</p>`}).join('')}</div>
    ${up||down?`<div><span class="label">Hodnocení</span><p>👍 ${up} · 👎 ${down}</p></div>`:''}
@@ -1560,7 +1579,7 @@ const actions={
  rmitem:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(b&&b.items.length>1){b.items.splice(+el.dataset.s,1);savePlan();render(true)}},
  addblk:()=>{const c=ctx();S.plan.blocks.forEach(b=>b.items.forEach(i=>c.used.add(i)));const a=best(pools.gameAny(c).filter(x=>!c.used.has(x.id)),c);if(!a)return toast('Žádná další vhodná hra.');const endI=S.plan.blocks.findIndex(b=>b.type==='end');S.plan.blocks.splice(endI<0?S.plan.blocks.length:endI,0,{id:uid(),type:'game',min:a.min,items:[a.id]});savePlan();render(true)},
  adddrink:()=>{const B=S.plan.blocks;const i=Math.max(1,Math.floor(B.length/2));B.splice(i,0,{id:uid(),type:'drink',min:3,items:['r04']});savePlan();render(true)},
- regroup:()=>{const p=S.plan,ts=selTeams(),cc=coachCount();p.teams=ts;p.team=ts[0];p.present=presentKeys();p.coaches=coachNames();p.groups=makeGroups(p.present,cc>=2?cc:1,S.draft.mix!==false);fitBlocks();S.sel=null;savePlan();render(true)},
+ regroup:()=>{const p=S.plan,ts=selTeams(),gp=groupPlan();p.teams=ts;p.team=ts[0];p.present=presentKeys();p.coaches=coachNames();p.gco=gp.gco;p.gman=!!gCfg();p.groups=makeGroups(p.present,gp.G,S.draft.mix!==false);fitBlocks();S.sel=null;savePlan();render(true)},
  pick:v=>{S.sel=S.sel===v?null:v;render(true)},
  moveto:v=>{const g=S.plan.groups;g.forEach(x=>{const i=x.indexOf(S.sel);if(i>=0)x.splice(i,1)});g[+v].push(S.sel);S.sel=null;savePlan();render(true)},
  save:async()=>{try{await savePlanToHistory();if(S.draft.name||S.draft.week){S.draft.name='';S.draft.week=0;saveDraft()}}catch(e){}},
@@ -1588,7 +1607,7 @@ const actions={
  lk:v=>{S.lib.kind=v;render(true)},fold:v=>{FOLD=Object.assign({},FOLD,{[v]:!FOLD[v]});ls.set('u7-fold',FOLD);render(true)},bedit:v=>{S.openBlk=S.openBlk===v?null:v;render(true)},pstep:v=>{S.pstep=+v;render(true);try{window.scrollTo(0,0)}catch(e){}},pmore:()=>{S.pmore=!S.pmore;render(true)},libreset:()=>{S.lib={kind:'all',cat:'all',age:'all',q:''};render(true)},hreset:()=>{S.hist.fav=false;S.hist.focus='all';S.hist.q='';S.hist.sea=false;render(true);renderHistList()},hsum:v=>openSummary(v),hsumload:v=>{closeSheet();actions.load(v)},hsumpr:v=>{const p=S.plans[v];if(!p)return;closeSheet();printHtml(planPrintHtml(p))},popen:v=>switchPlan(v),pnew:()=>{parkCurrent();S.addNew=true;actions.tab('plan')},pnewno:()=>{S.addNew=false;render(true)},
  pclose:()=>{if(!S.plan)return;const id=S.plan.id;closePlan(id);toast('Trénink zavřen. V Historii zůstává.');if(!S.plan)actions.tab('plan');else render(true)},
  pstale:()=>{openList().filter(e=>stale(e)&&(!S.plan||e.plan.id!==S.plan.id)).forEach(e=>delete OPEN[e.plan.id]);saveOpen();render(true)},
- genadd:()=>{S.addNew=true;generate()},borrow:v=>{S.draft.guests[selKey()]=guests().concat([v]);saveDraft();if(S.tab==='train'&&S.plan)applyCoaches();else render(true);toast(v+' je na tomto tréninku jako host.')},pcoach:v=>{actions.ctog(v);applyCoaches()},pguest:v=>{const k=selKey(),g=guests().slice();g.splice(+v,1);S.draft.guests[k]=g;saveDraft();applyCoaches()},pickit:(v,el)=>openPick(+el.dataset.b,+el.dataset.s),pickset:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(b){b.items[+el.dataset.s]=v;savePlan()}closeSheet();render(true)},replan:()=>{S.confirm='replan';render(true)},replango:()=>{S.confirm=null;if(S.plan){delete OPEN[S.plan.id];saveOpen()}S.plan=null;S.sel=null;S.gear={};S.openRate=false;savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();lock(false);actions.tab('plan');toast('Trénink zahozen. Naplánuj nový.')},patt:v=>pAttToggle(v),hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
+ genadd:()=>{S.addNew=true;generate()},borrow:v=>{S.draft.guests[selKey()]=guests().concat([v]);saveDraft();if(S.tab==='train'&&S.plan)applyCoaches();else render(true);toast(v+' je na tomto tréninku jako host.')},pcoach:v=>{actions.ctog(v);applyCoaches()},gn:v=>{const k=selKey(),g=S.draft.grp||(S.draft.grp={});if(+v>=1)g[k]={n:+v,at:(g[k]&&g[k].at)||{}};else delete g[k];saveDraft();grpChanged()},gat:(v,el)=>{const k=selKey(),g=S.draft.grp||(S.draft.grp={});if(!g[k])return;g[k].at=Object.assign({},g[k].at,{[el.dataset.n]:+v});saveDraft();grpChanged()},pguest:v=>{const k=selKey(),g=guests().slice();g.splice(+v,1);S.draft.guests[k]=g;saveDraft();applyCoaches()},pickit:(v,el)=>openPick(+el.dataset.b,+el.dataset.s),pickset:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(b){b.items[+el.dataset.s]=v;savePlan()}closeSheet();render(true)},replan:()=>{S.confirm='replan';render(true)},replango:()=>{S.confirm=null;if(S.plan){delete OPEN[S.plan.id];saveOpen()}S.plan=null;S.sel=null;S.gear={};S.openRate=false;savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();lock(false);actions.tab('plan');toast('Trénink zahozen. Naplánuj nový.')},patt:v=>pAttToggle(v),hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
  agetog:async v=>{const id=$('#sheet').dataset.id,a=ACT[id];if(!a)return;const cur=agOf(a),nx=cur.includes(v)?cur.filter(x=>x!==v):AGES.filter(x=>x===v||cur.includes(x));if(!nx.length){toast('Aspoň jedna kategorie musí zůstat.');return}
   if(nx.join()===agDef(a).join())await Store.del('ages',id);else await Store.put('ages',id,{ag:nx});openAct(id);renderLibList()},
  agereset:async()=>{const id=$('#sheet').dataset.id;await Store.del('ages',id);openAct(id);renderLibList()},lc:v=>{S.lib.cat=v;render(true)},
@@ -1604,8 +1623,8 @@ const actions={
  impinto:async()=>{const t=clone(team());const old=new Map((t.players||[]).map(p=>[p.num,p.lvl||'']));t.players=S.imp.R.players.map(p=>({num:String(p.num),name:p.name||'',lvl:old.get(String(p.num))||''}));S.imp=null;await saveTeam(t);toast('Soupiska převzata.')},
  impnew:async()=>{const id='t'+uid();const r=S.imp.R;S.imp=null;S.teamId=id;ls.set('u7-team',id);await Store.put('teams',id,{name:r.name||'Tým',players:r.players.map(p=>({num:String(p.num),name:p.name||'',lvl:''})),coaches:[]});toast('Tým přidán.')},
  impno:()=>{S.imp=null;render(true)},
- load:v=>{parkCurrent();S.plan=clone(S.plans[v]);S.draft.name=S.plan.name||'';S.draft.week=S.plan.week||0;S.draft.teamsSel=planTeams(S.plan).filter(t=>S.teams[t]);S.draft.minutes=S.plan.minutes;selectCoachesByNames(S.plan.coaches||[]);S.draft.date=S.plan.date;saveDraft();savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();actions.tab('train')},
- dup:v=>{parkCurrent();const p=clone(S.plans[v]);S.draft.teamsSel=planTeams(p).filter(t=>S.teams[t]);p.teams=selTeams();p.team=p.teams[0];p.id=uid();p.date=today();p.present=presentKeys();p.coaches=coachNames();S.plan=p;S.draft.date=p.date;const cc=coachCount();p.groups=makeGroups(p.present,cc>=2?cc:1,S.draft.mix!==false);fitBlocks();saveDraft();savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();actions.tab('train')},
+ load:v=>{parkCurrent();S.plan=clone(S.plans[v]);S.draft.name=S.plan.name||'';S.draft.week=S.plan.week||0;S.draft.teamsSel=planTeams(S.plan).filter(t=>S.teams[t]);S.draft.minutes=S.plan.minutes;selectCoachesByNames(S.plan.coaches||[]);restoreGrp(S.plan);S.draft.date=S.plan.date;saveDraft();savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();actions.tab('train')},
+ dup:v=>{parkCurrent();const p=clone(S.plans[v]);S.draft.teamsSel=planTeams(p).filter(t=>S.teams[t]);p.teams=selTeams();p.team=p.teams[0];p.id=uid();p.date=today();p.present=presentKeys();p.coaches=coachNames();S.plan=p;S.draft.date=p.date;const gp=groupPlan();p.gco=gp.gco;p.gman=!!gCfg();p.groups=makeGroups(p.present,gp.G,S.draft.mix!==false);fitBlocks();saveDraft();savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();actions.tab('train')},
  hfav:v=>{S.hist.fav=v==='1';render(true)},hmine:v=>{S.hist.mine=v==='1';render(true)},
  hfocus:v=>{S.hist.focus=v;render(true)},
  fav:async v=>{const p=clone(S.plans[v]);if(!p)return;p.fav=!p.fav;try{await Store.put('plans',v,p);if(S.plan&&S.plan.id===v){S.plan.fav=p.fav;savePlan()}toast(p.fav?'Přidáno do oblíbených.':'Odebráno z oblíbených.')}catch(e){}},
