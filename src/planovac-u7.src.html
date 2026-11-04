@@ -1295,7 +1295,10 @@ function fitBlocks(){const p=S.plan,G=nG(p);p.blocks.forEach(b=>{if(b.mode==='st
 const stepsHtml=a=>`<ol class="steps-list">${a.steps.map(x=>`<li><b>${esc(x.n)}</b> · ${x.min} min<br><span class="small">${esc(x.d)}</span></li>`).join('')}</ol>`;
 function mountAnims(root){if(!root)return;root.querySelectorAll('[data-anim]').forEach(el=>{try{animate(el,el.dataset.anim)}catch(e){el.remove()}})}
 function rotInfo(b){const n=b.items.length||1;const rot=Math.min(n,Math.max(1,Math.floor(b.min/5)));const rotMin=Math.floor(b.min/rot);return{n,rot,rotMin,last:b.min-rotMin*(rot-1)}}
-function blockPool(b,c){
+const ROUT=['start','drink','end'];
+/* any: pro výběr ze seznamu a přidání nabídne u organizačních bloků všechny rutiny, náhodná výměna drží typ (nástup/pauza/závěr) */
+function blockPool(b,c,any){
+ if(any&&ROUT.includes(b.type))return acts().filter(a=>a.k==='routine');
  if(b.mode==='st')return pools.station(c,groupSize(c));
  if(b.type==='warm')return pools.warm(c);
  if(b.type==='skillr')return pools.skillr(c);
@@ -1304,7 +1307,7 @@ function blockPool(b,c){
  if(b.type==='match')return pools.match(c).concat(acts().filter(a=>a.id==='g12'||a.id==='g10'));
  return pools[b.type]?pools[b.type](c):[]}
 /* ===== Úprava bloků v Tréninku ===== */
-const PICKABLE=['warm','skillr','skill','game','match'];
+const PICKABLE=['warm','skillr','skill','game','match','start','drink','end'];
 const BMIN={start:3,warm:7,skillr:8,skill:15,game:8,match:12,drink:3,end:4};
 function fillBlock(b,bi){const p=S.plan,c=ctx(p),G=nG(p);p.blocks.forEach((x,i)=>{if(i!==bi)x.items.forEach(id=>c.used.add(id))});RS=rateStats();b.items=[];b.mode='same';
  if(b.type==='start')b.items=['r01'];else if(b.type==='drink')b.items=['r04'];else if(b.type==='end')b.items=['r06'];
@@ -1317,7 +1320,7 @@ function addBlock(type){const p=S.plan;if(!p||!BT[type])return;const B=p.blocks,
  const endI=B.findIndex(x=>x.type==='end'),at=type==='start'?0:type==='end'?B.length:endI<0?B.length:endI;B.splice(at,0,b);
  if(!fillBlock(b,at)){B.splice(at,1);toast('Pro tento typ bloku teď není vhodná položka.');return}savePlan();render(true)}
 function openPick(bi,si){const p=S.plan,b=p.blocks[bi];if(!b)return;const c=ctx(p);p.blocks.forEach(x=>x.items.forEach(i=>c.used.add(i)));const cur=b.items[si];
- const list=blockPool(b,c).filter(a=>a.id===cur||!c.used.has(a.id)).sort((x,y)=>x.n.localeCompare(y.n,'cs')),sh=$('#sheet');
+ const list=blockPool(b,c,1).filter(a=>a.id===cur||!c.used.has(a.id)).sort((x,y)=>x.n.localeCompare(y.n,'cs')),sh=$('#sheet');
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Vybrat položku"><div class="sumline"><h2>${esc(BT[b.type]||'')}${b.mode==='st'?' · stanoviště '+(si+1):''}</h2><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <p class="small muted">Vyber, čím položku nahradit. Nabízí se jen hry a cviky vhodné pro tento blok${p.age?', kategorii '+p.age:''} a počet dětí.</p>
   <div class="lib-list">${list.map(a=>`<button class="item ${a.id===cur?'cur':''}" data-a="pickset" data-v="${a.id}" data-b="${bi}" data-s="${si}"><h3>${esc(a.n)}${a.id===cur?' <span class="lvl">teď</span>':''}</h3><span class="kb ${a.k}">${KINDS[a.k]}</span><span class="meta">${CATS[a.c]||''} · ${a.min} min${rateBadge(a.id)}</span></button>`).join('')||'<p class="muted">Žádná další vhodná položka.</p>'}</div></div>`;
@@ -1615,7 +1618,7 @@ function vPlanOut(){
     <div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${si+1} · ${esc(gCo(p,si)||'Trenér '+(si+1))}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit stanoviště ${si+1} náhodně">⟳</button><button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat stanoviště ${si+1} ze seznamu">☰</button></span>`:''}</div>`).join('')}</div>`}
   else{const multi=b.items.length>1,per=Math.floor(b.min/b.items.length);
    const note=cm?(G>1?'Všechny skupiny dělají totéž, každá se svým trenérem':'Celý tým spolu'):'';
-   body=`${note||multi?`<p class="small muted">${note}${multi?(note?' · ':'')+'asi '+per+' min na každou položku':''}</p>`:''}<div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${multi?si+1:'▶'}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit za jinou náhodně">⟳</button>${PICKABLE.includes(b.type)?`<button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat ze seznamu">☰</button>`:''}${multi?`<button class="ib" data-a="rmitem" data-b="${bi}" data-s="${si}" aria-label="Odebrat z bloku">✕</button>`:''}</span>`:''}</div>`).join('')}</div>${cm&&ed?`<div class="row"><button class="btn ghost sm" data-a="additem" data-b="${bi}">+ Další cvik do bloku</button></div>`:''}`}
+   body=`${note||multi?`<p class="small muted">${note}${multi?(note?' · ':'')+'asi '+per+' min na každou položku':''}</p>`:''}<div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${multi?si+1:'▶'}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit za jinou náhodně">⟳</button>${PICKABLE.includes(b.type)?`<button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat ze seznamu">☰</button>`:''}${multi?`<button class="ib" data-a="rmitem" data-b="${bi}" data-s="${si}" aria-label="Odebrat z bloku">✕</button>`:''}</span>`:''}</div>`).join('')}</div>${(cm||ROUT.includes(b.type))&&ed?`<div class="row"><button class="btn ghost sm" data-a="additem" data-b="${bi}">${ROUT.includes(b.type)?'+ Další položka do bloku':'+ Další cvik do bloku'}</button></div>`:''}`}
   return `<div class="blk ${ed?'ed':''}"><div class="clock">${start}′<small>${BT[b.type]||b.type}</small><span class="bmin">${b.min} min${b.mode==='st'?' · stanoviště':''}</span></div><div class="bbody">${ed?seg:''}${body}${ed?ctr:''}</div><button class="ib bedit" data-a="bedit" data-v="${esc(bk)}" aria-expanded="${ed}" aria-label="${ed?'Hotovo':'Upravit blok'}">${ed?'✓':'⋯'}</button></div>`
  }).join('');
  let h=`<section class="card" id="planCard">
@@ -1966,7 +1969,7 @@ const actions={
  rm:(v,el)=>{S.plan.blocks.splice(+el.dataset.b,1);savePlan();render(true)},
  swap:(v,el)=>swap(+el.dataset.b,+el.dataset.s),
  bmode:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(!b||b.mode===v||(v!=='st'&&b.mode!=='st'))return;setMode(b,v);savePlan();render(true)},
- additem:(v,el)=>{const p=S.plan,b=p.blocks[+el.dataset.b],c=ctx(p);p.blocks.forEach(x=>x.items.forEach(i=>c.used.add(i)));const pool=(b.type==='warm'?pools.warm(c):b.type==='game'?pools.gameAny(c):b.type==='skillr'?pools.skillr(c).concat(pools.seq(c)):pools.seq(c)).filter(a=>!c.used.has(a.id));const a=best(pool,c);if(!a)return toast('Další vhodná položka už není.');b.items.push(a.id);savePlan();render(true)},
+ additem:(v,el)=>{const p=S.plan,b=p.blocks[+el.dataset.b],c=ctx(p);p.blocks.forEach(x=>x.items.forEach(i=>c.used.add(i)));const pool=(ROUT.includes(b.type)?(pools[b.type](c).some(x=>!c.used.has(x.id))?pools[b.type](c):blockPool(b,c,1)):b.type==='warm'?pools.warm(c):b.type==='game'?pools.gameAny(c):b.type==='skillr'?pools.skillr(c).concat(pools.seq(c)):pools.seq(c)).filter(a=>!c.used.has(a.id));const a=best(pool,c);if(!a)return toast('Další vhodná položka už není.');b.items.push(a.id);savePlan();render(true)},
  rmitem:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(b&&b.items.length>1){b.items.splice(+el.dataset.s,1);savePlan();render(true)}},
  addblk:()=>{const c=ctx();S.plan.blocks.forEach(b=>b.items.forEach(i=>c.used.add(i)));const a=best(pools.gameAny(c).filter(x=>!c.used.has(x.id)),c);if(!a)return toast('Žádná další vhodná hra.');const endI=S.plan.blocks.findIndex(b=>b.type==='end');S.plan.blocks.splice(endI<0?S.plan.blocks.length:endI,0,{id:uid(),type:'game',min:a.min,items:[a.id]});savePlan();render(true)},
  adddrink:()=>{const B=S.plan.blocks;const i=Math.max(1,Math.floor(B.length/2));B.splice(i,0,{id:uid(),type:'drink',min:3,items:['r04']});savePlan();render(true)},
