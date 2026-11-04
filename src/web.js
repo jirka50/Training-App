@@ -326,7 +326,7 @@ const HELP=[
 <li><b>Délka tréninku</b> a <b>Zaměření dovedností</b> (házení, chytání, odpal, běh po metách, pozornost a hra). Aplikace upozorní na nejslabší oblast dětí.</li>
 <li><b>Další možnosti:</b> název tréninku a vlastní šablona struktury.</li></ul>
 <p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v menu <b>Naplánované</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
- ['train','Úpravy tréninku',`<p>V záložce <b>Trénink</b> vidíš celý plán po blocích a můžeš ho upravit před odchodem na hřiště.</p><ul>
+ ['train','Úpravy tréninku',`<p>Po klepnutí na Sestavit trénink se otevře <b>Trénink</b> s celým plánem po blocích, který můžeš upravit před odchodem na hřiště. Zpátky se k němu dostaneš z Plánování tlačítkem <b>Otevřít trénink</b>.</p><ul>
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
 <li>Pod plánem přidáš hru, pauzu na pití nebo jiný blok. Součet minut se hlídá nahoře u názvu.</li>

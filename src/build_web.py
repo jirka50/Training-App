@@ -26,7 +26,7 @@ R("function render(force){\n", "function render(force){\n if(PARENT){renderParen
 R("'Založ tým a přidej děti a trenéry v Nastavení, nebo tam nahraj soubor ze zápisníku.'", "(W.coachId?'Zatím ti nebyl přidělen žádný tým. Požádej správce, aby tě u týmu zaškrtl.':'Týmy zakládá správce ve Scorekeeperu. Jakmile tam budou, objeví se tady.')")
 R("'Načítám sestavu…'}</p>${S.ready?'<button class=\"btn\" data-a=\"tab\" data-v=\"set\">Otevřít nastavení</button>':''}", "'Načítám sestavu…'}</p>")
 R("Přidej děti v Nastavení.</p>", "Děti přidáš v záložce Tým.</p>", 2)
-R("const MENU=[['Trénink',['plan','train','field','planned','hist']],['Tým',['kids']],","const MENU=[['Trénink',['plan','train','field','planned','hist']],['Tým',['team','who','kids']],")
+R("const MENU=[['Trénink',['plan','field','planned','hist']],['Tým',['kids']],","const MENU=[['Trénink',['plan','field','planned','hist']],['Tým',['team','who','kids']],")
 R("['Nastavení',['set']]];","['Nastavení',['set','help']]];")
 R("['set','Nastavení']];","['set','Nastavení'],['help','Návod']];")
 R("['kids','Dovednosti'],","['team','Tým'],['who','Kdo je kdo'],['kids','Dovednosti'],")

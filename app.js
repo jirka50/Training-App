@@ -1184,7 +1184,7 @@ function vParents(){return `<section class="card"><div class="sumline"><h2>Pro r
  <textarea id="parentsTxt" rows="14">${esc(parentsText(S.plan))}</textarea>${parentsPub()}</section>`}
 
 /* ===== Vykreslení ===== */
-const MENU=[['Trénink',['plan','train','field','planned','hist']],['Tým',['team','who','kids']],['Knihovna',['lib']],['Nastavení',['set','help']]];
+const MENU=[['Trénink',['plan','field','planned','hist']],['Tým',['team','who','kids']],['Knihovna',['lib']],['Nastavení',['set','help']]];
 const TABS=[['plan','Plánování'],['train','Trénink'],['field','Na hřišti'],['team','Tým'],['who','Kdo je kdo'],['kids','Dovednosti'],['lib','Hry a cviky'],['planned','Naplánované'],['hist','Historie'],['set','Nastavení'],['help','Návod']];
 let pend=false;
 function render(force){
@@ -1195,7 +1195,7 @@ function render(force){
  if(!force&&ae&&ae.closest&&ae.closest('#view')&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&!['checkbox','button','file'].includes(ae.type)){pend=true;return}
  pend=false;
  const TN=Object.fromEntries(TABS);
- $('#tabs').innerHTML=`<button class="menu-btn" data-a="menu" aria-haspopup="true" aria-expanded="${S.menu?'true':'false'}"><span class="burger" aria-hidden="true"></span><span class="cur">${TN[S.tab]||'Menu'}</span><span class="caret" aria-hidden="true">${S.menu?'▴':'▾'}</span></button>${S.menu?`<div class="menu-list" role="menu">${MENU.map(([h,ks])=>`<div class="menu-h">${h}</div>${ks.map(k=>`<button role="menuitem" class="${S.tab===k?'on':''}" data-a="tab" data-v="${k}" ${S.tab===k?'aria-current="page"':''}>${TN[k]}</button>`).join('')}`).join('')}</div>`:''}`;
+ $('#tabs').innerHTML=`<button class="menu-btn" data-a="menu" aria-haspopup="true" aria-expanded="${S.menu?'true':'false'}"><span class="burger" aria-hidden="true"></span><span class="cur">${TN[S.tab]||'Menu'}</span><span class="caret" aria-hidden="true">${S.menu?'▴':'▾'}</span></button>${S.menu?`<div class="menu-list" role="menu">${MENU.map(([h,ks])=>`<div class="menu-h">${h}</div>${ks.map(k=>{const on=S.tab===k||(k==='plan'&&S.tab==='train');return `<button role="menuitem" class="${on?'on':''}" data-a="tab" data-v="${k}" ${on?'aria-current="page"':''}>${TN[k]}</button>`}).join('')}`).join('')}</div>`:''}`;
  const ts=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||''));
  $('#teamSel').innerHTML=ts.length?ts.map(([id,t])=>`<option value="${esc(id)}" ${id===S.teamId?'selected':''}>${esc(t.name||'Tým')}</option>`).join(''):'<option>Žádný tým</option>';
  $('#teamSel').disabled=!ts.length;$('#teamSel').hidden=ts.length<2;
@@ -2050,7 +2050,7 @@ const HELP=[
 <li><b>Délka tréninku</b> a <b>Zaměření dovedností</b> (házení, chytání, odpal, běh po metách, pozornost a hra). Aplikace upozorní na nejslabší oblast dětí.</li>
 <li><b>Další možnosti:</b> název tréninku a vlastní šablona struktury.</li></ul>
 <p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v menu <b>Naplánované</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
- ['train','Úpravy tréninku',`<p>V záložce <b>Trénink</b> vidíš celý plán po blocích a můžeš ho upravit před odchodem na hřiště.</p><ul>
+ ['train','Úpravy tréninku',`<p>Po klepnutí na Sestavit trénink se otevře <b>Trénink</b> s celým plánem po blocích, který můžeš upravit před odchodem na hřiště. Zpátky se k němu dostaneš z Plánování tlačítkem <b>Otevřít trénink</b>.</p><ul>
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
 <li>Pod plánem přidáš hru, pauzu na pití nebo jiný blok. Součet minut se hlídá nahoře u názvu.</li>
