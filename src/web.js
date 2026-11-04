@@ -325,7 +325,7 @@ const HELP=[
 <li><b>Sezónní plán:</b> týden plánu přidá povinné hry toho týdne.</li>
 <li><b>Délka tréninku</b> a <b>Zaměření dovedností</b> (házení, chytání, odpal, běh po metách, pozornost a hra). Aplikace upozorní na nejslabší oblast dětí.</li>
 <li><b>Další možnosti:</b> název tréninku a vlastní šablona struktury.</li></ul>
-<p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v Plánování v kartě <b>Naplánované tréninky</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
+<p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v menu <b>Naplánované</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
  ['train','Úpravy tréninku',`<p>V záložce <b>Trénink</b> vidíš celý plán po blocích a můžeš ho upravit před odchodem na hřiště.</p><ul>
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
@@ -350,7 +350,7 @@ const HELP=[
 <li><b>Zveřejnit pro rodiče:</b> trénink se objeví na veřejné stránce týmu <b>Eagles na tréninku</b> (bez jmen a fotek dětí). Odkaz pošli rodičům jednou, další tréninky se tam přidají samy. U společného tréninku vybereš, pro které týmy.</li>
 <li><b>Stáhnout</b> trénink ze stránky kdykoli odebere.</li></ul>`],
  ['hist','Historie',`<ul>
-<li>Jen uzavřené tréninky týmu (ty, které proběhly). Naplánované jsou zvlášť v Plánování. Nahoře vidíš zaměření posledních tréninků a co se dlouho nedělalo.</li>
+<li>Jen uzavřené tréninky týmu (ty, které proběhly). Naplánované jsou zvlášť v menu Naplánované. Nahoře vidíš zaměření posledních tréninků a co se dlouho nedělalo.</li>
 <li>Hledání podle názvu, hry nebo trenéra, filtr sezóny, ★ oblíbené a <b>Moje tréninky</b>.</li>
 <li><b>Souhrn</b> ukáže trénink bez otevírání (i text pro rodiče a tisk). <b>Otevřít</b> ho načte do Tréninku včetně skupin, <b>Použít znovu</b> ho zopakuje s dnešní docházkou a trenéry.</li></ul>`],
  ['team','Tým, Kdo je kdo, Dovednosti',`<ul>
