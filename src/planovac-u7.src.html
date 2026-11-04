@@ -277,7 +277,8 @@ table.mx th{font:600 14px var(--f-disp);letter-spacing:.05em;text-transform:uppe
 .note{font-size:14px;background:var(--sunk);border-radius:8px;padding:8px 10px}
 .warnnote{font-size:14px;color:var(--warn)}
 .pl-item{padding:10px 0;border-top:1px solid var(--line)}.pl-item:first-of-type{border-top:0}
-.achk-row{margin-bottom:10px;align-items:center}.achk .chip.kid{font-size:18px;padding:9px 14px}.achk .chip.kid.off{opacity:.55;text-decoration:line-through}.achk-foot{justify-content:space-between;align-items:center;margin-top:14px;position:sticky;bottom:0;background:var(--surface);padding:10px 0}
+.achk-row{margin-bottom:10px;align-items:center}.achk-grid .who .ph{border:3px solid var(--field)}.achk-grid .who.off .ph{border:3px dashed var(--line);opacity:.4;filter:grayscale(1)}.achk-grid .who.off .wname{text-decoration:line-through;color:var(--muted)}.achk-grid .who .ok{position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:var(--field);color:var(--field-ink);display:grid;place-items:center;font:700 14px/1 var(--f-body)}
+.achk .chip.kid{font-size:18px;padding:9px 14px}.achk .chip.kid.off{opacity:.55;text-decoration:line-through}.achk-foot{justify-content:space-between;align-items:center;margin-top:14px;position:sticky;bottom:0;background:var(--surface);padding:10px 0}
 .help details>summary h2{margin:0}.help-b{margin-top:10px}.help-b ul,.help-b ol{padding-left:20px;margin:6px 0}.help-b li{margin:6px 0;line-height:1.45}.help-b h3{margin:14px 0 4px}
 .gcfg .seg{flex-wrap:wrap}.gasg{display:grid;gap:6px;margin:4px 0}.gasg-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.gasg-r>span{min-width:110px;font-weight:600}
 .pl{display:grid;grid-template-columns:64px 1fr auto auto;gap:6px;align-items:center}
@@ -1809,6 +1810,8 @@ function openAct(id){const a=ACT[id];if(!a)return;
   </div>
   ${a.custom?(S.confirm==='act'?`<div class="row"><span class="warnnote">Opravdu smazat?</span><button class="btn danger sm" data-a="delact" data-v="${esc(a.custom)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn ghost sm" data-a="editact" data-v="${esc(a.custom)}">Upravit</button><button class="btn danger sm" data-a="askdel">Smazat</button></div>`):''}
  </div>`;sh.hidden=false;sh.dataset.id=id;mountAnims(sh)}
+/* dlaždice dítěte jako v Kdo je kdo (dodá webová verze) */
+let kidTile=null,kidTileSize=()=>'m';
 /* kontrola docházky na hřišti (nabídka, nic se neotevírá samo) */
 function openAttChk(){const p=S.plan;if(!p)return;const ts=planTeams(p),mt=ts.length>1,pr=new Set((p.present||[]).map(k=>normKey(k,p))),cs=coachPool(),sel=coachSelIds(),gs=guests(),G=nG(p),sh=$('#sheet');
  const all=ts.reduce((n,t)=>n+plOf(t).length,0),nc=(p.coaches||[]).filter(n=>n!=='Trenér').length;
@@ -1816,7 +1819,7 @@ function openAttChk(){const p=S.plan;if(!p)return;const ts=planTeams(p),mt=ts.le
   <p class="small muted">Klepnutím dítě odebereš nebo přidáš. Odebrané zmizí ze skupiny, přidané jde do nejmenší skupiny.</p>
   <h3>Trenéři · ${nc}</h3><div class="kids">${cs.map(c=>{const on=sel.includes(c.key);return `<button class="chip coach ${on?'on':'off'}" data-a="achkc" data-v="${esc(c.key)}" aria-pressed="${on}">${esc(c.name)}</button>`}).join('')}${gs.map(g=>`<span class="chip coach on">${esc(g)} <span class="guest">host</span></span>`).join('')}</div>
   <h3>Děti · ${pr.size} z ${all}</h3>
-  ${ts.map(tid=>`${mt?`<h3 class="small muted">${esc(tName(tid))}</h3>`:''}<div class="kids">${plOf(tid).slice().sort((a,b)=>dn(a).localeCompare(dn(b),'cs')).map(x=>{const k=K(tid,x.num),on=pr.has(k);return `<button class="chip kid ${on?'on':'off'}" data-a="achkk" data-v="${esc(k)}" aria-pressed="${on}">${kidPh({tid,num:x.num,name:x.name})}${esc(dn(x))}</button>`}).join('')||'<span class="muted small">soupiska je prázdná</span>'}</div>`).join('')}
+  ${ts.map(tid=>`${mt?`<h3 class="small muted">${esc(tName(tid))}</h3>`:''}<div class="${kidTile?'who-grid achk-grid '+kidTileSize():'kids'}">${plOf(tid).slice().sort((a,b)=>dn(a).localeCompare(dn(b),'cs')).map(x=>{const k=K(tid,x.num),on=pr.has(k);return kidTile?kidTile(tid,x,on,k,'achkk'):`<button class="chip kid ${on?'on':'off'}" data-a="achkk" data-v="${esc(k)}" aria-pressed="${on}">${kidPh({tid,num:x.num,name:x.name})}${esc(dn(x))}</button>`}).join('')||'<span class="muted small">soupiska je prázdná</span>'}</div>`).join('')}
   <div class="row achk-foot"><span><b>${pr.size} dětí · ${G} ${G===1?'skupina':G<5?'skupiny':'skupin'}</b><br><span class="small muted">${p.groups.map((g,i)=>GL[i]+' '+g.length).join(' · ')}</span></span><button class="btn" data-a="close">Vše sedí</button></div></div>`;
  sh.hidden=false;sh.dataset.id=''}
 function closeSheet(){const sh=$('#sheet');sh.hidden=true;sh.innerHTML='';S.confirm=null}

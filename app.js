@@ -1486,6 +1486,8 @@ function openAct(id){const a=ACT[id];if(!a)return;
   </div>
   ${a.custom?(S.confirm==='act'?`<div class="row"><span class="warnnote">Opravdu smazat?</span><button class="btn danger sm" data-a="delact" data-v="${esc(a.custom)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn ghost sm" data-a="editact" data-v="${esc(a.custom)}">Upravit</button><button class="btn danger sm" data-a="askdel">Smazat</button></div>`):''}
  </div>`;sh.hidden=false;sh.dataset.id=id;mountAnims(sh)}
+/* dlaždice dítěte jako v Kdo je kdo (dodá webová verze) */
+let kidTile=null,kidTileSize=()=>'m';
 /* kontrola docházky na hřišti (nabídka, nic se neotevírá samo) */
 function openAttChk(){const p=S.plan;if(!p)return;const ts=planTeams(p),mt=ts.length>1,pr=new Set((p.present||[]).map(k=>normKey(k,p))),cs=coachPool(),sel=coachSelIds(),gs=guests(),G=nG(p),sh=$('#sheet');
  const all=ts.reduce((n,t)=>n+plOf(t).length,0),nc=(p.coaches||[]).filter(n=>n!=='Trenér').length;
@@ -1493,7 +1495,7 @@ function openAttChk(){const p=S.plan;if(!p)return;const ts=planTeams(p),mt=ts.le
   <p class="small muted">Klepnutím dítě odebereš nebo přidáš. Odebrané zmizí ze skupiny, přidané jde do nejmenší skupiny.</p>
   <h3>Trenéři · ${nc}</h3><div class="kids">${cs.map(c=>{const on=sel.includes(c.key);return `<button class="chip coach ${on?'on':'off'}" data-a="achkc" data-v="${esc(c.key)}" aria-pressed="${on}">${esc(c.name)}</button>`}).join('')}${gs.map(g=>`<span class="chip coach on">${esc(g)} <span class="guest">host</span></span>`).join('')}</div>
   <h3>Děti · ${pr.size} z ${all}</h3>
-  ${ts.map(tid=>`${mt?`<h3 class="small muted">${esc(tName(tid))}</h3>`:''}<div class="kids">${plOf(tid).slice().sort((a,b)=>dn(a).localeCompare(dn(b),'cs')).map(x=>{const k=K(tid,x.num),on=pr.has(k);return `<button class="chip kid ${on?'on':'off'}" data-a="achkk" data-v="${esc(k)}" aria-pressed="${on}">${kidPh({tid,num:x.num,name:x.name})}${esc(dn(x))}</button>`}).join('')||'<span class="muted small">soupiska je prázdná</span>'}</div>`).join('')}
+  ${ts.map(tid=>`${mt?`<h3 class="small muted">${esc(tName(tid))}</h3>`:''}<div class="${kidTile?'who-grid achk-grid '+kidTileSize():'kids'}">${plOf(tid).slice().sort((a,b)=>dn(a).localeCompare(dn(b),'cs')).map(x=>{const k=K(tid,x.num),on=pr.has(k);return kidTile?kidTile(tid,x,on,k,'achkk'):`<button class="chip kid ${on?'on':'off'}" data-a="achkk" data-v="${esc(k)}" aria-pressed="${on}">${kidPh({tid,num:x.num,name:x.name})}${esc(dn(x))}</button>`}).join('')||'<span class="muted small">soupiska je prázdná</span>'}</div>`).join('')}
   <div class="row achk-foot"><span><b>${pr.size} dětí · ${G} ${G===1?'skupina':G<5?'skupiny':'skupin'}</b><br><span class="small muted">${p.groups.map((g,i)=>GL[i]+' '+g.length).join(' · ')}</span></span><button class="btn" data-a="close">Vše sedí</button></div></div>`;
  sh.hidden=false;sh.dataset.id=''}
 function closeSheet(){const sh=$('#sheet');sh.hidden=true;sh.innerHTML='';S.confirm=null}
@@ -2122,6 +2124,9 @@ function vWho(){
  ${sel.map(tid=>{const ps=(S.teams[tid].players||[]).slice().sort((a,b)=>dn(a).localeCompare(dn(b),'cs'));return `${sel.length>1?`<h3 class="who-h">${esc(tName(tid))} · ${ps.length}</h3>`:''}
   ${ps.length?`<div class="who-grid ${WHO.size}">${ps.map(p=>{const img=photoOf(tid,p);return `<button class="who" data-a="whoopen" data-v="${esc(K(tid,p.num))}" aria-label="${esc(dn(p))}${noNum(p.num)?'':', číslo '+esc(p.num)}">
    <span class="ph">${img?`<img src="${img}" alt="" loading="lazy">`:`<span class="ini">${esc(initials(dn(p)))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}</span><span class="wname">${esc(dn(p))}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná.</p>'}`}).join('')}`}
+kidTileSize=()=>WHO.size||'m';
+kidTile=(tid,p,on,k,act)=>{const img=photoOf(tid,p);return `<button class="who ${on?'':'off'}" data-a="${act}" data-v="${esc(k)}" aria-pressed="${on}" aria-label="${esc(dn(p))}${on?', přítomen':', chybí'}">
+ <span class="ph">${img?`<img src="${img}" alt="" loading="lazy">`:`<span class="ini">${esc(initials(dn(p)))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}${on?'<span class="ok" aria-hidden="true">✓</span>':''}</span><span class="wname">${esc(dn(p))}</span></button>`};
 function openWho(key){const x=kid(key),tid=x.tid,p=(S.teams[tid]&&S.teams[tid].players||[]).find(q=>q.num===x.num);if(!p)return;const img=photoOf(tid,p),sh=$('#sheet');
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="${esc(dn(p))}"><div class="sumline"><span class="kb game">${esc(tName(tid))}</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <div class="who-big">${img?`<img src="${img}" alt="Fotka: ${esc(dn(p))}">`:`<span class="ini">${esc(initials(dn(p)))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}</div>

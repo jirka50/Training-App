@@ -401,6 +401,9 @@ function vWho(){
  ${sel.map(tid=>{const ps=(S.teams[tid].players||[]).slice().sort((a,b)=>dn(a).localeCompare(dn(b),'cs'));return `${sel.length>1?`<h3 class="who-h">${esc(tName(tid))} · ${ps.length}</h3>`:''}
   ${ps.length?`<div class="who-grid ${WHO.size}">${ps.map(p=>{const img=photoOf(tid,p);return `<button class="who" data-a="whoopen" data-v="${esc(K(tid,p.num))}" aria-label="${esc(dn(p))}${noNum(p.num)?'':', číslo '+esc(p.num)}">
    <span class="ph">${img?`<img src="${img}" alt="" loading="lazy">`:`<span class="ini">${esc(initials(dn(p)))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}</span><span class="wname">${esc(dn(p))}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná.</p>'}`}).join('')}`}
+kidTileSize=()=>WHO.size||'m';
+kidTile=(tid,p,on,k,act)=>{const img=photoOf(tid,p);return `<button class="who ${on?'':'off'}" data-a="${act}" data-v="${esc(k)}" aria-pressed="${on}" aria-label="${esc(dn(p))}${on?', přítomen':', chybí'}">
+ <span class="ph">${img?`<img src="${img}" alt="" loading="lazy">`:`<span class="ini">${esc(initials(dn(p)))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}${on?'<span class="ok" aria-hidden="true">✓</span>':''}</span><span class="wname">${esc(dn(p))}</span></button>`};
 function openWho(key){const x=kid(key),tid=x.tid,p=(S.teams[tid]&&S.teams[tid].players||[]).find(q=>q.num===x.num);if(!p)return;const img=photoOf(tid,p),sh=$('#sheet');
  sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="${esc(dn(p))}"><div class="sumline"><span class="kb game">${esc(tName(tid))}</span><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
   <div class="who-big">${img?`<img src="${img}" alt="Fotka: ${esc(dn(p))}">`:`<span class="ini">${esc(initials(dn(p)))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}</div>
