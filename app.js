@@ -168,6 +168,11 @@ const A=[
  d:'„Krokodýli“ s rukavicí stojí u každé mety. Trenér uprostřed kutálí míčky ke krokodýlům, ti je „snědí“ krokodýlí tlamou a hodí zpátky. Mezitím druhé družstvo „běžců“ obíhá mety. Krokodýli dostávají bod za každý chycený míček, běžci za každé celé kolo. Po 2 minutách se družstva vymění a porovnají se body.',
  va:'Hladový krokodýl: kdo nechá míček proklouznout mezi nohama, musí si pro něj doběhnout a teprve pak hodit zpět.',
  kid:'„Krokodýl má tlamu u země – ham a míček je snězený!“'},
+{id:'g42',k:'game',n:'Baseball5 v tělocvičně',c:'odpal',t:['mety','chytani','hra'],e:3,min:12,kids:6,match:1,
+ gear:['Mety', 'Měkké míčky', 'Kužely', 'Obruče'],gn:'1 měkký míček, 3 mety a domácí meta, 2 kužely nebo lano na čáru, 1 obruč u domácí mety',dev:'odpal rukou, běh po metách, chytání a vracení míčku, pravidla hry, týmová spolupráce',
+ d:'Zjednodušený Baseball5 bez pálky a bez autů. Mety postav do čtverce asi 8 × 8 m, 2 m před domácí metou vyznač čáru (kužely nebo lano) a k domácí metě polož obruč. Dvě družstva: jedno pálí, druhé je v poli. Pálkař si sám nadhodí míček a odpálí ho dlaní nebo pěstí. Míček musí dopadnout za čáru, jinak zkouší znovu, dokud se to nepovede. Pak běží po metách, jak daleko stihne. Polaři míček co nejrychleji seberou a společně ho vrátí do obruče. Jakmile je míček v obruči, trenér zavolá „STOP!“. Kdo stojí na metě, zůstává tam, kdo je mezi metami, vrací se na metu, odkud vyběhl. Kdo doběhne domů, získá pro družstvo bod. Každé dítě v útoku pálí jednou, pak se družstva vymění. Neskluzuje se, běžci si uhýbají a na metě smí stát jen jeden.',
+ va:'Pro šikovnější: polař, který chytí míček ze vzduchu, získá bod pro obranu. Nebo musí míček před vrácením do obruče projít rukama aspoň dvou polařů.',
+ kid:'„Nadhoď si míček, plácni ho rukou přes čáru a utíkej! Když trenér řekne STOP, zastav se na metě.“'},
 /* --- CVIKY --- */
 {id:'d01',k:'drill',n:'Držení míče',c:'hazeni',e:1,min:5,kids:1,st:1,gear:['Měkké míčky'],gn:'míček pro každé dítě',
  dev:'správný úchop míče, příprava na hod',
@@ -565,6 +570,10 @@ g40:{d:9,s:[['diamond'],['bucket',50,36],['hoop',42,58,3]],cap:[[0,'Odpal z tee 
  KP([[0,38,20]],{t:'k2'}),KP([[0,66,16]],{t:'k2'}),KP([[0,30,42]],{t:'k2'}),
  KP([[0,47,56],[.12,47,56],[.16,44,57],[.36,72,34],[.5,62,23],[.75,62,23],[.95,47,56],[1,47,56]]),{t:'swing',x:48,y:56,at:[[.02,.09]],to:[42,58,.14]},
  BALL([[.08,.24,50,55,38,20,10],[.32,.48,38,20,50,36,6]],{show:[.08,.95]})]},
+g42:{d:8,s:[['diamond'],['dash',38,47,62,47],['hoop',44,59,3]],cap:[[0,'Nadhoď si míček a odpal ho dlaní přes čáru'],[.5,'Míček v obruči: STOP! Běžec zpět na metu']],a:[
+ KP([[0,38,22]],{t:'k2'}),KP([[0,64,20]],{t:'k2'}),KP([[0,32,42]],{t:'k2'}),
+ KP([[0,49,57],[.12,49,57],[.16,51,55],[.34,72,34],[.5,62,23],[.56,63,24],[.72,72,34],[1,72,34]]),
+ BALL([[.04,.1,50,55,50,49,4],[.1,.26,50,49,38,24,8],[.34,.5,38,24,44,59,6]],{show:[.04,1]})]},
 g41:{d:9,s:[['diamond']],cap:[[0,'Krokodýli „snědí“ kutálený míček'],[.5,'Běžci zatím obíhají mety']],a:[
  {t:'c',p:pth([[0,50,36]])},KP([[0,67,34]]),KP([[0,50,17]]),KP([[0,33,34]]),KP([[0,50,51]]),
  KP(around(0,.48),{t:'k2'}),KP(around(.5,.98),{t:'k2'}),
