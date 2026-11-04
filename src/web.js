@@ -335,6 +335,7 @@ const HELP=[
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
 <li>Dole: <b>Spustit na hřišti</b>, <b>Uložit do historie</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
  ['field','Na hřišti',`<ul>
+<li><b>✓ Zkontrolovat docházku</b> nahoře: před startem rychle odškrtneš, kdo opravdu přišel, a upravíš trenéry. Skupiny se samy upraví.</li>
 <li>Velký <b>časovač</b> odpočítává aktuální blok. Barva ukazuje, kolik času zbývá. Na šířku je časovač vlevo a stanoviště vpravo.</li>
 <li>Lišta dole: <b>◀ ▶</b> předchozí / další blok, <b>Start / Pauza</b>, <b>+1 min</b> a zkrácení / prodloužení.</li>
 <li>„Po skončení času automaticky na další blok“ a „Hlásit střídání nahlas“ – telefon sám ohlásí změnu. Hlas a tempo řeči nastavíš v Nastavení.</li>

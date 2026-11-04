@@ -1375,7 +1375,8 @@ function vField(){
   <p class="small muted">${s.r===0?'Skupiny začínají u stanoviště se svým číslem.':'Na písknutí vláček na další stanoviště, trenéři zůstávají.'}</p>`}
  else{const a=ACT[b.items[s.item]],G=nG(S.plan);mid=`${G>1&&MODEABLE.includes(b.type)?`<p class="small">Všechny skupiny dělají totéž: ${S.plan.groups.map((g,gi)=>GL[gi]+' – '+esc(gCo(S.plan,gi))).join(', ')}</p>`:''}<button class="aname" data-a="open" data-v="${a?a.id:''}">${esc(a?a.n:'')}</button>${a&&AN[a.id]?`<div class="animbox" data-anim="${a.id}"></div>`:''}${a&&a.kid?`<div class="cue"><span class="label">Řekni dětem</span><br>${esc(a.kid)}</div>`:''}${a&&a.steps?`<div class="cue"><span class="label">Kroky</span>${stepsHtml(a)}</div>`:''}${a?`<div class="cue small">${esc(a.d)}</div>`:''}`}
  const nx=st[S.run.i+1];
- return bar+`<section class="card now">
+ const fresh=S.run.i===0&&!S.run.running&&S.run.left==null;
+ return bar+`<div class="row achk-row"><button class="btn ${fresh?'':'ghost '}sm" data-a="achk">✓ Zkontrolovat docházku</button><span class="small muted">${(S.plan.present||[]).length} dětí · ${nG(S.plan)} ${nG(S.plan)===1?'skupina':nG(S.plan)<5?'skupiny':'skupin'}</span></div><section class="card now">
   <div class="now-l"><span class="label">${esc(planTitle(S.plan))} · ${BT[b.type]||''} · ${at}′–${at+s.min}′ z ${S.plan.minutes}′</span>
   <div class="timer" id="timer">${s.min}:00</div>
   <div class="prog"><i id="prog"></i></div>
@@ -1472,6 +1473,16 @@ function openAct(id){const a=ACT[id];if(!a)return;
   </div>
   ${a.custom?(S.confirm==='act'?`<div class="row"><span class="warnnote">Opravdu smazat?</span><button class="btn danger sm" data-a="delact" data-v="${esc(a.custom)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn ghost sm" data-a="editact" data-v="${esc(a.custom)}">Upravit</button><button class="btn danger sm" data-a="askdel">Smazat</button></div>`):''}
  </div>`;sh.hidden=false;sh.dataset.id=id;mountAnims(sh)}
+/* kontrola docházky na hřišti (nabídka, nic se neotevírá samo) */
+function openAttChk(){const p=S.plan;if(!p)return;const ts=planTeams(p),mt=ts.length>1,pr=new Set((p.present||[]).map(k=>normKey(k,p))),cs=coachPool(),sel=coachSelIds(),gs=guests(),G=nG(p),sh=$('#sheet');
+ const all=ts.reduce((n,t)=>n+plOf(t).length,0),nc=(p.coaches||[]).filter(n=>n!=='Trenér').length;
+ sh.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Kontrola docházky" class="achk"><div class="sumline"><h2>Kontrola docházky</h2><button class="ib" data-a="close" aria-label="Zavřít">✕</button></div>
+  <p class="small muted">Klepnutím dítě odebereš nebo přidáš. Odebrané zmizí ze skupiny, přidané jde do nejmenší skupiny.</p>
+  <h3>Trenéři · ${nc}</h3><div class="kids">${cs.map(c=>{const on=sel.includes(c.key);return `<button class="chip coach ${on?'on':'off'}" data-a="achkc" data-v="${esc(c.key)}" aria-pressed="${on}">${esc(c.name)}</button>`}).join('')}${gs.map(g=>`<span class="chip coach on">${esc(g)} <span class="guest">host</span></span>`).join('')}</div>
+  <h3>Děti · ${pr.size} z ${all}</h3>
+  ${ts.map(tid=>`${mt?`<h3 class="small muted">${esc(tName(tid))}</h3>`:''}<div class="kids">${plOf(tid).slice().sort((a,b)=>dn(a).localeCompare(dn(b),'cs')).map(x=>{const k=K(tid,x.num),on=pr.has(k);return `<button class="chip kid ${on?'on':'off'}" data-a="achkk" data-v="${esc(k)}" aria-pressed="${on}">${kidPh({tid,num:x.num,name:x.name})}${esc(dn(x))}</button>`}).join('')||'<span class="muted small">soupiska je prázdná</span>'}</div>`).join('')}
+  <div class="row achk-foot"><span><b>${pr.size} dětí · ${G} ${G===1?'skupina':G<5?'skupiny':'skupin'}</b><br><span class="small muted">${p.groups.map((g,i)=>GL[i]+' '+g.length).join(' · ')}</span></span><button class="btn" data-a="close">Vše sedí</button></div></div>`;
+ sh.hidden=false;sh.dataset.id=''}
 function closeSheet(){const sh=$('#sheet');sh.hidden=true;sh.innerHTML='';S.confirm=null}
 function actForm(cid){const c=cid?S.custom[cid]:{k:'game',c:'hazeni',min:6,kids:2,e:2,st:0};
  const sh=$('#sheet');
@@ -1595,6 +1606,7 @@ const actions={
  save:async()=>{try{await savePlanToHistory();if(S.draft.name||S.draft.week){S.draft.name='';S.draft.week=0;saveDraft()}}catch(e){}},
  go:()=>{actions.tab('field')},
  rate:async(v,el)=>{const r=+el.dataset.r,p=S.plan;p.rate=Object.assign({},p.rate);if(p.rate[v]===r)delete p.rate[v];else p.rate[v]=r;savePlan();S.openRate=true;render(true);try{await savePlanToHistory(true)}catch(e){}},
+ achk:()=>openAttChk(),achkk:v=>{pAttToggle(v);openAttChk()},achkc:v=>{actions.ctog(v);applyCoaches();openAttChk()},
  rateopen:()=>{S.openRate=true;actions.tab('train');setTimeout(()=>{const e=$('#rateCard');if(e&&e.scrollIntoView)e.scrollIntoView({behavior:'smooth'})},80)},
  copypar:async()=>{const t=$('#parentsTxt');if(!t)return;try{await navigator.clipboard.writeText(t.value);toast('Zkopírováno. Vlož do skupiny rodičů.')}catch(e){t.focus();t.select();toast('Text je označený, zkopíruj ho.')}},
  kid:v=>openKid(v),
@@ -2028,6 +2040,7 @@ const HELP=[
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
 <li>Dole: <b>Spustit na hřišti</b>, <b>Uložit do historie</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
  ['field','Na hřišti',`<ul>
+<li><b>✓ Zkontrolovat docházku</b> nahoře: před startem rychle odškrtneš, kdo opravdu přišel, a upravíš trenéry. Skupiny se samy upraví.</li>
 <li>Velký <b>časovač</b> odpočítává aktuální blok. Barva ukazuje, kolik času zbývá. Na šířku je časovač vlevo a stanoviště vpravo.</li>
 <li>Lišta dole: <b>◀ ▶</b> předchozí / další blok, <b>Start / Pauza</b>, <b>+1 min</b> a zkrácení / prodloužení.</li>
 <li>„Po skončení času automaticky na další blok“ a „Hlásit střídání nahlas“ – telefon sám ohlásí změnu. Hlas a tempo řeči nastavíš v Nastavení.</li>
