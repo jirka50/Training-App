@@ -402,6 +402,7 @@ function vWho(){
   ${ps.length?`<div class="who-grid ${WHO.size}">${ps.map(p=>{const img=photoOf(tid,p);return `<button class="who" data-a="whoopen" data-v="${esc(K(tid,p.num))}" aria-label="${esc(dn(p))}${noNum(p.num)?'':', číslo '+esc(p.num)}">
    <span class="ph">${img?`<img src="${img}" alt="" loading="lazy">`:`<span class="ini">${esc(initials(dn(p)))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}</span><span class="wname">${esc(dn(p))}</span></button>`}).join('')}</div>`:'<p class="muted">Soupiska je prázdná.</p>'}`}).join('')}`}
 kidTileSize=()=>WHO.size||'m';
+kidTileSeg=act=>`<div class="seg sm" role="group" aria-label="Velikost dlaždic">${[['s','S','Malé'],['m','M','Střední'],['l','L','Velké']].map(([k,l,t])=>`<button data-a="${act}" data-v="${k}" class="${(WHO.size||'m')===k?'on':''}" title="${t}" aria-label="${t}" aria-pressed="${(WHO.size||'m')===k}">${l}</button>`).join('')}</div>`;
 kidTile=(tid,p,on,k,act)=>{const img=photoOf(tid,p);return `<button class="who ${on?'':'off'}" data-a="${act}" data-v="${esc(k)}" aria-pressed="${on}" aria-label="${esc(dn(p))}${on?', přítomen':', chybí'}">
  <span class="ph">${img?`<img src="${img}" alt="" loading="lazy">`:`<span class="ini">${esc(initials(dn(p)))}</span>`}${noNum(p.num)?'':`<b class="wn">${esc(p.num)}</b>`}${on?'<span class="ok" aria-hidden="true">✓</span>':''}</span><span class="wname">${esc(dn(p))}</span></button>`};
 function openWho(key){const x=kid(key),tid=x.tid,p=(S.teams[tid]&&S.teams[tid].players||[]).find(q=>q.num===x.num);if(!p)return;const img=photoOf(tid,p),sh=$('#sheet');
@@ -586,6 +587,7 @@ Object.assign(actions,{
  wxreset:()=>{const h=wxPref().h;S.pref.wx={h};savePref();WX.at=0;render(true)},
  wlogout:()=>Web.logout(''),
  wpinnew:()=>newCoachPin(),wpindrop:()=>dropCoachPins(),
+ achksz:v=>{WHO.size=v;whoSave();openAttChk()},
  ghelp:v=>{W.guestHelp=v==='1';render(true);window.scrollTo(0,0)},
  wcopy:async v=>{try{await navigator.clipboard.writeText(v);toast('Odkaz zkopírován.')}catch(e){toast(v)}},
  wrdel:v=>{const tid=S.teamId,R=rosterOf(tid);R.players=R.players.filter(p=>String(p.num)!==v);rosterSave(tid,R);W.rmsg='';render(true)},
