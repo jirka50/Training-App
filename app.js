@@ -802,6 +802,9 @@ const saveOpen=()=>ls.set('u7-open',OPEN);
 const savePlan=()=>{ls.set('u7-plan',S.plan);if(S.plan&&S.plan.id){OPEN[S.plan.id]=Object.assign({},OPEN[S.plan.id],{plan:S.plan,run:S.run,gear:S.gear,at:Date.now()});saveOpen()}};
 const saveRun=()=>{ls.set('u7-run',S.run);if(S.plan&&OPEN[S.plan.id]){OPEN[S.plan.id].run=S.run;saveOpen()}};
 if(S.plan&&S.plan.id&&!OPEN[S.plan.id]){OPEN[S.plan.id]={plan:S.plan,run:S.run,at:Date.now()};saveOpen()}
+/* naplánovaný (uložený, ještě neproběhl) = st:'plan'; uzavřený = st:'done' nebo bez st (starší) */
+const isPlanned=p=>!!p&&p.st==='plan';
+const plannedAll=()=>Object.entries(S.plans).filter(([,p])=>isPlanned(p)&&planTeams(p).includes(S.teamId)).sort((a,b)=>(a[1].date||'').localeCompare(b[1].date||''));
 const openList=()=>Object.values(OPEN).filter(e=>e&&e.plan&&e.plan.id).sort((a,b)=>(a.plan.date||'').localeCompare(b.plan.date||'')||(a.at||0)-(b.at||0));
 function parkCurrent(){if(!S.plan)return;if(S.run.running&&S.run.endAt){S.run.left=Math.max(0,S.run.endAt-Date.now());S.run.running=false;S.run.endAt=null;try{lock(false)}catch(e){}}
  if(OPEN[S.plan.id]){OPEN[S.plan.id].run=clone(S.run);OPEN[S.plan.id].gear=S.gear;saveOpen()}}
@@ -1013,7 +1016,7 @@ function vRate(){
   <div class="dl" style="margin-top:12px"><p class="small muted">Označ, co fungovalo. Generátor pak osvědčené hry vybírá častěji a ty, které nefungovaly, méně.</p>
   ${ids.map(id=>`<div class="rate-row"><span>${esc(actName(id))}</span><span class="row" style="gap:6px;flex-wrap:nowrap"><button class="ib ${r[id]>0?'up':''}" data-a="rate" data-v="${id}" data-r="1" aria-pressed="${r[id]>0}" aria-label="Fungovalo: ${esc(actName(id))}">👍</button><button class="ib ${r[id]<0?'down':''}" data-a="rate" data-v="${id}" data-r="-1" aria-pressed="${r[id]<0}" aria-label="Nefungovalo: ${esc(actName(id))}">👎</button></span></div>`).join('')}
   <div class="field"><span class="label">Poznámka k tréninku</span><textarea id="plan_note" data-c="planote" placeholder="Co příště jinak, kdo se zlepšil…">${esc(p.note||'')}</textarea></div></div></details></section>`}
-async function savePlanToHistory(quiet){const p=clone(S.plan);p.teams=planTeams(p);p.teamName=p.teams.map(tName).join(' + ');p.savedAt=new Date().toISOString();await Store.put('plans',p.id,p);if(!quiet)toast('Trénink uložen do historie.')}
+async function savePlanToHistory(quiet,st){const prev=S.plans[S.plan.id];S.plan.st=st||(prev&&prev.st)||S.plan.st||'done';savePlan();const p=clone(S.plan);p.teams=planTeams(p);p.teamName=p.teams.map(tName).join(' + ');p.savedAt=new Date().toISOString();await Store.put('plans',p.id,p);if(!quiet)toast(p.st==='plan'?'Uloženo mezi naplánované tréninky (v Plánování).':'Trénink uložen do historie.')}
 
 /* ===== Dovednosti dětí ===== */
 const SK=[
@@ -1066,7 +1069,7 @@ function planPrintHtml(p){const t0=SEA().time||'',G=p.groups||[],gear=new Map();
   <h2>Pomůcky</h2><p class="pr-gear">${[...gear.keys()].sort((a,b)=>a.localeCompare(b,'cs')).map(esc).join(', ')||'bez pomůcek'}</p>
   ${p.note?`<h2>Poznámka</h2><p>${esc(p.note)}</p>`:''}</section>`}
 /* ===== Docházka za sezónu (z tréninků uložených v Historii) ===== */
-function attStats(tid){const ps=plOf(tid),seaOn=!!(SEA().from||SEA().to),pl=Object.values(S.plans).filter(p=>planTeams(p).includes(tid)&&p.date<=today()&&(!seaOn||inSeason(p.date)));
+function attStats(tid){const ps=plOf(tid),seaOn=!!(SEA().from||SEA().to),pl=Object.values(S.plans).filter(p=>!isPlanned(p)&&planTeams(p).includes(tid)&&p.date<=today()&&(!seaOn||inSeason(p.date)));
  const cnt={};pl.forEach(p=>(p.present||[]).forEach(k=>{const x=normKey(k,p);cnt[x]=(cnt[x]||0)+1}));
  const byNum={},names={};ps.forEach(p=>{names[nameKey(p.name)]=p.num});pl.forEach(p=>(p.present||[]).forEach(k=>{const x=kid(k,p);if(x.tid===tid&&!ps.some(q=>q.num===x.num)&&x.name&&names[nameKey(x.name)])byNum[names[nameKey(x.name)]]=(byNum[names[nameKey(x.name)]]||0)+1}));
  return{total:pl.length,of:num=>(cnt[K(tid,num)]||0)+(byNum[num]||0)}}
@@ -1109,7 +1112,7 @@ const SEASON=[
  {n:'Polař a hod na první',f:['chytani','hazeni'],must:['s04','d16'],tip:'Chytit přízemní míč a hodit na první metu. Kam hodím?'},
  {n:'Běh po metách naplno',f:['mety'],must:['s07','g13'],tip:'Probíhat první, banánek, zastavit na druhé a třetí.'},
  {n:'Mini zápas',f:['hra','odpal'],must:['g18','s06'],tip:'Všechno dohromady v zápase, všichni se vystřídají na všech pozicích.'}];
-const doneWeeks=tids=>new Set(Object.values(S.plans).filter(p=>p.week&&planTeams(p).some(t=>tids.includes(t))).map(p=>p.week));
+const doneWeeks=tids=>new Set(Object.values(S.plans).filter(p=>p.week&&!isPlanned(p)&&planTeams(p).some(t=>tids.includes(t))).map(p=>p.week));
 /* ===== Aktuální sezóna (webová verze ji načte ze sdílených dat; jinak prázdná) ===== */
 const SEA=()=>S.season||{};
 const DOW=['Ne','Po','Út','St','Čt','Pá','So'],DOWL=['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
@@ -1255,16 +1258,23 @@ function vPlan(){
   <div class="seg psteps" role="tablist">${[[1,'1 · Kdo přijde'],[2,'2 · Co trénovat']].map(([n,l])=>`<button data-a="pstep" data-v="${n}" class="${S.pstep===n?'on':''}" role="tab" aria-selected="${S.pstep===n}">${l}</button>`).join('')}</div>
   ${S.pstep===2?vPlan2():vPlan1()}
  </section>`;
- if(S.plan)h+=`<section class="card"><div class="sumline"><div><span class="label">Rozpracovaný trénink</span><p><b>${esc(planTitle(S.plan))}</b> · ${fmtDate(S.plan.date)} · ${S.plan.minutes} min · ${planTeams(S.plan).map(t=>esc(tName(t))).join(' + ')}</p></div><button class="btn ghost sm" data-a="tab" data-v="train">Otevřít trénink</button></div><p class="small muted">„Sestavit znovu“ ho nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový${openList().length>1?' · rozpracováno '+openList().length+' tréninků':''}. Uložené tréninky najdeš v Historii.</p></section>`;
+ if(S.plan)h+=`<section class="card"><div class="sumline"><div><span class="label">Rozpracovaný trénink</span><p><b>${esc(planTitle(S.plan))}</b> · ${fmtDate(S.plan.date)} · ${S.plan.minutes} min · ${planTeams(S.plan).map(t=>esc(tName(t))).join(' + ')}</p></div><span class="row" style="gap:6px"><button class="btn ghost sm" data-a="tab" data-v="train">Otevřít trénink</button>${!S.plans[S.plan.id]?'<button class="btn sm" data-a="psaveplan">Uložit jako naplánovaný</button>':''}</span></div><p class="small muted">„Sestavit znovu“ ho nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový${openList().length>1?' · rozpracováno '+openList().length+' tréninků':''}. ${S.plans[S.plan.id]?(isPlanned(S.plans[S.plan.id])?'Je uložený mezi naplánovanými.':'Je uložený v Historii.'):'„Uložit jako naplánovaný“ ho uloží, aby ho viděli i ostatní trenéři.'}</p></section>`;
+ h+=vPlanned();
  return h
 }
+function vPlanned(){const L=plannedAll();if(!L.length)return'';
+ return `<section class="card"><h2>Naplánované tréninky · ${L.length}</h2><p class="small muted">Uložené tréninky, které ještě neproběhly. Po tréninku je uzavři v Tréninku tlačítkem „Trénink proběhl – uzavřít“ a přesunou se do Historie.</p>
+ ${L.map(([id,p])=>`<div class="pl-item"><div class="sumline"><span><b>${esc(planTitle(p))}</b>${p.name?' · '+fmtDate(p.date):''} · ${p.minutes} min${p.week?` <span class="lvl">týden ${p.week}</span>`:''}${S.plan&&S.plan.id===id?' <span class="lvl">otevřený</span>':''}</span></div>
+  <p class="small muted">${planTeams(p).map(t=>esc(tName(t))).join(' + ')} · ${(p.present||[]).length} dětí · ${(p.coaches||[]).map(esc).join(', ')}${p.by&&typeof byName==='function'&&byName(p.by)?' · připravil(a) '+esc(byName(p.by)):''}</p>
+  ${(p.date||'')<today()?'<p class="warnnote">Datum už uplynulo. Pokud trénink proběhl, otevři ho a uzavři, jinak ho smaž.</p>':''}
+  ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento naplánovaný trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="load" data-v="${esc(id)}">Otevřít</button><button class="btn ghost sm" data-a="hsum" data-v="${esc(id)}">Souhrn</button><button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button></div>`}</div>`).join('')}</section>`}
 function splitText(k,n){const b=Math.floor(k/n),r=k%n,out=[];for(let i=0;i<n;i++)out.push(b+(i<r?1:0));return out.join(' / ')+' dětí'}
 
 function vTrain(){
  const bar=vOpenBar();
  if(!S.plan)return bar+`<section class="card empty"><div class="em-ico" aria-hidden="true">📋</div><h2>Zatím žádný trénink</h2><p class="muted">Vyber v Plánování délku, týmy, trenéry a přítomné děti a klepni na Sestavit trénink. Nebo otevři uložený trénink z Historie.</p><div class="row" style="justify-content:center"><button class="btn" data-a="tab" data-v="plan">Naplánovat</button><button class="btn ghost" data-a="tab" data-v="hist">Historie</button></div></section>`;
  const saved=!!S.plans[S.plan.id];
- return bar+vPlanOut()+`<section class="card">${saved&&S.confirm!=='replan'?`<div class="row" style="margin-bottom:8px"><button class="btn ghost" data-a="pclose">✓ Zavřít trénink</button><span class="small muted">Uložený je v Historii.</span></div>`:''}${S.confirm==='replan'?`<p><b>Zahodit tento trénink a naplánovat nový?</b></p><p class="small muted">${saved?'V Historii zůstane uložená verze.':'Trénink není uložený v Historii, smaže se úplně.'} Nastavení v Plánování (týmy, trenéři, docházka) zůstane.</p>
+ return bar+vPlanOut()+`<section class="card">${S.confirm!=='replan'?(saved&&!isPlanned(S.plans[S.plan.id])?`<div class="row" style="margin-bottom:8px"><button class="btn ghost" data-a="pclose">✓ Zavřít trénink</button><span class="small muted">Uložený je v Historii.</span></div>`:`<div class="row" style="margin-bottom:8px"><button class="btn" data-a="pdone">✓ Trénink proběhl – uzavřít</button>${saved?'<button class="btn ghost" data-a="ppark">Odložit</button>':''}</div><p class="small muted">${saved?'Trénink je uložený mezi naplánovanými v Plánování. Po uzavření se přesune do Historie, „Odložit“ ho jen zavře v tomto telefonu.':'Uzavřený trénink se uloží do Historie. Pokud ještě neproběhl, ulož ho tlačítkem „Uložit jako naplánovaný“.'}</p>`):''}${S.confirm==='replan'?`<p><b>Zahodit tento trénink a naplánovat nový?</b></p><p class="small muted">${saved?'V Historii zůstane uložená verze.':'Trénink není uložený v Historii, smaže se úplně.'} Nastavení v Plánování (týmy, trenéři, docházka) zůstane.</p>
   <div class="row"><button class="btn danger" data-a="replango">Ano, naplánovat znovu</button><button class="btn ghost" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn ghost" data-a="replan">↺ Naplánovat znovu</button></div>`}</section>`
 }
 function vPlanOut(){
@@ -1298,7 +1308,7 @@ function vPlanOut(){
  if(nG(p)>1)h+=foldCard('grp','Skupiny',p.groups.map((g,i)=>GL[i]+' '+esc(gCo(p,i))+' · '+g.length).join(' | '),vGroups());
  h+=foldCard('gear','Pomůcky do tašky',`${gearN} položek${Object.values(S.gear||{}).filter(Boolean).length?' · sbaleno '+Object.values(S.gear).filter(Boolean).length:''}`,vGear());
  h+=vRate()+foldCard('par','Pro rodiče',typeof pubOn==='function'&&pubOn(p).length?'✓ zveřejněno na stránce pro rodiče':'shrnutí, WhatsApp, stránka pro rodiče',vParents());
- h+=`<section class="card"><div class="row"><button class="btn" data-a="go">Spustit na hřišti</button><button class="btn ghost" data-a="tab" data-v="plan">Upravit nastavení</button><button class="btn ghost" data-a="save">${S.plans[p.id]?'Uložit změny':'Uložit do historie'}</button><button class="btn ghost" data-a="tplform">Uložit jako šablonu</button><button class="btn ghost" data-a="prplan">🖨 Vytisknout</button></div>
+ h+=`<section class="card"><div class="row"><button class="btn" data-a="go">Spustit na hřišti</button><button class="btn ghost" data-a="tab" data-v="plan">Upravit nastavení</button><button class="btn ghost" data-a="save">${!S.plans[p.id]?'Uložit jako naplánovaný':'Uložit změny'}</button><button class="btn ghost" data-a="tplform">Uložit jako šablonu</button><button class="btn ghost" data-a="prplan">🖨 Vytisknout</button></div>
   ${S.tplForm?`<form id="tplForm" class="row"><input type="text" id="tpl_name" placeholder="Název šablony, např. Hala 60 min" aria-label="Název šablony" style="flex:1 1 200px;width:auto" value="${esc(p.name||'')}"><button class="btn sm" type="submit">Uložit šablonu</button><button class="btn ghost sm" type="button" data-a="tplno">Zrušit</button></form><p class="small muted">Šablona si zapamatuje bloky, jejich délku a volbu Všichni / Stanoviště. Hry se při sestavení vyberou znovu.</p>`:''}</section>`;
  return h
 }
@@ -1528,7 +1538,7 @@ function vHist(){
   :`<div class="em-ico" aria-hidden="true">📚</div><p class="muted">Uložené tréninky se objeví tady. Sestav trénink a na konci klepni na <b>Uložit do historie</b>. Pak tu najdeš souhrn, hodnocení a můžeš trénink použít znovu.</p><div class="row"><button class="btn sm" data-a="tab" data-v="plan">Naplánovat trénink</button></div>`}</section>
  <div id="histList" style="display:grid;gap:16px"></div>`
 }
-function histAll(){return Object.entries(S.plans).filter(([,p])=>planTeams(p).includes(S.teamId)).sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''))}
+function histAll(){return Object.entries(S.plans).filter(([,p])=>!isPlanned(p)&&planTeams(p).includes(S.teamId)).sort((a,b)=>(b[1].date||'').localeCompare(a[1].date||''))}
 /* ===== Souhrn uloženého tréninku ===== */
 let sumParents=()=>'';
 /* profil trenéra (webová verze): ME() = id přihlášeného trenéra, byName(id) = jeho jméno */
@@ -1603,7 +1613,7 @@ const actions={
  regroup:()=>{const p=S.plan,ts=selTeams(),gp=groupPlan();p.teams=ts;p.team=ts[0];p.present=presentKeys();p.coaches=coachNames();p.gco=gp.gco;p.gman=!!gCfg();p.groups=makeGroups(p.present,gp.G,S.draft.mix!==false);fitBlocks();S.sel=null;savePlan();render(true)},
  pick:v=>{S.sel=S.sel===v?null:v;render(true)},
  moveto:v=>{const g=S.plan.groups;g.forEach(x=>{const i=x.indexOf(S.sel);if(i>=0)x.splice(i,1)});g[+v].push(S.sel);S.sel=null;savePlan();render(true)},
- save:async()=>{try{await savePlanToHistory();if(S.draft.name||S.draft.week){S.draft.name='';S.draft.week=0;saveDraft()}}catch(e){}},
+ save:async()=>{const pv=S.plans[S.plan.id];try{await savePlanToHistory(false,!pv||isPlanned(pv)?'plan':'done');if(S.draft.name||S.draft.week){S.draft.name='';S.draft.week=0;saveDraft()}}catch(e){}},
  go:()=>{actions.tab('field')},
  rate:async(v,el)=>{const r=+el.dataset.r,p=S.plan;p.rate=Object.assign({},p.rate);if(p.rate[v]===r)delete p.rate[v];else p.rate[v]=r;savePlan();S.openRate=true;render(true);try{await savePlanToHistory(true)}catch(e){}},
  achk:()=>openAttChk(),achkk:v=>{pAttToggle(v);openAttChk()},achkc:v=>{actions.ctog(v);applyCoaches();openAttChk()},
@@ -1627,6 +1637,9 @@ const actions={
  plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();tick()},
  next:()=>gotoStep(S.run.i+1),prev:()=>gotoStep(S.run.i-1),goto:v=>gotoStep(+v),
  lk:v=>{S.lib.kind=v;render(true)},fold:v=>{FOLD=Object.assign({},FOLD,{[v]:!FOLD[v]});ls.set('u7-fold',FOLD);render(true)},bedit:v=>{S.openBlk=S.openBlk===v?null:v;render(true)},pstep:v=>{S.pstep=+v;render(true);try{window.scrollTo(0,0)}catch(e){}},pmore:()=>{S.pmore=!S.pmore;render(true)},libreset:()=>{S.lib={kind:'all',cat:'all',age:'all',q:''};render(true)},hreset:()=>{S.hist.fav=false;S.hist.focus='all';S.hist.q='';S.hist.sea=false;render(true);renderHistList()},hsum:v=>openSummary(v),hsumload:v=>{closeSheet();actions.load(v)},hsumpr:v=>{const p=S.plans[v];if(!p)return;closeSheet();printHtml(planPrintHtml(p))},popen:v=>switchPlan(v),pnew:()=>{parkCurrent();S.addNew=true;actions.tab('plan')},pnewno:()=>{S.addNew=false;render(true)},
+ pdone:async()=>{if(!S.plan)return;try{await savePlanToHistory(true,'done')}catch(e){toast('Uložení se nepovedlo.');return}const id=S.plan.id;closePlan(id);toast('Trénink uzavřen a uložen do Historie.');if(!S.plan)actions.tab('plan');else render(true)},
+ ppark:()=>{if(!S.plan)return;closePlan(S.plan.id);toast('Trénink odložen. Najdeš ho v Plánování mezi naplánovanými.');if(!S.plan)actions.tab('plan');else render(true)},
+ psaveplan:async()=>{if(!S.plan)return;try{await savePlanToHistory(false,'plan')}catch(e){}render(true)},
  pclose:()=>{if(!S.plan)return;const id=S.plan.id;closePlan(id);toast('Trénink zavřen. V Historii zůstává.');if(!S.plan)actions.tab('plan');else render(true)},
  pstale:()=>{openList().filter(e=>stale(e)&&(!S.plan||e.plan.id!==S.plan.id)).forEach(e=>delete OPEN[e.plan.id]);saveOpen();render(true)},
  genadd:()=>{S.addNew=true;generate()},borrow:v=>{S.draft.guests[selKey()]=guests().concat([v]);saveDraft();if(S.tab==='train'&&S.plan)applyCoaches();else render(true);toast(v+' je na tomto tréninku jako host.')},pcoach:v=>{actions.ctog(v);applyCoaches()},gn:v=>{const k=selKey(),g=S.draft.grp||(S.draft.grp={});if(+v>=1)g[k]={n:+v,at:(g[k]&&g[k].at)||{}};else delete g[k];saveDraft();grpChanged()},gat:(v,el)=>{const k=selKey(),g=S.draft.grp||(S.draft.grp={});if(!g[k])return;g[k].at=Object.assign({},g[k].at,{[el.dataset.n]:+v});saveDraft();grpChanged()},pguest:v=>{const k=selKey(),g=guests().slice();g.splice(+v,1);S.draft.guests[k]=g;saveDraft();applyCoaches()},pickit:(v,el)=>openPick(+el.dataset.b,+el.dataset.s),pickset:(v,el)=>{const b=S.plan.blocks[+el.dataset.b];if(b){b.items[+el.dataset.s]=v;savePlan()}closeSheet();render(true)},replan:()=>{S.confirm='replan';render(true)},replango:()=>{S.confirm=null;if(S.plan){delete OPEN[S.plan.id];saveOpen()}S.plan=null;S.sel=null;S.gear={};S.openRate=false;savePlan();S.run={i:0,left:null,endAt:null,running:false,auto:S.run.auto};saveRun();lock(false);actions.tab('plan');toast('Trénink zahozen. Naplánuj nový.')},patt:v=>pAttToggle(v),hsea:v=>{S.hist.sea=v==='1';render(true)},mkopen:()=>{S.mk=mkDefault();openMk()},mkkid:v=>mkToggle(v),la:v=>{S.lib.age=v;render(true)},
@@ -1874,7 +1887,7 @@ function pubData(p,noDom){const items=[...new Set(p.blocks.flatMap(b=>b.items))]
 const PUBT={};
 const pubOn=p=>Object.keys(S.teams).filter(t=>W.pub[t]&&W.pub[t][p.id]);
 const pubSel=p=>PUBT[p.id]||[...new Set(planTeams(p).filter(t=>S.teams[t]).concat(pubOn(p)))];
-async function pubPlan(){const p=S.plan;if(!p)return;const sel=pubSel(p);if(!sel.length){toast('Vyber aspoň jeden tým.');return}if(!S.plans[p.id]){toast('Nejdřív trénink ulož do historie.');return}
+async function pubPlan(){const p=S.plan;if(!p)return;const sel=pubSel(p);if(!sel.length){toast('Vyber aspoň jeden tým.');return}if(!S.plans[p.id]){toast('Nejdřív trénink ulož (jako naplánovaný nebo ho uzavři).');return}
  const d=pubData(p),ts=Date.now();try{for(const tid of pubOn(p).filter(t=>!sel.includes(t)))await W.fb.db.ref('public/'+tid+'/training/'+p.id).remove();
   for(const tid of sel){await W.fb.db.ref('public/'+tid+'/training/'+p.id).set({ts,json:J(d)});
    const all=Object.entries(W.pub[tid]||{}).map(([id,v])=>[id,(PJ(v)||{}).date||'']).concat([[p.id,d.date]]);const keep=new Set(all.sort((a,b)=>b[1].localeCompare(a[1])).slice(0,12).map(x=>x[0]));
@@ -2030,7 +2043,7 @@ const HELP=[
 <li><b>Sezónní plán:</b> týden plánu přidá povinné hry toho týdne.</li>
 <li><b>Délka tréninku</b> a <b>Zaměření dovedností</b> (házení, chytání, odpal, běh po metách, pozornost a hra). Aplikace upozorní na nejslabší oblast dětí.</li>
 <li><b>Další možnosti:</b> název tréninku a vlastní šablona struktury.</li></ul>
-<p>Klepni na <b>Sestavit trénink</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
+<p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v Plánování v kartě <b>Naplánované tréninky</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
  ['train','Úpravy tréninku',`<p>V záložce <b>Trénink</b> vidíš celý plán po blocích a můžeš ho upravit před odchodem na hřiště.</p><ul>
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
@@ -2038,7 +2051,8 @@ const HELP=[
 <li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
 <li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
-<li>Dole: <b>Spustit na hřišti</b>, <b>Uložit do historie</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
+<li><b>✓ Trénink proběhl – uzavřít</b> uloží trénink do Historie a zavře ho. <b>Odložit</b> naplánovaný trénink jen zavře v telefonu.</li>
+<li>Dole: <b>Spustit na hřišti</b>, <b>Uložit jako naplánovaný / Uložit změny</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
  ['field','Na hřišti',`<ul>
 <li><b>✓ Zkontrolovat docházku</b> nahoře: před startem rychle odškrtneš, kdo opravdu přišel, a upravíš trenéry. Skupiny se samy upraví.</li>
 <li>Velký <b>časovač</b> odpočítává aktuální blok. Barva ukazuje, kolik času zbývá. Na šířku je časovač vlevo a stanoviště vpravo.</li>
@@ -2054,7 +2068,7 @@ const HELP=[
 <li><b>Zveřejnit pro rodiče:</b> trénink se objeví na veřejné stránce týmu <b>Eagles na tréninku</b> (bez jmen a fotek dětí). Odkaz pošli rodičům jednou, další tréninky se tam přidají samy. U společného tréninku vybereš, pro které týmy.</li>
 <li><b>Stáhnout</b> trénink ze stránky kdykoli odebere.</li></ul>`],
  ['hist','Historie',`<ul>
-<li>Všechny uložené tréninky týmu. Nahoře vidíš zaměření posledních tréninků a co se dlouho nedělalo.</li>
+<li>Jen uzavřené tréninky týmu (ty, které proběhly). Naplánované jsou zvlášť v Plánování. Nahoře vidíš zaměření posledních tréninků a co se dlouho nedělalo.</li>
 <li>Hledání podle názvu, hry nebo trenéra, filtr sezóny, ★ oblíbené a <b>Moje tréninky</b>.</li>
 <li><b>Souhrn</b> ukáže trénink bez otevírání (i text pro rodiče a tisk). <b>Otevřít</b> ho načte do Tréninku včetně skupin, <b>Použít znovu</b> ho zopakuje s dnešní docházkou a trenéry.</li></ul>`],
  ['team','Tým, Kdo je kdo, Dovednosti',`<ul>

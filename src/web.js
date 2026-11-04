@@ -169,7 +169,7 @@ function pubData(p,noDom){const items=[...new Set(p.blocks.flatMap(b=>b.items))]
 const PUBT={};
 const pubOn=p=>Object.keys(S.teams).filter(t=>W.pub[t]&&W.pub[t][p.id]);
 const pubSel=p=>PUBT[p.id]||[...new Set(planTeams(p).filter(t=>S.teams[t]).concat(pubOn(p)))];
-async function pubPlan(){const p=S.plan;if(!p)return;const sel=pubSel(p);if(!sel.length){toast('Vyber aspoň jeden tým.');return}if(!S.plans[p.id]){toast('Nejdřív trénink ulož do historie.');return}
+async function pubPlan(){const p=S.plan;if(!p)return;const sel=pubSel(p);if(!sel.length){toast('Vyber aspoň jeden tým.');return}if(!S.plans[p.id]){toast('Nejdřív trénink ulož (jako naplánovaný nebo ho uzavři).');return}
  const d=pubData(p),ts=Date.now();try{for(const tid of pubOn(p).filter(t=>!sel.includes(t)))await W.fb.db.ref('public/'+tid+'/training/'+p.id).remove();
   for(const tid of sel){await W.fb.db.ref('public/'+tid+'/training/'+p.id).set({ts,json:J(d)});
    const all=Object.entries(W.pub[tid]||{}).map(([id,v])=>[id,(PJ(v)||{}).date||'']).concat([[p.id,d.date]]);const keep=new Set(all.sort((a,b)=>b[1].localeCompare(a[1])).slice(0,12).map(x=>x[0]));
@@ -325,7 +325,7 @@ const HELP=[
 <li><b>Sezónní plán:</b> týden plánu přidá povinné hry toho týdne.</li>
 <li><b>Délka tréninku</b> a <b>Zaměření dovedností</b> (házení, chytání, odpal, běh po metách, pozornost a hra). Aplikace upozorní na nejslabší oblast dětí.</li>
 <li><b>Další možnosti:</b> název tréninku a vlastní šablona struktury.</li></ul>
-<p>Klepni na <b>Sestavit trénink</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
+<p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v Plánování v kartě <b>Naplánované tréninky</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
  ['train','Úpravy tréninku',`<p>V záložce <b>Trénink</b> vidíš celý plán po blocích a můžeš ho upravit před odchodem na hřiště.</p><ul>
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
@@ -333,7 +333,8 @@ const HELP=[
 <li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
 <li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
-<li>Dole: <b>Spustit na hřišti</b>, <b>Uložit do historie</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
+<li><b>✓ Trénink proběhl – uzavřít</b> uloží trénink do Historie a zavře ho. <b>Odložit</b> naplánovaný trénink jen zavře v telefonu.</li>
+<li>Dole: <b>Spustit na hřišti</b>, <b>Uložit jako naplánovaný / Uložit změny</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
  ['field','Na hřišti',`<ul>
 <li><b>✓ Zkontrolovat docházku</b> nahoře: před startem rychle odškrtneš, kdo opravdu přišel, a upravíš trenéry. Skupiny se samy upraví.</li>
 <li>Velký <b>časovač</b> odpočítává aktuální blok. Barva ukazuje, kolik času zbývá. Na šířku je časovač vlevo a stanoviště vpravo.</li>
@@ -349,7 +350,7 @@ const HELP=[
 <li><b>Zveřejnit pro rodiče:</b> trénink se objeví na veřejné stránce týmu <b>Eagles na tréninku</b> (bez jmen a fotek dětí). Odkaz pošli rodičům jednou, další tréninky se tam přidají samy. U společného tréninku vybereš, pro které týmy.</li>
 <li><b>Stáhnout</b> trénink ze stránky kdykoli odebere.</li></ul>`],
  ['hist','Historie',`<ul>
-<li>Všechny uložené tréninky týmu. Nahoře vidíš zaměření posledních tréninků a co se dlouho nedělalo.</li>
+<li>Jen uzavřené tréninky týmu (ty, které proběhly). Naplánované jsou zvlášť v Plánování. Nahoře vidíš zaměření posledních tréninků a co se dlouho nedělalo.</li>
 <li>Hledání podle názvu, hry nebo trenéra, filtr sezóny, ★ oblíbené a <b>Moje tréninky</b>.</li>
 <li><b>Souhrn</b> ukáže trénink bez otevírání (i text pro rodiče a tisk). <b>Otevřít</b> ho načte do Tréninku včetně skupin, <b>Použít znovu</b> ho zopakuje s dnešní docházkou a trenéry.</li></ul>`],
  ['team','Tým, Kdo je kdo, Dovednosti',`<ul>
