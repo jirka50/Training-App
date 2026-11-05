@@ -276,6 +276,7 @@ table.mx th{font:600 14px var(--f-disp);letter-spacing:.05em;text-transform:uppe
 .empty{text-align:center;padding:28px 12px;display:grid;gap:10px;justify-items:center}
 .note{font-size:14px;background:var(--sunk);border-radius:8px;padding:8px 10px}
 .warnnote{font-size:14px;color:var(--warn)}
+.after-h{margin:22px 4px 2px;font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.after-p{margin:0 4px 10px}
 .pl-item{padding:10px 0;border-top:1px solid var(--line)}.pl-item:first-of-type{border-top:0}
 .achk-row{margin-bottom:10px;align-items:center}.achk-grid .who .ph{border:3px solid var(--field)}.achk-grid .who.off .ph{border:3px dashed var(--line);opacity:.4;filter:grayscale(1)}.achk-grid .who.off .wname{text-decoration:line-through;color:var(--muted)}.achk-grid .who .ok{position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:var(--field);color:var(--field-ink);display:grid;place-items:center;font:700 14px/1 var(--f-body)}
 .achk .chip.kid{font-size:18px;padding:9px 14px}.achk .chip.kid.off{opacity:.55;text-decoration:line-through}.achk-foot{justify-content:space-between;align-items:center;margin-top:14px;position:sticky;bottom:0;background:var(--surface);padding:10px 0}
@@ -1713,9 +1714,10 @@ function vPlanOut(){
  h+=foldCard('att','Docházka',`${(p.present||[]).length} dětí · ${nCo} ${nCo>1&&nCo<5?'trenéři':nCo>=5?'trenérů':'trenér'}`,vAttEdit());
  if(nG(p)>1)h+=foldCard('grp','Skupiny',p.groups.map((g,i)=>GL[i]+' '+esc(gCo(p,i))+' · '+g.length).join(' | '),vGroups());
  h+=foldCard('gear','Pomůcky do tašky',`${gearN} položek${Object.values(S.gear||{}).filter(Boolean).length?' · sbaleno '+Object.values(S.gear).filter(Boolean).length:''}`,vGear());
- h+=vRate()+foldCard('par','Pro rodiče',typeof pubOn==='function'&&pubOn(p).length?'✓ zveřejněno na stránce pro rodiče':'shrnutí, WhatsApp, stránka pro rodiče',vParents());
  h+=`<section class="card"><div class="row"><button class="btn" data-a="go">Spustit na hřišti</button><button class="btn ghost" data-a="tab" data-v="plan">Upravit nastavení</button><button class="btn ghost" data-a="save">${!S.plans[p.id]?'Uložit jako naplánovaný':'Uložit změny'}</button><button class="btn ghost" data-a="tplform">Uložit jako šablonu</button><button class="btn ghost" data-a="prplan">🖨 Vytisknout</button></div>
   ${S.tplForm?`<form id="tplForm" class="row"><input type="text" id="tpl_name" placeholder="Název šablony, např. Hala 60 min" aria-label="Název šablony" style="flex:1 1 200px;width:auto" value="${esc(p.name||'')}"><button class="btn sm" type="submit">Uložit šablonu</button><button class="btn ghost sm" type="button" data-a="tplno">Zrušit</button></form><p class="small muted">Šablona si zapamatuje bloky, jejich délku a volbu Všichni / Stanoviště. Hry se při sestavení vyberou znovu.</p>`:''}</section>`;
+ /* po tréninku: zhodnocení a info pro rodičům až za částí Na hřišti, těsně před uzavřením */
+ h+=`<h2 class="after-h">Po tréninku</h2><p class="small muted after-p">Zhodnoť hry, pošli info rodičům a pak trénink uzavři.</p>`+vRate()+foldCard('par','Pro rodiče',typeof pubOn==='function'&&pubOn(p).length?'✓ zveřejněno na stránce pro rodiče':'shrnutí, WhatsApp, stránka pro rodiče',vParents());
  return h
 }
 /* malá fotka dítěte ve skupinách; webová verze ji dodá ze soupisky */

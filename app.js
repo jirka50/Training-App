@@ -1389,9 +1389,10 @@ function vPlanOut(){
  h+=foldCard('att','Docházka',`${(p.present||[]).length} dětí · ${nCo} ${nCo>1&&nCo<5?'trenéři':nCo>=5?'trenérů':'trenér'}`,vAttEdit());
  if(nG(p)>1)h+=foldCard('grp','Skupiny',p.groups.map((g,i)=>GL[i]+' '+esc(gCo(p,i))+' · '+g.length).join(' | '),vGroups());
  h+=foldCard('gear','Pomůcky do tašky',`${gearN} položek${Object.values(S.gear||{}).filter(Boolean).length?' · sbaleno '+Object.values(S.gear).filter(Boolean).length:''}`,vGear());
- h+=vRate()+foldCard('par','Pro rodiče',typeof pubOn==='function'&&pubOn(p).length?'✓ zveřejněno na stránce pro rodiče':'shrnutí, WhatsApp, stránka pro rodiče',vParents());
  h+=`<section class="card"><div class="row"><button class="btn" data-a="go">Spustit na hřišti</button><button class="btn ghost" data-a="tab" data-v="plan">Upravit nastavení</button><button class="btn ghost" data-a="save">${!S.plans[p.id]?'Uložit jako naplánovaný':'Uložit změny'}</button><button class="btn ghost" data-a="tplform">Uložit jako šablonu</button><button class="btn ghost" data-a="prplan">🖨 Vytisknout</button></div>
   ${S.tplForm?`<form id="tplForm" class="row"><input type="text" id="tpl_name" placeholder="Název šablony, např. Hala 60 min" aria-label="Název šablony" style="flex:1 1 200px;width:auto" value="${esc(p.name||'')}"><button class="btn sm" type="submit">Uložit šablonu</button><button class="btn ghost sm" type="button" data-a="tplno">Zrušit</button></form><p class="small muted">Šablona si zapamatuje bloky, jejich délku a volbu Všichni / Stanoviště. Hry se při sestavení vyberou znovu.</p>`:''}</section>`;
+ /* po tréninku: zhodnocení a info pro rodičům až za částí Na hřišti, těsně před uzavřením */
+ h+=`<h2 class="after-h">Po tréninku</h2><p class="small muted after-p">Zhodnoť hry, pošli info rodičům a pak trénink uzavři.</p>`+vRate()+foldCard('par','Pro rodiče',typeof pubOn==='function'&&pubOn(p).length?'✓ zveřejněno na stránce pro rodiče':'shrnutí, WhatsApp, stránka pro rodiče',vParents());
  return h
 }
 /* malá fotka dítěte ve skupinách; webová verze ji dodá ze soupisky */
@@ -2148,6 +2149,7 @@ const HELP=[
 <li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra, <b>přidáš další tým</b> (přijde se svými dětmi a trenéry) a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
 <li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
+<li><b>Po tréninku</b> (úplně dole): zhodnocení her, karta Pro rodiče a uzavření tréninku.</li>
 <li><b>✓ Trénink proběhl – uzavřít</b> uloží trénink do Historie a zavře ho. <b>Odložit</b> naplánovaný trénink jen zavře v telefonu.</li>
 <li>Dole: <b>Spustit na hřišti</b>, <b>Uložit jako naplánovaný / Uložit změny</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
  ['field','Na hřišti',`<ul>

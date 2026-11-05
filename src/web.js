@@ -333,6 +333,7 @@ const HELP=[
 <li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra, <b>přidáš další tým</b> (přijde se svými dětmi a trenéry) a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
 <li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
+<li><b>Po tréninku</b> (úplně dole): zhodnocení her, karta Pro rodiče a uzavření tréninku.</li>
 <li><b>✓ Trénink proběhl – uzavřít</b> uloží trénink do Historie a zavře ho. <b>Odložit</b> naplánovaný trénink jen zavře v telefonu.</li>
 <li>Dole: <b>Spustit na hřišti</b>, <b>Uložit jako naplánovaný / Uložit změny</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
  ['field','Na hřišti',`<ul>
