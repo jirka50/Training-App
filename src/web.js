@@ -380,7 +380,7 @@ const HOPEN=new Set(['start']);
 /* návod bez přihlášení: tlačítko na přihlašovací stránce nebo odkaz s ?navod */
 let HELPQ=(()=>{try{return new URLSearchParams(location.search).has('navod')}catch(e){return false}})();
 const helpUrl=()=>location.origin+location.pathname+'?navod';
-function vHelp(){return `<section class="card"><h2>Návod</h2><p class="small muted">Jak plánovač používat. Klepnutím na kapitolu ji rozbalíš.</p>${W.role?`<div class="row"><button class="btn ghost sm" data-a="wcopy" data-v="${esc(helpUrl())}">Kopírovat odkaz na návod</button></div><p class="small muted">Odkaz otevře návod i bez přihlášení, můžeš ho poslat novým trenérům.</p>`:''}</section>`+
+function vHelp(){return `<section class="card"><h2>Návod</h2><p class="small muted">Jak plánovač používat. Klepnutím na kapitolu ji rozbalíš. · ${esc(verTxt())}</p>${W.role?`<div class="row"><button class="btn ghost sm" data-a="wcopy" data-v="${esc(helpUrl())}">Kopírovat odkaz na návod</button></div><p class="small muted">Odkaz otevře návod i bez přihlášení, můžeš ho poslat novým trenérům.</p>`:''}</section>`+
  HELP.filter(([k])=>k!=='admin'||W.role==='admin').map(([k,t,h])=>`<section class="card help"><details data-h="${k}" ${HOPEN.has(k)?'open':''}><summary><h2>${t}</h2></summary><div class="help-b">${h}</div></details></section>`).join('')+
  (W.role?`<section class="card"><div class="row"><button class="btn" data-a="tab" data-v="plan">Naplánovat trénink</button><button class="btn ghost" data-a="tab" data-v="lib">Hry a cviky</button></div></section>`:`<section class="card"><div class="row"><button class="btn" data-a="ghelp" data-v="0">Přihlásit se</button></div></section>`)}
 document.addEventListener('toggle',e=>{const d=e.target;if(!d||!d.dataset||!d.dataset.h)return;if(d.open)HOPEN.add(d.dataset.h);else HOPEN.delete(d.dataset.h)},true);
@@ -455,7 +455,7 @@ async function exportXls(tids){if(!tids.length)return;toast('Připravuji soubor�
  const ws=X.utils.json_to_sheet(rows,{header:(multi?['Tým']:[]).concat(['Jméno','Kategorie','Úroveň'])});ws['!cols']=(multi?[{wch:24}]:[]).concat([{wch:28},{wch:11},{wch:11}]);
  X.utils.book_append_sheet(wb,ws,multi?'Všechny týmy':safeSheet(tName(tids[0])));
  X.writeFile(wb,(tids.length>1?'Týmy':tName(tids[0])).replace(/[\\/:*?"<>|]/g,' ')+' – '+today()+'.xlsx')}
-seaHint=()=>W.role==='admin'&&!SEA().name?`<div class="hint"><span class="small">📅 <b>Nastav sezónu</b> – aplikace pak sama předvyplní datum dalšího tréninku, týden plánu a čas pro počasí.</span><button class="btn ghost sm" data-a="gofold" data-v="s_sea">Nastavit</button></div>`:'';
+seaHint=()=>W.role==='admin'&&!SEA().name&&!ls.get('u7-seahint-x',false)?`<div class="hint"><span class="small">📅 <b>Nastav sezónu</b> – aplikace pak sama předvyplní datum dalšího tréninku, týden plánu a čas pro počasí.</span><span class="row" style="gap:6px"><button class="btn ghost sm" data-a="gofold" data-v="s_sea">Nastavit</button><button class="ib" data-a="seahintx" aria-label="Skrýt upozornění" title="Skrýt">✕</button></span></div>`:'';
 function legacyDel(tid,keys){const m=Object.assign({},W.raw.photos[tid]||{});keys.forEach(k=>{if(m[k]){delete m[k];Web.write('photos/'+tid+'/'+k,null)}});W.raw.photos[tid]=m;phCache()}
 function photoSet(tid,num,img){const R=rosterOf(tid),p=R.players.find(x=>String(x.num)===String(num));if(!p)return;if(img)p.photo=img;else delete p.photo;rosterSave(tid,R);legacyDel(tid,[phKey(num)])}
 function migratePhotos(tid){if(!W.loaded['r_'+tid]||!W.loaded['p_'+tid]||!W.raw.roster[tid])return;const m=W.raw.photos[tid]||{},keys=Object.keys(m);if(!keys.length)return;
@@ -595,6 +595,7 @@ Object.assign(actions,{
  wxreset:()=>{const h=wxPref().h;S.pref.wx={h};savePref();WX.at=0;render(true)},
  wlogout:()=>Web.logout(''),
  wpinnew:()=>newCoachPin(),wpindrop:()=>dropCoachPins(),
+ seahintx:()=>{ls.set('u7-seahint-x',true);render(true)},
  wredit:()=>{W.redit=!W.redit;W.rmsg='';render(true)},
  gofold:v=>{FOLD=Object.assign({},FOLD,{[v]:1});ls.set('u7-fold',FOLD);actions.tab('set')},
  achksz:v=>{WHO.size=v;whoSave();openAttChk()},
