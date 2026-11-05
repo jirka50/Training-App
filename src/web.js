@@ -333,8 +333,7 @@ const HELP=[
 <li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra, <b>přidáš další tým</b> (přijde se svými dětmi a trenéry) a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
 <li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
-<li><b>Po tréninku</b> (úplně dole): zhodnocení her, karta Pro rodiče a uzavření tréninku.</li>
-<li><b>✓ Trénink proběhl – uzavřít</b> uloží trénink do Historie a zavře ho. <b>Odložit</b> naplánovaný trénink jen zavře v telefonu.</li>
+<li><b>Odložit</b> naplánovaný trénink jen zavře v telefonu, zůstane mezi naplánovanými.</li>
 <li>Dole: <b>Spustit na hřišti</b>, <b>Uložit jako naplánovaný / Uložit změny</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
  ['field','Na hřišti',`<ul>
 <li><b>✓ Zkontrolovat docházku</b> nahoře: před startem rychle odškrtneš, kdo opravdu přišel, a upravíš trenéry. Skupiny se samy upraví.</li>
@@ -344,9 +343,9 @@ const HELP=[
 <li>U stanovišť tabulka ukazuje, která skupina je kde a který trenér stanoviště vede. Na písknutí se skupiny posunou, trenéři zůstávají.</li>
 <li>U hry vidíš animaci, „Řekni dětem“ a kroky. Klepnutím na název otevřeš celý popis.</li>
 <li><b>✓ Kdo co zvládl</b> – rovnou na hřišti odškrtáš dovednosti dětem.</li>
-<li>Na konci <b>Zhodnotit trénink</b>: 👍 / 👎 u her (generátor pak osvědčené hry vybírá častěji) a poznámka.</li>
+<li><b>Po tréninku</b> (dole na kartě Na hřišti): <b>Jak trénink dopadl?</b> 👍 / 👎 u her (generátor pak osvědčené hry vybírá častěji) a poznámka, karta <b>Pro rodiče</b> a nakonec <b>✓ Trénink proběhl – uzavřít</b>, které trénink uloží do Historie.</li>
 <li><b>☀</b> v hlavičce zapne režim na slunce s vysokým kontrastem.</li></ul>`],
- ['par','Rodiče a WhatsApp',`<p>V Tréninku i v Historii je karta <b>Pro rodiče</b>.</p><ul>
+ ['par','Rodiče a WhatsApp',`<p>Na kartě Na hřišti (část Po tréninku) i v Historii je karta <b>Pro rodiče</b>.</p><ul>
 <li><b>WhatsApp / Kopírovat:</b> hotový text o tom, co děti hrály, co to rozvíjí, co je nového, tip na doma a tvůj vzkaz.</li>
 <li><b>Zveřejnit pro rodiče:</b> trénink se objeví na veřejné stránce týmu <b>Eagles na tréninku</b> (bez jmen a fotek dětí). Odkaz pošli rodičům jednou, další tréninky se tam přidají samy. U společného tréninku vybereš, pro které týmy.</li>
 <li><b>Stáhnout</b> trénink ze stránky kdykoli odebere.</li></ul>`],
