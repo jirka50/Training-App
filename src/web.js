@@ -325,7 +325,7 @@ const HELP=[
 <li><b>Sezónní plán:</b> týden plánu přidá povinné hry toho týdne.</li>
 <li><b>Délka tréninku</b> a <b>Zaměření dovedností</b> (házení, chytání, odpal, běh po metách, pozornost a hra). Aplikace upozorní na nejslabší oblast dětí.</li>
 <li><b>Další možnosti:</b> název tréninku a vlastní šablona struktury.</li></ul>
-<p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v menu <b>Naplánované</b>. „Sestavit znovu“ rozpracovaný trénink nahradí, „Sestavit jako další trénink“ ho nechá a přidá nový – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
+<p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v menu <b>Naplánované</b>. Když už máš jiný trénink rozpracovaný, aplikace se zeptá, jestli ho <b>nahradit</b>, nebo nový <b>přidat jako další</b> – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
  ['train','Úpravy tréninku',`<p>Po klepnutí na Sestavit trénink se otevře <b>Trénink</b> s celým plánem po blocích, který můžeš upravit před odchodem na hřiště. Zpátky se k němu dostaneš z Plánování tlačítkem <b>Otevřít trénink</b>.</p><ul>
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
@@ -334,12 +334,12 @@ const HELP=[
 <li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
 <li><b>Odložit</b> naplánovaný trénink jen zavře v telefonu, zůstane mezi naplánovanými.</li>
-<li>Dole: <b>Spustit na hřišti</b>, <b>Uložit jako naplánovaný / Uložit změny</b>, <b>Uložit jako šablonu</b>, <b>🖨 Vytisknout</b>, <b>✓ Zavřít trénink</b>.</li></ul>`],
+<li>Dole: <b>Spustit na hřišti</b> a <b>Uložit</b>. Pod <b>⋯ Další</b> je Upravit nastavení, Uložit jako šablonu, 🖨 Vytisknout, Odložit / Zavřít trénink a Naplánovat znovu.</li></ul>`],
  ['field','Na hřišti',`<ul>
 <li><b>✓ Zkontrolovat docházku</b> nahoře: před startem rychle odškrtneš, kdo opravdu přišel, a upravíš trenéry. Skupiny se samy upraví.</li>
 <li>Velký <b>časovač</b> odpočítává aktuální blok. Barva ukazuje, kolik času zbývá. Na šířku je časovač vlevo a stanoviště vpravo.</li>
 <li>Lišta dole: <b>◀ ▶</b> předchozí / další blok, <b>Start / Pauza</b>, <b>+1 min</b> a zkrácení / prodloužení.</li>
-<li>„Po skončení času automaticky na další blok“ a „Hlásit střídání nahlas“ – telefon sám ohlásí změnu. Hlas a tempo řeči nastavíš v Nastavení.</li>
+<li>„Automaticky na další blok“ a „Hlásit střídání nahlas“ zapneš v Nastavení → Aplikace a hlas, tam je i hlas a tempo řeči. Seznam bloků je v kartě <b>Průběh</b>.</li>
 <li>U stanovišť tabulka ukazuje, která skupina je kde a který trenér stanoviště vede. Na písknutí se skupiny posunou, trenéři zůstávají.</li>
 <li>U hry vidíš animaci, „Řekni dětem“ a kroky. Klepnutím na název otevřeš celý popis.</li>
 <li><b>✓ Kdo co zvládl</b> – rovnou na hřišti odškrtáš dovednosti dětem.</li>
@@ -364,7 +364,7 @@ const HELP=[
 <li>V detailu najdeš popis, „Řekni dětem“, kroky, pomůcky, varianty a odkaz na video.</li>
 <li><b>+ Vlastní</b> přidá vlastní hru nebo cvik, uvidí ji všichni trenéři.</li></ul>`],
  ['set','Nastavení',`<ul>
-<li><b>Vzhled</b> (podle telefonu, světlý, tmavý, na slunce), <b>hlas hlášení</b> a <b>tempo řeči</b>, <b>místo pro počasí</b>.</li>
+<li>Karty se rozbalují šipkou. <b>Aplikace a hlas:</b> vzhled (podle telefonu, světlý, tmavý, na slunce), chování na hřišti (nezhasínat obrazovku, automaticky další blok, hlášení nahlas), hlas a tempo řeči, místo pro počasí.</li>
 <li><b>Sezóna:</b> název, termín, tréninkové dny a čas, zimní příprava. Podle ní se předvyplní datum dalšího tréninku a týden plánu. Mění ji správce.</li>
 <li><b>Šablony tréninku:</b> vlastní struktura bloků (třeba „90 min hala“), vybíráš ji v Plánování → Další možnosti.</li>
 <li><b>Trenéři</b> tvých týmů a <b>Účet</b> s odhlášením.</li></ul>`],
@@ -454,7 +454,7 @@ async function exportXls(tids){if(!tids.length)return;toast('Připravuji soubor�
  const ws=X.utils.json_to_sheet(rows,{header:(multi?['Tým']:[]).concat(['Jméno','Kategorie','Úroveň'])});ws['!cols']=(multi?[{wch:24}]:[]).concat([{wch:28},{wch:11},{wch:11}]);
  X.utils.book_append_sheet(wb,ws,multi?'Všechny týmy':safeSheet(tName(tids[0])));
  X.writeFile(wb,(tids.length>1?'Týmy':tName(tids[0])).replace(/[\\/:*?"<>|]/g,' ')+' – '+today()+'.xlsx')}
-seaHint=()=>W.role==='admin'&&!SEA().name?`<div class="hint"><span class="small">📅 <b>Nastav sezónu</b> – aplikace pak sama předvyplní datum dalšího tréninku, týden plánu a čas pro počasí.</span><button class="btn ghost sm" data-a="tab" data-v="set">Nastavit</button></div>`:'';
+seaHint=()=>W.role==='admin'&&!SEA().name?`<div class="hint"><span class="small">📅 <b>Nastav sezónu</b> – aplikace pak sama předvyplní datum dalšího tréninku, týden plánu a čas pro počasí.</span><button class="btn ghost sm" data-a="gofold" data-v="s_sea">Nastavit</button></div>`:'';
 function legacyDel(tid,keys){const m=Object.assign({},W.raw.photos[tid]||{});keys.forEach(k=>{if(m[k]){delete m[k];Web.write('photos/'+tid+'/'+k,null)}});W.raw.photos[tid]=m;phCache()}
 function photoSet(tid,num,img){const R=rosterOf(tid),p=R.players.find(x=>String(x.num)===String(num));if(!p)return;if(img)p.photo=img;else delete p.photo;rosterSave(tid,R);legacyDel(tid,[phKey(num)])}
 function migratePhotos(tid){if(!W.loaded['r_'+tid]||!W.loaded['p_'+tid]||!W.raw.roster[tid])return;const m=W.raw.photos[tid]||{},keys=Object.keys(m);if(!keys.length)return;
@@ -549,25 +549,32 @@ function vSet(){
  let h=`<section class="card"><div class="sumline"><h2>Účet</h2><button class="btn ghost sm" data-a="wlogout">Odhlásit</button></div>
   <p class="small">Přihlášen jako <b>${esc(whoLabel())}</b>${W.code?` · ${W.role==='admin'?'kód správce':W.coachId?'osobní kód':'společný kód'} ${esc(W.code.slice(0,4))}-••••`:''} · ${W.online?'online':'offline, změny se uloží po připojení'}</p>
   ${W.coachId&&W.role!=='admin'?'<p class="small muted">Vidíš jen týmy, u kterých tě správce zaškrtl. Vzhled a hlasová hlášení se ukládají k tvému profilu, takže je máš stejné v každém zařízení.</p>':''}</section>`;
+ let adm1='';
  if(adm){const cc=coachCodes();if(W.pins===null){W.pins=undefined;loadPins()}
-  h+=`<h2 class="sect">Správa <span class="small muted">jen správce</span></h2><section class="card"><h2>Společný kód pro trenéry</h2>
+  adm1+=`<section class="card"><h2>Společný kód pro trenéry</h2>
   <p class="small muted">Platí pro trenéry, kteří ještě nemají osobní kód, a vidí s ním všechny týmy. Osobní kódy vytváříš níže v seznamu Trenéři. Až budou mít všichni svůj, společný kód zruš.</p>
   ${W.pins===undefined?'<p class="small muted">Načítám…</p>':cc.length?`<div class="row">${cc.map(c=>`<code class="code">${esc(c)}</code>`).join(' ')}</div>`:'<p class="small">Zatím žádný kód.</p>'}
   <div class="row"><button class="btn sm" data-a="wpinnew">${cc.length?'Vyměnit kód':'Vytvořit kód'}</button>${cc.length?'<button class="btn ghost sm" data-a="wpindrop">Zrušit kód</button>':''}<button class="btn ghost sm" data-a="wcopy" data-v="${esc(baseUrl())}">Kopírovat odkaz na plánovač</button></div>
   ${W.pinMsg?`<p class="small"><b>${esc(W.pinMsg)}</b></p>`:''}<p class="small muted">„Vyměnit kód“ zruší starý společný kód a kdo s ním byl přihlášený, bude se muset přihlásit novým. Osobních kódů se to netýká.</p></section>`}
- if(adm)h+=`<section class="card"><div class="sumline"><h2>Týmy</h2></div>
+ if(adm)adm1+=`<section class="card"><div class="sumline"><h2>Týmy</h2></div>
   ${Object.keys(S.teams).length?`<div class="row">${Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'')).map(([id,x])=>`<button class="chip ${id===S.teamId?'on':''}" data-a="team" data-v="${esc(id)}">${esc(x.name)} · ${(x.players||[]).length}</button>`).join('')}</div>`:`<p class="muted">${S.ready?'Ve Scorekeeperu zatím není žádný tým.':'Načítám týmy…'}</p>`}
   <p class="small muted">Týmy jsou společné se Scorekeeperem. Soupisku upravíš v záložce Tým, nový tým založíš ve Scorekeeperu.</p>
   ${Object.keys(S.teams).length?`<div class="field"><span class="label">Export do Excelu</span><div class="row"><button class="btn ghost sm" data-a="xlsone">⬇ ${esc(team()?team().name:'')}</button>${Object.keys(S.teams).length>1?'<button class="btn ghost sm" data-a="xlsall">⬇ Všechny týmy</button>':''}</div><span class="small muted">Jméno, kategorie a úroveň dětí. Všechny týmy = jeden list se sloupcem Tým.</span></div>`:''}</section>`;
- if(adm)h+=vSeaSet()+vLogins()+vViews()+'<h2 class="sect">Trenéři a aplikace</h2>';
- if(t)h+=vStaff();
- h+=`${tplList().length?`<section class="card"><h2>Šablony tréninku</h2><div class="dl">${tplList().map(([id,tp])=>`<div class="sumline"><span><b>${esc(tp.name)}</b> · ${tplMin(tp)} min<br><span class="small muted">${tp.blocks.map(b=>BT[b.type]||b.type).join(' → ')}</span></span>${S.confirm==='t_'+id?`<span class="row"><button class="btn danger sm" data-a="tpldel" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></span>`:`<button class="ib" data-a="tplask" data-v="${esc(id)}" aria-label="Smazat šablonu ${esc(tp.name)}">✕</button>`}</div>`).join('')}</div></section>`:''}
- <section class="card"><h2>Aplikace v tomto telefonu</h2>
+ const tplH=`${tplList().length?`<section class="card"><h2>Šablony tréninku</h2><div class="dl">${tplList().map(([id,tp])=>`<div class="sumline"><span><b>${esc(tp.name)}</b> · ${tplMin(tp)} min<br><span class="small muted">${tp.blocks.map(b=>BT[b.type]||b.type).join(' → ')}</span></span>${S.confirm==='t_'+id?`<span class="row"><button class="btn danger sm" data-a="tpldel" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></span>`:`<button class="ib" data-a="tplask" data-v="${esc(id)}" aria-label="Smazat šablonu ${esc(tp.name)}">✕</button>`}</div>`).join('')}</div></section>`:''}`;
+ const appH=`<section class="card"><h2>Aplikace v tomto telefonu</h2>
   <div class="field"><span class="label">Vzhled</span><select id="pf_theme" data-c="theme">${[['','podle telefonu'],['light','světlý'],['dark','tmavý'],['sun','na slunce (vysoký kontrast)']].map(([v,l])=>`<option value="${v}" ${(S.pref.theme||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>
+  <span class="label">Na hřišti</span>
   <label class="row"><input type="checkbox" id="pf_wake" data-c="wake" ${S.pref.wake!==false?'checked':''}> Během tréninku na hřišti nenechat obrazovku zhasnout</label>
+  <label class="row"><input type="checkbox" id="auto" data-c="auto" ${S.run.auto?'checked':''}> Po skončení času automaticky na další blok</label>
+  <label class="row"><input type="checkbox" id="voice" data-c="voice" ${S.pref.voice!==false?'checked':''}> Hlásit střídání nahlas${window.speechSynthesis?'':' (tento prohlížeč neumí)'}</label>
   ${voiceSet()}
   ${wxSet()}
   <p class="small muted">Aplikaci si můžeš přidat na plochu telefonu (v prohlížeči Sdílet → Přidat na plochu). Tlačítko ☀ nahoře zapne režim na slunce.</p></section>`;
+ const nT=tplList().length,nS=t?staffList().filter(x=>(x.teams||[]).includes(S.teamId)).length:0,th={'':'podle telefonu',light:'světlý',dark:'tmavý',sun:'na slunce'}[S.pref.theme||'']||'';
+ h+=foldCard('s_app','Aplikace a hlas',esc(th)+' · hlášení '+(S.pref.voice!==false?'zapnuté':'vypnuté'),appH);
+ if(nT)h+=foldCard('s_tpl','Šablony tréninku',nT+(nT===1?' šablona':nT<5?' šablony':' šablon'),tplH);
+ if(t)h+=foldCard('s_staff','Trenéři',nS+' u týmu '+esc(t.name||''),vStaff());
+ if(adm){const s=SEA();h+=`<h2 class="sect">Správa <span class="small muted">jen správce</span></h2>`+foldCard('s_sea','Sezóna',s.name?esc(s.name)+(s.from?' · od '+fmtDate(s.from):''):'zatím nenastavená',vSeaSet())+foldCard('s_adm','Kódy, týmy a přehledy','společný kód, export, přihlášení, návštěvy rodičů',adm1+vLogins()+vViews())}
  h+=`<p class="small muted ver">Tréninkový plánovač U7 · ${verTxt()} · ${new Date(APP_DATE).toLocaleDateString('cs-CZ')}</p>`;
  return h}
 Object.assign(actions,{
@@ -587,6 +594,7 @@ Object.assign(actions,{
  wxreset:()=>{const h=wxPref().h;S.pref.wx={h};savePref();WX.at=0;render(true)},
  wlogout:()=>Web.logout(''),
  wpinnew:()=>newCoachPin(),wpindrop:()=>dropCoachPins(),
+ gofold:v=>{FOLD=Object.assign({},FOLD,{[v]:1});ls.set('u7-fold',FOLD);actions.tab('set')},
  achksz:v=>{WHO.size=v;whoSave();openAttChk()},
  ghelp:v=>{W.guestHelp=v==='1';render(true);window.scrollTo(0,0)},
  wcopy:async v=>{try{await navigator.clipboard.writeText(v);toast('Odkaz zkopírován.')}catch(e){toast(v)}},
