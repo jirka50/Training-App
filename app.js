@@ -365,7 +365,7 @@ const A=[
   {n:'Nahoz ze strany',min:3,d:'Trenér klečí bokem a pomalu nahazuje spodem měkké míčky. Stejná technika jako u tee.'},
   {n:'Nahoz zepředu',min:2,d:'Trenér na koleni 5–6 m před pálkařem za ochrannou sítí, pomalý nahoz spodem.'}],
  kid:'„Nápřah, oči na míček, rozmáčkni brouka!“',link:'https://www.littleleague.org/university/articles/hitting-drill-progression/',lt:'Little League – Hitting Drill Progression'},
-{id:'s07',k:'seq',n:'Běh po metách krok za krokem',c:'mety',e:3,min:8,kids:2,st:1,gear:['Mety', 'Kužely'],
+{id:'s07',k:'seq',n:'Běh po metách krok za krokem (venku)',c:'mety',e:3,min:8,kids:2,st:1,out:1,gear:['Mety', 'Kužely'],
  dev:'probíhání první mety, oblouk, zastavení na metě, start po odpalu',
  d:'Děti startují po jednom z domácí mety, další vybíhá, když je předchozí v polovině. Trenér stojí u mety a ukazuje.',
  steps:[{n:'Přes první metu',min:2,d:'Proběhnout první metu až ke kuželu za ní, na metě nezastavovat.'},
@@ -373,6 +373,15 @@ const A=[
   {n:'Zastavit na druhé a třetí',min:2,d:'Na druhé a třetí metě se zastavuje a zůstává na ní nohou.'},
   {n:'Start po odpalu',min:2,d:'Dítě stojí na první metě, trenér odpálí nebo hodí míč: start hned po kontaktu.'}],
  kid:'„První probíháme, druhou a třetí držíme!“',link:'https://www.baseball.bc.ca/uploads/files/8U%20Practice%20Plans%20FINAL%20DOC%202019(1).pdf',lt:'Baseball BC – 8U Practice Plans (PDF)'},
+{id:'s10',k:'seq',n:'Běh po metách krok za krokem (hala, 2 skupiny)',c:'mety',e:3,min:8,kids:4,st:1,hala:1,gear:['Mety', 'Kužely', 'Měkké míčky'],gn:'2 sady met (8 met), 4 kužely, 2 žíněnky ke stěně, měkký míček a tee nebo jen míček',
+ dev:'probíhání první mety a bezpečné zabrzdění, oblouk, zastavení na metě, start na signál',
+ d:'Tělocvičnu rozděl na dvě poloviny. V každé postav čtverec met o straně 6–7 m rovnoběžně se stěnami. Natoč ho tak, aby se za první metou běželo ke stěně, ne doprostřed haly k druhé skupině. Asi 2 m za první metou dej kužel na zabrzdění a za něj ke stěně žíněnku. Mety musí být ploché a neklouzat. Každá skupina má svůj čtverec a svého trenéra u první mety, obě běhají stejným směrem a dělají stejný krok. Další dítě vybíhá, když předchozí šlápne na první metu, takže na čtverci jsou nejvýš 2–3 děti.',
+ va:'Jeden trenér: stoupne si mezi čtverce a dává signál oběma skupinám. Z každé vybíhá jedno dítě naráz a z dvojic je malý závod. Pro šikovnější štafeta skupin: kdo oběhne čtverec, plácne dalšího v řadě, vyhrává skupina, která se vystřídá dřív.',
+ steps:[{n:'Přes první metu',min:2,d:'Proběhnout první metu a zabrzdit u kuželu („letadlo přistává“), ne až u stěny.'},
+  {n:'Banánek kolem první',min:2,d:'Kužel stojí asi 1 m vně čáry před první metou. Oběhnout ho obloukem, šlápnout na vnitřní roh mety a běžet na druhou.'},
+  {n:'Zastavit na druhé a třetí',min:2,d:'„Zmrzni“ s nohou na metě, trenér zkontroluje a pustí dál.'},
+  {n:'Start po odpalu',min:2,d:'Dítě stojí na první metě. Trenér odpálí měkký míček z tee do žíněnky nebo plácne míčkem o zem a dítě vybíhá na zvuk.'}],
+ kid:'„První probíháme a brzdíme u kuželu, druhou a třetí držíme!“'},
 {id:'s08',k:'seq',n:'Rozcvička hráče',c:'warm',e:2,min:6,kids:1,gear:['Kužely'],gn:'dráha 10–15 m',
  dev:'dynamické rozehřátí nohou, trupu a paží před házením',
  d:'Děti v řadě přecházejí dráhu tam a zpět, každý cvik jednou dráhou. Na konci kroužení pažemi a „objetí“.',
@@ -398,7 +407,7 @@ const A=[
 
 ];
 /* Věková kategorie: návrh pro každou položku. Jen U7 = složitější pravidla, přesnější hod nebo chytání, hra s tagováním. Ostatní se hodí pro U6 i U7. Trenéři to můžou v Knihovně přepsat (kolekce „ages“). */
-const AGES=['U6','U7'],U7_ONLY=['g03','g06','g14','g18','g20','g28','g29','g30','d08','d14','d16','s01','s03','s04','s07','g34','g38','g39','g40','g41','d22'];
+const AGES=['U6','U7'],U7_ONLY=['s10','g03','g06','g14','g18','g20','g28','g29','g30','d08','d14','d16','s01','s03','s04','s07','g34','g38','g39','g40','g41','d22'];
 A.forEach(a=>{a.ag=U7_ONLY.includes(a.id)?['U7']:['U6','U7']});
 
 /* ===== Animace: hřiště shora (děti = tečky), technika = postava z boku ===== */
@@ -683,6 +692,8 @@ s06:{d:9,s:[['tee',58,52]],cap:[[0,'1 Švih na sucho'],[.3,'2 Z tee'],[.6,'3 Nah
  a:[BALL([[.42,.55,58,47,96,30,6]],{hide:[.55,1]}),{t:'c',p:pth([[0,62,60]]),show:[.56,.8]},BALL([[.6,.7,62,57,56,32,4],[.7,.8,56,32,96,24,6]],{hide:[0,.6]}),{t:'c',p:pth([[0,92,52]]),show:[.8,1]},BALL([[.84,.93,90,48,56,32,3],[.93,1,56,32,96,24,4]],{hide:[0,.84]})]},
 s07:{d:9,s:[['diamond'],['cone',84,26]],cap:[[0,'1 Přes první metu'],[.3,'2 Banánek'],[.62,'3 Zastavit na druhé'],[.8,'4 Start po odpalu']],a:[
  KP([[0,50,56],[.18,72,34],[.25,84,26],[.3,50,56],[.42,72,34],[.6,50,12],[.65,50,12],[.7,72,34],[.8,72,34],[.95,50,12],[1,50,56]])]},
+s10:{d:10,s:[['home',40,51],['base',40,14],['base',12,14],['base',12,50],['cone',43,7],['cone',45,22],['rect',34,1,12,3],['home',60,51],['base',88,50],['base',88,14],['base',60,14],['cone',95,47],['cone',81,55],['rect',97,44,3,12],['dash',50,4,50,58]],cap:[[0,'Dva čtverce: 1 Přes první, brzdi u kuželu (žíněnka u stěny)'],[.32,'2 Banánek kolem kuželu'],[.6,'3 Zastavit na druhé a třetí'],[.8,'4 Start z první na signál']],a:[
+ KP([[0,40,50],[0.05,40,50],[0.17,40,14],[0.22,40,7],[0.26,40,7],[0.3,40,50],[0.33,40,50],[0.4,45,22],[0.46,40,14],[0.6,12,14],[0.66,12,14],[0.74,12,50],[0.78,12,50],[0.82,40,14],[0.86,40,14],[0.98,12,14],[1,12,14]]),KP([[0,60,50],[0.05,60,50],[0.17,88,50],[0.22,95,50],[0.26,95,50],[0.3,60,50],[0.33,60,50],[0.4,81,55],[0.46,88,50],[0.6,88,14],[0.66,88,14],[0.74,60,14],[0.78,60,14],[0.82,88,50],[0.86,88,50],[0.98,88,14],[1,88,14]],{t:'k2'})]},
 s08:{d:9,s:[['cone',10,14],['cone',90,14],['cone',10,48],['cone',90,48]],cap:[[0,'Vysoká kolena'],[.17,'Zakopávání'],[.33,'Posunné kroky'],[.5,'Rotace trupu'],[.67,'Sprinty'],[.83,'Paže a objetí']],a:[
  ...[20,31,42].map(y=>K_(t=>{const k=Math.floor(t*6),u=(t*6)%1,x=12+76*(k%2?1-u:u);return[x,y+(k===2?Math.sin(u*TAU*5)*1.2:0),k<2?Math.abs(Math.sin(u*TAU*6))*2.5:0]}))]},
 s09:{d:12,s:[['cone',10,14],['cone',90,14],['cone',10,48],['cone',90,48]],cap:[[0,'Liftink'],[.125,'Skipink'],[.25,'Zakopávání'],[.375,'Předkopávání'],[.5,'Cval stranou'],[.625,'Odpichy'],[.75,'Poskoky se švihem paží'],[.875,'Rovinka']],a:[
@@ -890,7 +901,7 @@ const autoAge=()=>{const ts=selTeams();if(ts.some(t=>teamAge(t)==='U6'))return'U
 const dAge=()=>{const a=(S.draft.ageBy||{})[selKey()];return AGES.includes(a)?a:AGES.includes(S.draft.age)?S.draft.age:''};
 const draftAge=()=>dAge()||autoAge();
 function ctx(p){const d=S.draft;return{age:(p&&p.age)||draftAge(),kids:presentKeys().length,coaches:coachCount(),groups:groupPlan().G,venue:d.venue,focus:d.focus.length?d.focus:FOCUS.slice(),recent:recentIds(),used:new Set()}}
-function fits(a,c,kids){if(c.age&&!agOf(a).includes(c.age))return false;if((a.kids||1)>(kids==null?c.kids:kids))return false;if(a.out&&c.venue==='hala')return false;if((a.co||1)>c.coaches)return false;return true}
+function fits(a,c,kids){if(c.age&&!agOf(a).includes(c.age))return false;if((a.kids||1)>(kids==null?c.kids:kids))return false;if(a.out&&c.venue==='hala')return false;if(a.hala&&c.venue!=='hala')return false;if((a.co||1)>c.coaches)return false;return true}
 function score(a,c,cat){let s=Math.random()*1.5;const tags=[a.c].concat(a.t||[]);
  if(cat){if(a.c===cat)s+=4;else if(tags.includes(cat))s+=2}
  else if(c.focus.includes(a.c))s+=3;else if(tags.some(t=>c.focus.includes(t)))s+=1.5;
@@ -1465,7 +1476,7 @@ function renderLibList(){
  const list=acts().filter(a=>(L.kind==='all'||a.k===L.kind)&&(L.age==='all'||agOf(a).includes(L.age))&&(L.cat==='all'||a.c===L.cat||(a.t||[]).includes(L.cat))&&(!q||(a.n+' '+(a.v||'')+' '+gearText(a)+' '+(a.gn||'')+' '+(a.dev||'')).toLowerCase().includes(q)))
   .sort((a,b)=>a.n.localeCompare(b.n,'cs'));
  const el=$('#libList');if(!el)return;
- el.innerHTML=list.length?`<p class="small muted">${list.length} položek</p>`+list.map(a=>`<button class="item" data-a="open" data-v="${a.id}"><h3>${esc(a.n)}${a.v?` <span class="muted" style="font-weight:500">/ ${esc(a.v)}</span>`:''}</h3><span class="kb ${a.k}">${KINDS[a.k]}</span><span class="meta"><b class="ag">${agTxt(a)}</b> · ${CATS[a.c]||''} · ${a.min} min${a.kids>1?' · od '+a.kids+' dětí':''}${a.st?' · na stanoviště':''}${a.custom?' · vlastní':''}${rateBadge(a.id)}<br>${esc(gearText(a))}</span></button>`).join(''):`<section class="card empty"><div class="em-ico" aria-hidden="true">🔍</div><h2>Nic nenalezeno</h2><p class="muted">Žádná hra ani cvik neodpovídá ${L.q.trim()?'hledání „'+esc(L.q.trim())+'“ a ':''}vybraným filtrům.</p><div class="row"><button class="btn sm" data-a="libreset">Zrušit filtry</button><button class="btn ghost sm" data-a="newact">+ Přidat vlastní</button></div></section>`
+ el.innerHTML=list.length?`<p class="small muted">${list.length} položek</p>`+list.map(a=>`<button class="item" data-a="open" data-v="${a.id}"><h3>${esc(a.n)}${a.v?` <span class="muted" style="font-weight:500">/ ${esc(a.v)}</span>`:''}</h3><span class="kb ${a.k}">${KINDS[a.k]}</span><span class="meta"><b class="ag">${agTxt(a)}</b> · ${CATS[a.c]||''} · ${a.min} min${a.kids>1?' · od '+a.kids+' dětí':''}${a.st?' · na stanoviště':''}${a.out?' · venku':''}${a.hala?' · hala':''}${a.custom?' · vlastní':''}${rateBadge(a.id)}<br>${esc(gearText(a))}</span></button>`).join(''):`<section class="card empty"><div class="em-ico" aria-hidden="true">🔍</div><h2>Nic nenalezeno</h2><p class="muted">Žádná hra ani cvik neodpovídá ${L.q.trim()?'hledání „'+esc(L.q.trim())+'“ a ':''}vybraným filtrům.</p><div class="row"><button class="btn sm" data-a="libreset">Zrušit filtry</button><button class="btn ghost sm" data-a="newact">+ Přidat vlastní</button></div></section>`
 }
 function openAct(id){const a=ACT[id];if(!a)return;
  const sh=$('#sheet');
@@ -1482,7 +1493,7 @@ function openAct(id){const a=ACT[id];if(!a)return;
    <div><span class="label">Rozvíjí</span><p>${esc(a.dev||'')}</p></div>
    <div><span class="label">Pomůcky</span>${gearOf(a).length?`<div class="row" style="gap:6px">${gearOf(a).map(g=>`<span class="chip">${esc(g)}</span>`).join('')}</div>`:'<p>bez pomůcek</p>'}${a.gn?`<p class="small muted">${esc(a.gn)}</p>`:''}</div>
    <div><span class="label">Vhodné pro</span><div class="row" style="gap:6px">${AGES.map(g=>`<button class="chip ${agOf(a).includes(g)?'on':''}" data-a="agetog" data-v="${g}" aria-pressed="${agOf(a).includes(g)}">${g}</button>`).join('')}${S.ages[a.id]?`<button class="btn ghost sm" data-a="agereset">Vrátit návrh (${agDef(a).join(' · ')})</button>`:''}</div><p class="small muted">${S.ages[a.id]?'Upraveno trenérem.':'Návrh aplikace.'} Klepnutím změníš, platí pro všechny trenéry.</p></div>
-   <div><span class="label">Parametry</span><p>${a.min} min · od ${a.kids||1} ${(a.kids||1)===1?'dítěte':'dětí'}${a.co>1?' · aspoň '+a.co+' trenéři':''}${a.st?' · hodí se na stanoviště':''}${a.out?' · jen venku':''}${rateBadge(a.id)}</p></div>
+   <div><span class="label">Parametry</span><p>${a.min} min · od ${a.kids||1} ${(a.kids||1)===1?'dítěte':'dětí'}${a.co>1?' · aspoň '+a.co+' trenéři':''}${a.st?' · hodí se na stanoviště':''}${a.out?' · jen venku':''}${a.hala?' · do haly':''}${rateBadge(a.id)}</p></div>
    ${a.link?`<div><span class="label">Video a návod</span><p><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.lt||'Odkaz')}</a></p></div>`:''}
   </div>
   ${a.custom?(S.confirm==='act'?`<div class="row"><span class="warnnote">Opravdu smazat?</span><button class="btn danger sm" data-a="delact" data-v="${esc(a.custom)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn ghost sm" data-a="editact" data-v="${esc(a.custom)}">Upravit</button><button class="btn danger sm" data-a="askdel">Smazat</button></div>`):''}
