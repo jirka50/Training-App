@@ -102,7 +102,7 @@ p{margin:0}
  .pr-time{font:700 13pt var(--f-disp),sans-serif}
  .pr-time small{display:block;font:400 9pt var(--f-body),sans-serif;color:#555}
  .pr-h{font-weight:700;text-transform:uppercase;font-size:9.5pt;letter-spacing:.04em;color:#1F5A36}
- .pr-a{margin:1mm 0}
+ .pr-a{margin:1.2mm 0 2mm}.pr-m{font-size:8.5pt;color:#555}.pr-d{font-size:9.5pt;line-height:1.35;margin-top:.5mm}.pr-s{font-size:9pt;color:#333;margin-top:.5mm}.pr-k{font-size:9pt;font-style:italic;color:#1F5A36;margin-top:.5mm}
  .pr-t{border-collapse:collapse;margin-top:2mm;font-size:9.5pt;width:100%}
  .pr-t th,.pr-t td{border:.2mm solid #999;padding:1mm 2mm;text-align:left;vertical-align:top}
  .pr-g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3mm 6mm}
