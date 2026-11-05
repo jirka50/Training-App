@@ -259,9 +259,14 @@ const A=[
  dev:'běh po metách ve správném pořadí, koordinace, různé způsoby pohybu, šlápnutí na metu',
  d:'Děti obíhají mety, ale každý úsek jinak: z domácí na první poskoky, z první na druhou snožmo jako žabka, z druhé na třetí bokem jako krab, ze třetí domů sprint. Na každou metu se musí šlápnout. Děti vybíhají po jednom, další startuje, když je předchozí na první metě. Způsoby pohybu se dají střídat (pozpátku, po jedné noze, jako slon).',
  kid:'„Poskoky, žabka, krab a domů sprint! A na každou metu šlápni.“'},
-{id:'d22',k:'drill',n:'Aut nebo safe?',c:'hra',t:['mety'],e:2,min:6,kids:3,st:1,gear:['Mety', 'Měkké míčky', 'Rukavice', 'Kužely'],gn:'kužely nebo lano na čáry fér',
+{id:'d22',k:'drill',n:'Aut nebo safe? (venku)',c:'hra',t:['mety'],e:2,min:6,kids:3,st:1,out:1,gear:['Mety', 'Měkké míčky', 'Rukavice', 'Kužely'],gn:'kužely nebo lano na čáry fér',
  dev:'pochopení pravidel: aut, safe, fér a faul; rozhodování, pozornost',
  d:'Trenér ukazuje situace a děti rozhodují. Běžec doběhne na metu dřív než míček do rukavice polaře: všichni ukážou SAFE (ruce do stran). Míček je v rukavici na metě dřív: AUT (pěst nahoru). Pak trenér kutálí nebo odpálí míček a děti hlásí FÉR (míček v poli mezi čarami, skok dopředu) nebo FAUL (mimo čáru, skok dozadu). Děti se střídají v roli běžce a polaře.',
+ kid:'„Safe? Ruce do stran! Aut? Pěst nahoru! Fér skok dopředu, faul skok dozadu.“'},
+{id:'d26',k:'drill',n:'Aut nebo safe? (hala)',c:'hra',t:['mety'],e:2,min:6,kids:3,st:1,hala:1,gear:['Mety', 'Měkké míčky', 'Rukavice', 'Kužely'],gn:'2 mety, 1 kužel a žíněnka na zabrzdění, měkký míček, 1 rukavice; čáry fér jsou čáry hřiště v hale',
+ dev:'pochopení pravidel: aut, safe, fér a faul; rozhodování, pozornost',
+ d:'Domácí metu dej do rohu hřiště v hale, první metu 7–8 m od ní po namalované čáře. Čáry hřiště jsou čáry fér. Asi 2 m za první metou kužel na zabrzdění a za ním ke stěně žíněnka. Polař s rukavicí stojí u první mety, trenér 3–4 m od ní. Ostatní děti sedí jako „rozhodčí“ v řadě u stěny mimo dráhu. Běžec vybíhá z domácí mety, trenér ve stejnou chvíli krátce hodí nebo dokutálí míček polaři. Rozhodčí ukážou SAFE (ruce do stran), když byl běžec na metě dřív, nebo AUT (pěst nahoru), když měl polař míček dřív. Pak trenér z domácí mety kutálí míček a děti hlásí FÉR (mezi čarami, skok dopředu) nebo FAUL (za čarou, skok dozadu). Míček se jen kutálí, neodpaluje, aby nelétal do oken a světel. Po každém běhu se vystřídá běžec, polař a jeden rozhodčí.',
+ va:'Dvě skupiny: druhá skupina hraje totéž na druhé polovině haly se svým trenérem, každá běží ke své stěně. S jedním trenérem je druhá skupina rozhodčí a po 4 bězích se skupiny vymění.',
  kid:'„Safe? Ruce do stran! Aut? Pěst nahoru! Fér skok dopředu, faul skok dozadu.“'},
 {id:'d23',k:'drill',n:'Přenášení míčků bokem',c:'chytani',t:['warm'],e:3,min:6,kids:1,st:1,gear:['Kužely', 'Měkké míčky'],gn:'2 kužely 3–4 m od sebe, u prvního 3–5 míčků; pro závod dvě řady',
  dev:'přesun bokem bez křížení nohou, nízký postoj polaře, sebrání míče oběma rukama, obratnost',
@@ -407,7 +412,7 @@ const A=[
 
 ];
 /* Věková kategorie: návrh pro každou položku. Jen U7 = složitější pravidla, přesnější hod nebo chytání, hra s tagováním. Ostatní se hodí pro U6 i U7. Trenéři to můžou v Knihovně přepsat (kolekce „ages“). */
-const AGES=['U6','U7'],U7_ONLY=['s10','g03','g06','g14','g18','g20','g28','g29','g30','d08','d14','d16','s01','s03','s04','s07','g34','g38','g39','g40','g41','d22'];
+const AGES=['U6','U7'],U7_ONLY=['d26','s10','g03','g06','g14','g18','g20','g28','g29','g30','d08','d14','d16','s01','s03','s04','s07','g34','g38','g39','g40','g41','d22'];
 A.forEach(a=>{a.ag=U7_ONLY.includes(a.id)?['U7']:['U6','U7']});
 
 /* ===== Animace: hřiště shora (děti = tečky), technika = postava z boku ===== */
@@ -632,6 +637,11 @@ d22:{d:12,s:[['diamond'],['dash',50,56,94,12],['dash',50,56,6,12]],cap:[[0,'Bě�
  KP([[0,50,56],[.03,50,56],[.2,72,34],[.3,72,34],[.36,50,56],[.4,50,56],[.6,72,34],[.66,72,34],[.72,50,56],[1,50,56]],{t:'k2'}),
  BALL([[.06,.26,42,30,73,32,5]],{show:[.06,.32]}),BALL([[.4,.5,42,30,73,32,5]],{show:[.4,.66]}),
  BALL([[.7,.8,50,54,38,24,8]],{show:[.7,.83]}),BALL([[.86,.96,50,54,88,46,6]],{show:[.86,1]})]},
+d26:{d:12,s:[['home',12,53],['base',62,52],['cone',74,52],['rect',86,45,4,14],['line',12,52,96,52],['line',12,52,12,4],['txt',50,58,'čára hřiště = čára fér']],cap:[[0,'Běžec dřív = SAFE (ruce do stran)'],[.33,'Míček dřív = AUT (pěst nahoru)'],[.68,'Mezi čarami = FÉR'],[.84,'Za čarou = FAUL']],a:[
+ {t:'c',p:pth([[0,58,34]])},KP([[0,64,46]]),...[30,40,50,60].map(x=>KP([[0,x,8]],{t:'k2'})),
+ KP([[0,12,50],[.03,12,50],[.2,62,50],[.24,72,50],[.3,72,50],[.36,12,50],[.4,12,50],[.6,62,50],[.64,72,50],[.68,72,50],[.72,12,50],[1,12,50]],{t:'k2'}),
+ BALL([[.08,.26,58,34,64,46,4]],{show:[.08,.32]}),BALL([[.4,.5,58,34,64,46,4]],{show:[.4,.66]}),
+ BALL([[.7,.8,14,49,40,30,0]],{show:[.7,.83]}),BALL([[.86,.96,14,49,9,22,0]],{show:[.86,1]})]},
 d23:(()=>{const P=1/3,L=(a,b,u)=>a+(b-a)*u,mv=(s,a,b)=>s<a?0:s>b?1:ez((s-a)/(b-a));
  const lane=(y,cA,cB,ph)=>{const kx=t=>{const s=((t+ph)%1*3)%1;return s<.42?L(cA,cB,mv(s,.08,.42)):L(cB,cA,mv(s,.55,.9))},moving=t=>{const s=((t+ph)%1*3)%1;return(s>.08&&s<.42)||(s>.55&&s<.9)};
   const kid=t=>[kx(t),y,moving(t)?Math.abs(Math.sin(t*TAU*30))*2.2:0],pa=[[cA-6,y-5],[cA-6,y-9],[cA-9.5,y-7]],pb=[[cB+6,y-5],[cB+6,y-9],[cB+9.5,y-7]];
