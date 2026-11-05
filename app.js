@@ -71,6 +71,11 @@ const A=[
  d:'Děti jsou „atomy“ a volně běhají po vymezeném prostoru. Trenér zavolá „Molekula tři!“ (nebo ukáže tři prsty) a děti se co nejrychleji chytí za ruce ve skupinkách po třech. Skupinka, která drží pohromadě, zaujme postoj polaře. Kdo zbyde, udělá rychlý baseballový úkol (třeba 3 švihy na sucho nebo oběhne nejbližší metu) a hned hraje dál, nikdo nevypadává. Čísla střídej (2, 3, 4, „celý tým!“) a mezi povely nech děti chvíli běhat.',
  va:'Baseballová molekula: k číslu přidej pozici, např. „Molekula dvě – pálkař!“ (postoj pálkaře) nebo „Molekula čtyři – vláček na metu!“ (skupinka v zástupu doběhne k metě). Pro starší místo čísla jen ukazuj prsty, ať se děti dívají na trenéra.',
  kid:'„Jsme atomy! Molekula tři – chyťte se po třech a postoj polaře!“'},
+{id:'g51',k:'game',n:'Na vojáky',c:'hazeni',t:['warm','hra'],e:3,min:7,kids:8,
+ gear:['Měkké míčky', 'Velké měkké míče', 'Kužely'],gn:'2–4 měkké nebo velké měkké míče, kužely na vymezení prostoru',dev:'hod na pohyblivý cíl, uhýbání, rychlost, spolupráce a pomoc spoluhráčům',
+ d:'Děti se rozdělí na dvě skupiny: vojáky a ostřelovače. Vojáci běhají po vymezeném prostoru, ostřelovači mají měkké nebo velké měkké míče. Ostřelovač se vojáka dotkne míčem, hodem nebo míčem v ruce, a to jen pod ramena. Zasažený voják je zraněný: lehne si na záda a čeká. Zraněného vojáka můžou ostatní vojáci uzdravit: čtyři vojáci ho chytí každý za jednu ruku nebo nohu a společně řeknou „Uzdraven!“. Pak voják vstane a běží dál. Po 1–2 minutách se spočítají ležící vojáci a skupiny si vymění role.',
+ va:'Méně dětí: k uzdravení stačí dva vojáci (za ruce). Pro šikovnější: ostřelovači smějí jen házet a nesmějí s míčem v ruce běhat, nebo hrají jen s jedním velkým míčem a přihrávají si.',
+ kid:'„Ostřelovači, míř pod ramena! Vojáci, nenechte kamaráda ležet – čtyři ho uzdraví!“'},
 {id:'g17',k:'game',n:'Trenér říká',c:'hra',e:1,min:5,kids:2,
  gear:[],dev:'pozornost, nácvik baseballových pohybů, koordinace',
  d:'Baseballová varianta „Simon říká“. Trenér dává pokyny jako „Trenér říká: švihni pálkou“, „chyť vysoký míč“, „běž na místě“, „hoď na první metu“. Děti pohyb jen předvádějí. Pokud pokyn nezačíná slovy „Trenér říká“, nesmí se pohnout. Kdo se splete, udělá 3 dřepy a hraje dál.'},
@@ -556,6 +561,11 @@ g16:{d:6,cap:[[0,'Běhej volně…'],[.5,'SOCHA! Postoj polaře']],a:[
  ...[0,1,2,3,4].map(i=>K_(t=>Wd(50,31,30,18,1,2,i*1.3)(Math.min(t,.5)*2)))]},
 g50:{d:7,cap:[[0,'Atomy běhají…'],[.5,'„Molekula tři!“ – po třech a postoj polaře']],a:[
  ...[0,1,2,3,4,5].map(i=>{const W=Wd(50,31,32,18,1,2,i*1.1),c=[[32,30],[68,30]][i%2],o=[[0,-5],[-5,4],[5,4]][Math.floor(i/2)];return K_(t=>{const w=W(Math.min(t,.45)/.45*.9);if(t<.45)return w;const u=ez(Math.min(1,(t-.45)/.15));return[w[0]+(c[0]+o[0]-w[0])*u,w[1]+(c[1]+o[1]-w[1])*u,0]},i%2?{t:'k2'}:{})})]},
+g51:{d:8,s:[['rect',6,4,88,54]],cap:[[0,'Ostřelovači míří na vojáky'],[.4,'Zasažený voják si lehne'],[.6,'Čtyři vojáci ho uzdraví: „Uzdraven!“']],a:[
+ KP([[0,14,10]],{t:'k2'}),KP([[0,86,52]],{t:'k2'}),
+ KP([[0,30,40],[.3,48,32],[.38,50,31],[1,50,31]]),
+ ...[[30,18,45,31],[70,18,50,27],[72,46,55,31],[28,50,50,35]].map(([x,y,tx,ty],i)=>{const W=Wd(x>50?66:34,31,14,12,1,2,i*1.7);return K_(t=>{const w=W(Math.min(t,.42)/.42*.6);if(t<.45)return w;const u=ez(Math.min(1,(t-.45)/.15));return[w[0]+(tx-w[0])*u,w[1]+(ty-w[1])*u,0]})}),
+ BALL([[.18,.34,16,12,48,31,10]],{show:[.18,.4]})]},
 g17:{d:6,s:[['txt',50,8,'Trenér říká…']],cap:[[0,'„Trenér říká: běž na místě!“ – všichni běží'],[.5,'„Švihni!“ – bez Trenér říká se nehýbáme']],a:[
  {t:'c',p:pth([[0,50,16]])},...[20,35,50,65,80].map((x,i)=>K_(t=>[x,40+(t<.5?Math.sin(t*TAU*8+i)*1.5:0),0]))]},
 g18:{d:7,s:[['diamond']],cap:[[0,'Vláček obíhá mety, pak mini zápas']],a:[0,1,2,3,4].map(i=>KP(around(i*.04,.8+i*.04)))},
