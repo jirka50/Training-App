@@ -1384,6 +1384,7 @@ const faces=(g,p)=>{const ks=g.map(n=>kid(n,p)),ph=ks.map(x=>kidPh(x));if(!ph.so
 function vAttEdit(){const p=S.plan,ts=planTeams(p),mt=ts.length>1,pr=new Set((p.present||[]).map(k=>normKey(k,p))),all=ts.reduce((n,t)=>n+plOf(t).length,0);
  return `<section class="card"><div class="sumline"><h2>Docházka · ${pr.size} z ${all}</h2></div>
   <p class="small muted">Klepnutím dítě odebereš nebo přidáš. Přidané dítě se zařadí do nejmenší skupiny, skupiny se jinak nemíchají.</p>
+  ${Object.keys(S.teams).length>1?`<h3>Týmy na tréninku</h3><div class="row hs">${Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs')).map(([id,x])=>{const on=ts.includes(id);return `<button class="chip ${on?'on':''}" data-a="ptteam" data-v="${esc(id)}" aria-pressed="${on}">${on?'✓ ':'+ '}${esc(x.name)}</button>`}).join('')}</div><p class="small muted">Přidaný tým přinese své děti a trenéry, skupiny se podle toho upraví.</p>`:''}
   ${(()=>{const cs=coachPool(),sel=coachSelIds(),gs=guests();return `<h3>Trenéři · ${(p.coaches||[]).filter(n=>n!=='Trenér').length}</h3><div class="kids">${cs.map(c=>{const on=sel.includes(c.key);return `<button class="chip coach ${on?'on':'off'}" data-a="pcoach" data-v="${esc(c.key)}" aria-pressed="${on}">${esc(c.name)}</button>`}).join('')}${gs.map((g,i)=>`<button class="chip coach on" data-a="pguest" data-v="${i}" aria-label="Odebrat hosta ${esc(g)}">${esc(g)} <span class="guest">host ✕</span></button>`).join('')}${!cs.length&&!gs.length?'<span class="muted small">Týmy nemají uložené trenéry.</span>':''}</div>
   ${vBorrow()}
   <form id="addGuestT" class="row"><input type="text" id="gt_name" placeholder="Host na tento trénink" aria-label="Jméno hostujícího trenéra" style="flex:1 1 180px;width:auto"><button class="btn ghost sm" type="submit">Přidat</button></form>
@@ -1391,6 +1392,18 @@ function vAttEdit(){const p=S.plan,ts=planTeams(p),mt=ts.length>1,pr=new Set((p.
   ${ts.map(tid=>`${mt?`<h3>${esc(tName(tid))}</h3>`:''}<div class="kids">${sortPl(plOf(tid)).map(x=>{const k=K(tid,x.num),on=pr.has(k);return `<button class="chip kid ${on?'on':'off'}" data-a="patt" data-v="${esc(k)}" aria-pressed="${on}">${kidPh({tid,num:x.num,name:x.name})}<b>${esc(numShort(x.num))}</b>${esc(x.dn||x.name)}</button>`}).join('')||'<span class="muted small">soupiska je prázdná</span>'}</div>`).join('')}</section>`}
 function applyCoaches(){const p=S.plan;if(!p)return;const oldG=nG(p),gp=groupPlan(),G=gp.G;p.coaches=coachNames();p.gco=gp.gco;p.gman=!!gCfg();
  if(G!==oldG){p.groups=makeGroups(p.present,G,S.draft.mix!==false);fitBlocks();S.sel=null;toast(G>1?'Děti rozděleny do '+G+' skupin.':'Jedna skupina: všechny děti spolu.')}savePlan();render(true)}
+/* přidání / odebrání týmu u otevřeného tréninku (před začátkem) */
+function pTeamToggle(tid){const p=S.plan;if(!p||!S.teams[tid])return;const ts=planTeams(p).filter(t=>S.teams[t]),i=ts.indexOf(tid);
+ const keepNames=(p.coaches||[]).filter(n=>n!=='Trenér'),cfg=gCfg()?JSON.parse(JSON.stringify(gCfg())):null,oldG=nG(p);let added=[];
+ if(i>=0){if(ts.length===1){toast('Aspoň jeden tým musí zůstat.');return}ts.splice(i,1);const drop=k=>kid(k,p).tid===tid;p.present=(p.present||[]).filter(k=>!drop(k));p.groups=(p.groups||[[]]).map(g=>g.filter(k=>!drop(k)));if(S.sel&&drop(S.sel))S.sel=null}
+ else{ts.push(tid);added=presentOf(tid).map(n=>K(tid,n));p.present=(p.present||[]).concat(added)}
+ S.draft.teamsSel=ts;const st=selTeams();p.teams=st;p.team=st[0];
+ const newNames=i<0?coachesOf(S.teams[tid]).map(c=>c.name).filter(n=>!keepNames.includes(n)):[],pool=coachPool().map(c=>c.name),gone=i>=0?coachesOf(S.teams[tid]).map(c=>c.name).filter(n=>!pool.includes(n)):[];selectCoachesByNames(keepNames.filter(n=>!gone.includes(n)).concat(newNames));
+ const g=S.draft.grp||(S.draft.grp={});if(cfg)g[selKey()]=cfg;else delete g[selKey()];
+ const gp=groupPlan();p.coaches=coachNames();p.gco=gp.gco;p.gman=!!gCfg();
+ if(gp.G!==oldG){p.groups=makeGroups(p.present,gp.G,S.draft.mix!==false);fitBlocks();S.sel=null}
+ else added.forEach(k=>{let gi=0;p.groups.forEach((x,j)=>{if(x.length<p.groups[gi].length)gi=j});p.groups[gi].push(k)});
+ saveDraft();savePlan();render(true);toast(i>=0?tName(tid)+' odebrán z tréninku.':tName(tid)+' přidán: '+added.length+' dětí'+(newNames.length?', '+newNames.length+' trenéři':'')+'.')}
 function pAttToggle(key){const p=S.plan;if(!p)return;const x=kid(key,p),nk=K(x.tid,x.num),same=k=>normKey(k,p)===nk;p.groups=p.groups&&p.groups.length?p.groups:[[]];
  if((p.present||[]).some(same)){p.present=p.present.filter(k=>!same(k));p.groups=p.groups.map(g=>g.filter(k=>!same(k)));if(S.sel&&same(S.sel))S.sel=null;
   if(S.draft.present[x.tid])S.draft.present[x.tid]=S.draft.present[x.tid].filter(n=>n!==x.num)}
@@ -1683,7 +1696,7 @@ const actions={
  save:async()=>{const pv=S.plans[S.plan.id];try{await savePlanToHistory(false,!pv||isPlanned(pv)?'plan':'done');if(S.draft.name||S.draft.week){S.draft.name='';S.draft.week=0;saveDraft()}}catch(e){}},
  go:()=>{actions.tab('field')},
  rate:async(v,el)=>{const r=+el.dataset.r,p=S.plan;p.rate=Object.assign({},p.rate);if(p.rate[v]===r)delete p.rate[v];else p.rate[v]=r;savePlan();S.openRate=true;render(true);try{await savePlanToHistory(true)}catch(e){}},
- achk:()=>openAttChk(),achkk:v=>{pAttToggle(v);openAttChk()},achkc:v=>{actions.ctog(v);applyCoaches();openAttChk()},
+ achk:()=>openAttChk(),ptteam:v=>pTeamToggle(v),achkk:v=>{pAttToggle(v);openAttChk()},achkc:v=>{actions.ctog(v);applyCoaches();openAttChk()},
  rateopen:()=>{S.openRate=true;actions.tab('train');setTimeout(()=>{const e=$('#rateCard');if(e&&e.scrollIntoView)e.scrollIntoView({behavior:'smooth'})},80)},
  copypar:async()=>{const t=$('#parentsTxt');if(!t)return;try{await navigator.clipboard.writeText(t.value);toast('Zkopírováno. Vlož do skupiny rodičů.')}catch(e){t.focus();t.select();toast('Text je označený, zkopíruj ho.')}},
  kid:v=>openKid(v),
@@ -2115,7 +2128,7 @@ const HELP=[
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
 <li>Pod plánem přidáš hru, pauzu na pití nebo jiný blok. Součet minut se hlídá nahoře u názvu.</li>
-<li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
+<li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra, <b>přidáš další tým</b> (přijde se svými dětmi a trenéry) a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
 <li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
 <li><b>✓ Trénink proběhl – uzavřít</b> uloží trénink do Historie a zavře ho. <b>Odložit</b> naplánovaný trénink jen zavře v telefonu.</li>

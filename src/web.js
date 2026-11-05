@@ -330,7 +330,7 @@ const HELP=[
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
 <li>Pod plánem přidáš hru, pauzu na pití nebo jiný blok. Součet minut se hlídá nahoře u názvu.</li>
-<li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
+<li><b>Docházka:</b> ještě před tréninkem odebereš nebo přidáš dítě či trenéra, <b>přidáš další tým</b> (přijde se svými dětmi a trenéry) a změníš skupiny. Přidané dítě jde do nejmenší skupiny.</li>
 <li><b>Skupiny:</b> klepni na dítě a pak na „Sem“ u jiné skupiny. „Zamíchat a přepočítat“ rozdělí děti znovu.</li>
 <li><b>Pomůcky do tašky:</b> seznam všeho, co bude potřeba, s odškrtáváním.</li>
 <li><b>✓ Trénink proběhl – uzavřít</b> uloží trénink do Historie a zavře ho. <b>Odložit</b> naplánovaný trénink jen zavře v telefonu.</li>
