@@ -1241,7 +1241,16 @@ const csVoices=()=>{try{return window.speechSynthesis?window.speechSynthesis.get
 function voiceScore(v){const n=v.name;return(/premium|prémiov/i.test(n)?60:0)+(/natural|neural/i.test(n)?55:0)+(/enhanced|vylepšen/i.test(n)?45:0)+(/online/i.test(n)?20:0)+(/google/i.test(n)?30:0)+(/zuzana|vlasta|antonin|antonín/i.test(n)?8:0)+(/compact|eloquence/i.test(n)?-30:0)+(v.localService?2:0)}
 function voiceTag(v){const n=v.name;return/premium|prémiov|natural|neural/i.test(n)?'přirozený':/enhanced|vylepšen|google|online/i.test(n)?'lepší':'základní'}
 function bestVoice(){const vs=csVoices();if(S.pref.vname){const f=vs.find(v=>v.name===S.pref.vname);if(f)return f}return vs.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null}
-function say(t,force){if(!force&&S.pref.voice===false)return;try{const sp=window.speechSynthesis;if(!sp)return;sp.cancel();const u=new SpeechSynthesisUtterance(t),v=bestVoice();if(v)u.voice=v;u.lang=v?v.lang:'cs-CZ';u.rate=+S.pref.vrate||0.95;u.pitch=1;sp.speak(u)}catch(e){}}
+let actx=null;
+/* písknutí píšťalky před hlášením (Web Audio, bez souboru); vrací, za kolik ms začít mluvit */
+function whistle(){try{if(!actx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC()}if(!actx)return 0;if(actx.state==='suspended')actx.resume();
+ const t0=actx.currentTime+.02,d=.6,g=actx.createGain(),l=actx.createOscillator(),lg=actx.createGain(),os=[2900,3180].map(f=>{const o=actx.createOscillator();o.type='sine';o.frequency.value=f;o.connect(g);lg.connect(o.frequency);return o});
+ l.frequency.value=34;lg.gain.value=170;l.connect(lg);g.connect(actx.destination);
+ g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.22,t0+.03);g.gain.setValueAtTime(.22,t0+d-.07);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+ os.concat(l).forEach(o=>{o.start(t0);o.stop(t0+d+.02)});return 700}catch(e){return 0}}
+let sayT=null;
+function say(t,force){if(!force&&S.pref.voice===false)return;try{const sp=window.speechSynthesis;if(!sp)return;sp.cancel();clearTimeout(sayT);const u=new SpeechSynthesisUtterance(t),v=bestVoice();if(v)u.voice=v;u.lang=v?v.lang:'cs-CZ';u.rate=+S.pref.vrate||0.95;u.pitch=1;
+ const w=S.pref.whistle!==false?whistle():0;if(w)sayT=setTimeout(()=>{try{sp.speak(u)}catch(e){}},w);else sp.speak(u)}catch(e){}}
 try{if(window.speechSynthesis){window.speechSynthesis.getVoices();window.speechSynthesis.addEventListener('voiceschanged',()=>{if(S.tab==='set')render(true)})}}catch(e){}
 function voiceSet(){if(!window.speechSynthesis)return'<p class="small muted">Tento prohlížeč hlasová hlášení neumí.</p>';const vs=csVoices().sort((a,b)=>voiceScore(b)-voiceScore(a)),b=vs[0];
  return `<div class="field"><span class="label">Hlas hlášení</span><select id="pf_vname" data-c="vname"><option value="">automaticky${b?' – '+esc(b.name):''}</option>${vs.map(v=>`<option value="${esc(v.name)}" ${S.pref.vname===v.name?'selected':''}>${esc(v.name)} · ${voiceTag(v)}</option>`).join('')}</select></div>
@@ -1510,7 +1519,7 @@ function vField(){
  </div>
  `+foldCard('prub','Průběh',`blok ${S.run.i+1} z ${st.length}`,`<section class="card"><h2>Průběh</h2><div class="steps">${st.map((x,i)=>{let a2=0;for(let j=0;j<i;j++)a2+=st[j].min;return `<button class="stp ${i===S.run.i?'cur':i<S.run.i?'done':''}" data-a="goto" data-v="${i}"><span>${a2}′</span><span>${esc(stepTitle(x))}</span><span>${x.min}′</span></button>`}).join('')}</div></section>`)+vAfter()
 }
-let actx=null,beeped=false,wl=null;
+let beeped=false,wl=null;
 function beep(){try{if(!actx)return;[0,.35,.7].forEach(t=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=880;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.001,actx.currentTime+t);g.gain.exponentialRampToValueAtTime(.4,actx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+t+.25);o.start(actx.currentTime+t);o.stop(actx.currentTime+t+.3)})}catch(e){}if(navigator.vibrate)try{navigator.vibrate([200,100,200])}catch(e){}}
 function curStep(){return steps()[S.run.i]}
 /* ===== Na hřišti: rychlé odškrtnutí zvládnuté dovednosti ===== */
@@ -1795,6 +1804,7 @@ document.addEventListener('change',async e=>{const el=e.target,c=el.dataset.c;if
  else if(c==='btype'){setBlockType(+el.dataset.b,el.value)}
  else if(c==='addbtype'){if(el.value)addBlock(el.value);el.value=''}
  else if(c==='voice'){S.pref.voice=el.checked;savePref();if(el.checked)say('Hlášení zapnuto.')}
+ else if(c==='whistle'){S.pref.whistle=el.checked;savePref();if(el.checked)whistle()}
  else if(c==='vname'){S.pref.vname=el.value;savePref();say('Ahoj děti, jdeme na to!',true)}
  else if(c==='vrate'){S.pref.vrate=el.value;savePref();say('Ještě minuta.',true)}
  else if(c==='skill'){const t=clone(team()),pl=t.players.find(x=>x.num===el.dataset.p);if(!pl)return;const sk=skOf(pl);pl.sk=el.checked?[...new Set(sk.concat([el.dataset.v]))]:sk.filter(x=>x!==el.dataset.v);await saveTeam(t);openKid(el.dataset.p)}
@@ -1855,7 +1865,7 @@ const baseUrl=()=>location.origin+location.pathname;
 const isPerm=e=>/permission/i.test(String(e&&(e.code||e.message)));
 const ROLE_NAME={admin:'Správce',coach:'Trenér'};
 /* ---------- profil trenéra ---------- */
-const ME_KEY='u7w-me',PREF_SYNC=['theme','wake','voice','vrate','wx'];
+const ME_KEY='u7w-me',PREF_SYNC=['whistle','theme','wake','voice','vrate','wx'];
 function meEntry(){if(!W.coachId)return null;if(Array.isArray(W.raw.staff))return W.raw.staff.find(c=>c.id===W.coachId)||null;return ls.get(ME_KEY,null)}
 function whoLabel(){if(W.role==='admin')return 'Správce';if(W.coachId){const m=meEntry();return (m&&m.name?m.name:'Trenér')+' · trenér'}return 'Trenér · společný kód'}
 /* trenér s osobním kódem vidí jen týmy, u kterých ho správce zaškrtl */
@@ -2196,7 +2206,7 @@ const HELP=[
 <li>V detailu najdeš popis, „Řekni dětem“, kroky, pomůcky, varianty a odkaz na video.</li>
 <li><b>+ Vlastní</b> přidá vlastní hru nebo cvik, uvidí ji všichni trenéři.</li></ul>`],
  ['set','Nastavení',`<ul>
-<li>Karty se rozbalují šipkou. <b>Aplikace a hlas:</b> vzhled (podle telefonu, světlý, tmavý, na slunce), chování na hřišti (nezhasínat obrazovku, automaticky další blok, hlášení nahlas), hlas a tempo řeči, místo pro počasí.</li>
+<li>Karty se rozbalují šipkou. <b>Aplikace a hlas:</b> vzhled (podle telefonu, světlý, tmavý, na slunce), chování na hřišti (nezhasínat obrazovku, automaticky další blok, hlášení nahlas, písknutí před hlášením), hlas a tempo řeči, místo pro počasí.</li>
 <li><b>Sezóna:</b> název, termín, tréninkové dny a čas, zimní příprava. Podle ní se předvyplní datum dalšího tréninku a týden plánu. Mění ji správce.</li>
 <li><b>Šablony tréninku:</b> vlastní struktura bloků (třeba „90 min hala“), vybíráš ji v Plánování → Další možnosti.</li>
 <li><b>Trenéři</b> tvých týmů a <b>Účet</b> s odhlášením.</li></ul>`],
@@ -2403,6 +2413,7 @@ function vSet(){
   <label class="row"><input type="checkbox" id="pf_wake" data-c="wake" ${S.pref.wake!==false?'checked':''}> Během tréninku na hřišti nenechat obrazovku zhasnout</label>
   <label class="row"><input type="checkbox" id="auto" data-c="auto" ${S.run.auto?'checked':''}> Po skončení času automaticky na další blok</label>
   <label class="row"><input type="checkbox" id="voice" data-c="voice" ${S.pref.voice!==false?'checked':''}> Hlásit střídání nahlas${window.speechSynthesis?'':' (tento prohlížeč neumí)'}</label>
+  <label class="row"><input type="checkbox" id="whistle" data-c="whistle" ${S.pref.whistle!==false?'checked':''}> Před každým hlášením písknout (píšťalka)</label>
   ${voiceSet()}
   ${wxSet()}
   <p class="small muted">Aplikaci si můžeš přidat na plochu telefonu (v prohlížeči Sdílet → Přidat na plochu). Tlačítko ☀ nahoře zapne režim na slunce.</p></section>`;

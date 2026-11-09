@@ -25,7 +25,7 @@ const baseUrl=()=>location.origin+location.pathname;
 const isPerm=e=>/permission/i.test(String(e&&(e.code||e.message)));
 const ROLE_NAME={admin:'Správce',coach:'Trenér'};
 /* ---------- profil trenéra ---------- */
-const ME_KEY='u7w-me',PREF_SYNC=['theme','wake','voice','vrate','wx'];
+const ME_KEY='u7w-me',PREF_SYNC=['whistle','theme','wake','voice','vrate','wx'];
 function meEntry(){if(!W.coachId)return null;if(Array.isArray(W.raw.staff))return W.raw.staff.find(c=>c.id===W.coachId)||null;return ls.get(ME_KEY,null)}
 function whoLabel(){if(W.role==='admin')return 'Správce';if(W.coachId){const m=meEntry();return (m&&m.name?m.name:'Trenér')+' · trenér'}return 'Trenér · společný kód'}
 /* trenér s osobním kódem vidí jen týmy, u kterých ho správce zaškrtl */
@@ -366,7 +366,7 @@ const HELP=[
 <li>V detailu najdeš popis, „Řekni dětem“, kroky, pomůcky, varianty a odkaz na video.</li>
 <li><b>+ Vlastní</b> přidá vlastní hru nebo cvik, uvidí ji všichni trenéři.</li></ul>`],
  ['set','Nastavení',`<ul>
-<li>Karty se rozbalují šipkou. <b>Aplikace a hlas:</b> vzhled (podle telefonu, světlý, tmavý, na slunce), chování na hřišti (nezhasínat obrazovku, automaticky další blok, hlášení nahlas), hlas a tempo řeči, místo pro počasí.</li>
+<li>Karty se rozbalují šipkou. <b>Aplikace a hlas:</b> vzhled (podle telefonu, světlý, tmavý, na slunce), chování na hřišti (nezhasínat obrazovku, automaticky další blok, hlášení nahlas, písknutí před hlášením), hlas a tempo řeči, místo pro počasí.</li>
 <li><b>Sezóna:</b> název, termín, tréninkové dny a čas, zimní příprava. Podle ní se předvyplní datum dalšího tréninku a týden plánu. Mění ji správce.</li>
 <li><b>Šablony tréninku:</b> vlastní struktura bloků (třeba „90 min hala“), vybíráš ji v Plánování → Další možnosti.</li>
 <li><b>Trenéři</b> tvých týmů a <b>Účet</b> s odhlášením.</li></ul>`],
@@ -573,6 +573,7 @@ function vSet(){
   <label class="row"><input type="checkbox" id="pf_wake" data-c="wake" ${S.pref.wake!==false?'checked':''}> Během tréninku na hřišti nenechat obrazovku zhasnout</label>
   <label class="row"><input type="checkbox" id="auto" data-c="auto" ${S.run.auto?'checked':''}> Po skončení času automaticky na další blok</label>
   <label class="row"><input type="checkbox" id="voice" data-c="voice" ${S.pref.voice!==false?'checked':''}> Hlásit střídání nahlas${window.speechSynthesis?'':' (tento prohlížeč neumí)'}</label>
+  <label class="row"><input type="checkbox" id="whistle" data-c="whistle" ${S.pref.whistle!==false?'checked':''}> Před každým hlášením písknout (píšťalka)</label>
   ${voiceSet()}
   ${wxSet()}
   <p class="small muted">Aplikaci si můžeš přidat na plochu telefonu (v prohlížeči Sdílet → Přidat na plochu). Tlačítko ☀ nahoře zapne režim na slunce.</p></section>`;
