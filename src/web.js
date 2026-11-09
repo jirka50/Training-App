@@ -358,7 +358,7 @@ const HELP=[
  ['team','Tým, Kdo je kdo, Dovednosti',`<ul>
 <li><b>Tým:</b> soupiska se jmény a čísly (stejná jako ve Scorekeeperu). Tlačítkem <b>Upravit soupisku</b> změníš název týmu, úroveň dítěte (Orlíci / Orli / Orliska), přidáš nebo odebereš dítě a přidělíš číslo dresu.</li>
 <li><b>Kdo je kdo:</b> fotky dětí, aby noví trenéři poznali jména. Fotka se ukládá i do Scorekeeperu.</li>
-<li><b>Dovednosti:</b> klepni na dítě a odškrtni, co zvládá. Podle počtu dovedností aplikace navrhne úroveň. Za celou oblast dítě dostane odznak, za všechno ⭐ Hvězdu týmu. Uvidíš i docházku za sezónu.</li>
+<li><b>Dovednosti:</b> klepni na dítě a odškrtni, co zvládá. Tam mu taky nastavíš <b>úroveň</b> (Orlíci / Orli / Orliska). Podle počtu dovedností aplikace navrhne úroveň. Za celou oblast dítě dostane odznak, za všechno ⭐ Hvězdu týmu. Uvidíš i docházku za sezónu.</li>
 <li><b>Diplomy:</b> pro jedno dítě nebo celý tým, tisk na A4 na šířku nebo uložení jako PDF.</li>
 <li><b>Věková kategorie</b> U6 / U7 jde nastavit u každého dítěte zvlášť.</li></ul>`],
  ['lib','Hry a cviky',`<ul>

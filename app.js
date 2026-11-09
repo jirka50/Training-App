@@ -1187,7 +1187,7 @@ function openKid(num){const p=players().find(x=>x.num===num);if(!p)return;const 
   <h2>${esc(dn(p))}${noNum(p.num)?'':' · '+esc(p.num)}</h2>${p.nick&&String(p.nick).trim()?`<p class="small muted">${esc(p.name)}</p>`:''}<p class="small muted">${has.length} z ${SK.length} dovedností · návrh úrovně: <b>${LVL[sg]}</b></p>
   <div class="field"><span class="label">Věková kategorie</span><div class="row" style="gap:6px">${AGES.map(g=>`<button class="chip ${kidAge(S.teamId,p)===g?'on':''}" data-a="kidag" data-v="${g}" data-p="${esc(p.num)}" aria-pressed="${kidAge(S.teamId,p)===g}">${g}</button>`).join('')}<span class="small muted">${AGES.includes(p.ag)?'nastaveno u dítěte':'podle týmu'}</span></div></div>
   ${(()=>{const a=attStats(S.teamId);return a.total?`<p class="small">Docházka${SEA().name?' ('+esc(SEA().name)+')':''}: <b>${a.of(p.num)} z ${a.total}</b> tréninků</p>`:''})()}
-  ${p.lvl!==sg?`<div class="row"><button class="btn sm" data-a="kidlvl" data-v="${esc(p.num)}">Nastavit úroveň ${LVL[sg]}</button></div>`:''}
+  <div class="field"><span class="label">Úroveň</span><div class="row" style="gap:6px">${Object.entries(LVL).map(([k,l])=>`<button class="chip ${p.lvl===k?'on':''}" data-a="kidlvlset" data-v="${k}" data-p="${esc(p.num)}" aria-pressed="${p.lvl===k}">${l}${sg===k&&p.lvl!==k?' ⇠':''}</button>`).join('')}<span class="small muted">${p.lvl===sg?'odpovídá dovednostem':'podle dovedností: '+LVL[sg]}</span></div></div>
   <div class="field"><span class="label">Odznaky</span><div class="row" style="gap:6px">${FOCUS.map(f=>{const on=badgesOf(p).includes(f);return `<span class="chip badge ${on?'on':'off'}">${BADGE[f][0]} ${BADGE[f][1]}${on?'':' · '+bHint(p,f)}</span>`}).join('')}${badgesOf(p).includes('all')?'<span class="chip badge on">⭐ Hvězda týmu</span>':''}</div></div>
   <div class="row"><button class="btn ghost sm" data-a="dipone" data-v="${esc(p.num)}">🖨 Diplom</button></div>
   ${FOCUS.map(f=>`<div class="field"><span class="label">${CATS[f]}</span><ul class="gear">${SK.filter(s=>s.c===f).map(s=>`<li><label><input type="checkbox" id="sk_${s.id}" data-c="skill" data-v="${s.id}" data-p="${esc(p.num)}" ${has.includes(s.id)?'checked':''}><span>${esc(s.n)}</span></label></li>`).join('')}</ul></div>`).join('')}</div>`;
@@ -1732,6 +1732,7 @@ const actions={
  kid:v=>openKid(v),
  prplan:()=>{if(S.plan)printHtml(planPrintHtml(S.plan))},dipall:()=>printDip(players().map(p=>p.num)),dipone:v=>{closeSheet();printDip([v])},
  kidag:async(v,el)=>{const n=el.dataset.p,t=clone(team()),p=t.players.find(x=>x.num===n);if(!p)return;p.ag=v===teamAge(S.teamId)?'':v;await saveTeam(t);openKid(n)},
+ kidlvlset:async(v,el)=>{const n=el.dataset.p,t=clone(team()),p=t.players.find(x=>x.num===n);if(!p)return;p.lvl=p.lvl===v?'':v;await saveTeam(t);openKid(n)},
  kidlvl:async v=>{const t=clone(team()),p=t.players.find(x=>x.num===v);if(!p)return;p.lvl=lvlFor(skOf(p).length);await saveTeam(t);openKid(v)},
  kidfocus:v=>{S.draft.focus=[v];saveDraft();actions.tab('plan');toast('Zaměření nastaveno: '+CATS[v])},
  week:v=>{const w=+v;S.draft.week=w;if(w){S.draft.focus=SEASON[w-1].f.slice()}saveDraft();render(true)},
@@ -2187,7 +2188,7 @@ const HELP=[
  ['team','Tým, Kdo je kdo, Dovednosti',`<ul>
 <li><b>Tým:</b> soupiska se jmény a čísly (stejná jako ve Scorekeeperu). Tlačítkem <b>Upravit soupisku</b> změníš název týmu, úroveň dítěte (Orlíci / Orli / Orliska), přidáš nebo odebereš dítě a přidělíš číslo dresu.</li>
 <li><b>Kdo je kdo:</b> fotky dětí, aby noví trenéři poznali jména. Fotka se ukládá i do Scorekeeperu.</li>
-<li><b>Dovednosti:</b> klepni na dítě a odškrtni, co zvládá. Podle počtu dovedností aplikace navrhne úroveň. Za celou oblast dítě dostane odznak, za všechno ⭐ Hvězdu týmu. Uvidíš i docházku za sezónu.</li>
+<li><b>Dovednosti:</b> klepni na dítě a odškrtni, co zvládá. Tam mu taky nastavíš <b>úroveň</b> (Orlíci / Orli / Orliska). Podle počtu dovedností aplikace navrhne úroveň. Za celou oblast dítě dostane odznak, za všechno ⭐ Hvězdu týmu. Uvidíš i docházku za sezónu.</li>
 <li><b>Diplomy:</b> pro jedno dítě nebo celý tým, tisk na A4 na šířku nebo uložení jako PDF.</li>
 <li><b>Věková kategorie</b> U6 / U7 jde nastavit u každého dítěte zvlášť.</li></ul>`],
  ['lib','Hry a cviky',`<ul>
