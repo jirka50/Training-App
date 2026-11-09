@@ -1952,7 +1952,7 @@ const Web={
  write(path,val){if(!W.fb){toast('Bez připojení se nic neuloží.');return}
   const r=W.fb.db.ref(path),p=val===null?r.remove():r.set(val);
   p.catch(e=>{toast(isPerm(e)?'Na tuhle změnu nemáš oprávnění.':'Uložení se nepovedlo. Zkus to znovu.')})},
- putTeam(tid,t){const kids={};(t.players||[]).forEach(p=>{if(p.lvl||p.ag||(p.sk&&p.sk.length))kids[p.num]={lvl:p.lvl||'',sk:p.sk||[],name:p.name||'',ag:p.ag||''}});
+ putTeam(tid,t){const kids={},old=W.raw.kids[tid]||{};(t.players||[]).forEach(p=>{/* záznam zůstane i prázdný, když už existoval – jinak by kidsCarry vrátil úroveň z jiného týmu */if(p.lvl||p.ag||(p.sk&&p.sk.length)||old[p.num])kids[p.num]={lvl:p.lvl||'',sk:p.sk||[],name:p.name||'',ag:p.ag||''}});
   W.raw.kids[tid]=kids;Web.compose();render();Web.write('training/kids/'+tid,{ts:Date.now(),json:J(kids)})},
  compose(){const tl=W.raw.teamlist||{},out={};
   Object.keys(tl).forEach(tid=>{const R=W.raw.roster[tid]||{},kids=W.raw.kids[tid]||{},kv=Object.values(kids);
