@@ -1585,8 +1585,8 @@ function whistle(){try{if(!actx){const AC=window.AudioContext||window.webkitAudi
  g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.22,t0+.03);g.gain.setValueAtTime(.22,t0+d-.07);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
  os.concat(l).forEach(o=>{o.start(t0);o.stop(t0+d+.02)});return 700}catch(e){return 0}}
 let sayT=null;
-function say(t,force){if(!force&&S.pref.voice===false)return;try{const sp=window.speechSynthesis;if(!sp)return;sp.cancel();clearTimeout(sayT);const u=new SpeechSynthesisUtterance(t),v=bestVoice();if(v)u.voice=v;u.lang=v?v.lang:'cs-CZ';u.rate=+S.pref.vrate||0.95;u.pitch=1;
- const w=S.pref.whistle!==false?whistle():0;if(w)sayT=setTimeout(()=>{try{sp.speak(u)}catch(e){}},w);else sp.speak(u)}catch(e){}}
+function say(t,force,quiet){if(!force&&S.pref.voice===false)return;try{const sp=window.speechSynthesis;if(!sp)return;sp.cancel();clearTimeout(sayT);const u=new SpeechSynthesisUtterance(t),v=bestVoice();if(v)u.voice=v;u.lang=v?v.lang:'cs-CZ';u.rate=+S.pref.vrate||0.95;u.pitch=1;
+ const w=!quiet&&S.pref.whistle!==false?whistle():0;if(w)sayT=setTimeout(()=>{try{sp.speak(u)}catch(e){}},w);else sp.speak(u)}catch(e){}}
 try{if(window.speechSynthesis){window.speechSynthesis.getVoices();window.speechSynthesis.addEventListener('voiceschanged',()=>{if(S.tab==='set')render(true)})}}catch(e){}
 function voiceSet(){if(!window.speechSynthesis)return'<p class="small muted">Tento prohlížeč hlasová hlášení neumí.</p>';const vs=csVoices().sort((a,b)=>voiceScore(b)-voiceScore(a)),b=vs[0];
  return `<div class="field"><span class="label">Hlas hlášení</span><select id="pf_vname" data-c="vname"><option value="">automaticky${b?' – '+esc(b.name):''}</option>${vs.map(v=>`<option value="${esc(v.name)}" ${S.pref.vname===v.name?'selected':''}>${esc(v.name)} · ${voiceTag(v)}</option>`).join('')}</select></div>
@@ -1878,7 +1878,7 @@ function tick(force){
  if(S.run.running&&ms<=0&&!beeped){beeped=true;beep();
   if(S.run.auto&&S.run.i<steps().length-1){S.run.i++;const n=curStep();S.run.endAt=Date.now()+n.min*60000;S.run.left=null;beeped=false;saveRun();render();announce();return}
   say(S.run.i<steps().length-1?'Čas! Pokračujte dalším blokem.':'Konec tréninku. Výborně!')}
- if(S.run.running&&ms<=60000&&ms>0&&warnedFor!==S.run.i&&s.min>=2){warnedFor=S.run.i;say('Ještě minuta.')}
+ if(S.run.running&&ms<=60000&&ms>0&&warnedFor!==S.run.i&&s.min>=2){warnedFor=S.run.i;say('Ještě minuta.',false,true)}
  const el=$('#timer'),pr=$('#prog');if(!el)return;
  const neg=ms<0,a=Math.abs(ms),m=Math.floor(a/60000),sec=Math.floor(a%60000/1000);
  el.textContent=(neg?'+':'')+m+':'+String(sec).padStart(2,'0');el.classList.toggle('over',neg);el.classList.toggle('last',!neg&&ms<=60000);el.classList.toggle('ok',S.run.running&&ms>60000);if(pr&&pr.parentNode&&pr.parentNode.dataset)pr.parentNode.dataset.st=neg?'over':ms<=60000?'last':'ok';
