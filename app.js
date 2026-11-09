@@ -900,7 +900,7 @@ function closePlan(id){delete OPEN[id];saveOpen();if(S.plan&&S.plan.id===id){con
 const openLabel=p=>(p.age?p.age+' · ':'')+planTeams(p).map(t=>tShort(t)).join('+')+' · '+fmtDate(p.date).replace(/ \d{4}$/,'');
 const stale=e=>{const d=new Date(e.plan.date+'T12:00');return (new Date(today()+'T12:00')-d)/864e5>3};
 function vOpenBar(){const L=openList();if(L.length<2&&!S.addNew)return '';const old=L.filter(e=>stale(e)&&(!S.plan||e.plan.id!==S.plan.id));
- return `<div class="openbar">${L.map(e=>{const cur=S.plan&&e.plan.id===S.plan.id,r=e.run||{},tm=cur?(S.run.running||S.run.left!=null):(r.left!=null);return `<button class="chip ${cur?'on':''}" data-a="popen" data-v="${esc(e.plan.id)}" aria-pressed="${cur}">${tm?'⏱ ':''}${esc(openLabel(e.plan))}</button>`}).join('')}<button class="chip" data-a="pnew">+ Nový</button>
+ return `<div class="openbar">${L.map(e=>{const cur=S.plan&&e.plan.id===S.plan.id,r=e.run||{},tm=cur?(S.run.running||S.run.left!=null):(r.left!=null);return `<button class="chip ${cur?'on':''}" data-a="popen" data-v="${esc(e.plan.id)}" aria-pressed="${cur}">${tm?'⏱ ':''}${esc(openLabel(e.plan))}</button>`}).join('')}${canPlan()?'<button class="chip" data-a="pnew">+ Nový</button>':''}
   ${old.length?`<span class="small muted">${old.length} ${old.length===1?'starý trénink':'staré tréninky'}</span><button class="btn ghost sm" data-a="pstale">Smazat staré</button>`:''}</div>`}
 
 let ACT={};
@@ -1284,8 +1284,9 @@ function render(force){
  const ae=document.activeElement;
  if(!force&&ae&&ae.closest&&ae.closest('#view')&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&!['checkbox','button','file'].includes(ae.type)){pend=true;return}
  pend=false;
+ if(!canPlan()&&S.tab==='plan')S.tab='planned';
  const TN=Object.fromEntries(TABS);
- $('#tabs').innerHTML=`<button class="menu-btn" data-a="menu" aria-haspopup="true" aria-expanded="${S.menu?'true':'false'}"><span class="burger" aria-hidden="true"></span><span class="cur">${TN[S.tab]||'Menu'}</span><span class="caret" aria-hidden="true">${S.menu?'▴':'▾'}</span></button>${S.menu?`<div class="menu-list" role="menu">${MENU.map(([h,ks])=>`<div class="menu-h">${h}</div>${ks.map(k=>{const on=S.tab===k||(k==='plan'&&S.tab==='train');return `<button role="menuitem" class="${on?'on':''}" data-a="tab" data-v="${k}" ${on?'aria-current="page"':''}>${TN[k]}</button>`}).join('')}`).join('')}</div>`:''}`;
+ $('#tabs').innerHTML=`<button class="menu-btn" data-a="menu" aria-haspopup="true" aria-expanded="${S.menu?'true':'false'}"><span class="burger" aria-hidden="true"></span><span class="cur">${TN[S.tab]||'Menu'}</span><span class="caret" aria-hidden="true">${S.menu?'▴':'▾'}</span></button>${S.menu?`<div class="menu-list" role="menu">${MENU.map(([h,ks])=>`<div class="menu-h">${h}</div>${ks.filter(k=>k!=='plan'||canPlan()).map(k=>{const on=S.tab===k||(k==='plan'&&S.tab==='train');return `<button role="menuitem" class="${on?'on':''}" data-a="tab" data-v="${k}" ${on?'aria-current="page"':''}>${TN[k]}</button>`}).join('')}`).join('')}</div>`:''}`;
  const ts=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||''));
  $('#teamSel').innerHTML=ts.length?ts.map(([id,t])=>`<option value="${esc(id)}" ${id===S.teamId?'selected':''}>${esc(t.name||'Tým')}</option>`).join(''):'<option>Žádný tým</option>';
  $('#teamSel').disabled=!ts.length;$('#teamSel').hidden=ts.length<2;
@@ -1355,18 +1356,19 @@ function vPlan(){
  {const n=plannedAll().length;if(n)h+=`<section class="card"><div class="sumline"><span>Naplánované tréninky: <b>${n}</b></span><button class="btn ghost sm" data-a="tab" data-v="planned">Zobrazit</button></div></section>`}
  return h
 }
-function vPlannedTab(){if(!team())return noTeam();return vPlanned()||emptyCard('🗓','Žádný naplánovaný trénink','Sestav trénink v Plánování a ulož ho tlačítkem „Uložit jako naplánovaný“. Uvidí ho i ostatní trenéři.',[['Naplánovat','tab','plan',1]])}
+function vPlannedTab(){if(!team())return noTeam();const who=planners().length?planners().join(', '):'správce',note=canPlan()?'':`<p class="small muted" style="margin:0 6px 10px">Tréninky plánuje: ${esc(who)}. Naplánovaný trénink otevřeš, upravíš docházku a spustíš na hřišti.</p>`;
+ return (vPlanned()?note+vPlanned():'')||(canPlan()?emptyCard('🗓','Žádný naplánovaný trénink','Sestav trénink v Plánování a ulož ho tlačítkem „Uložit jako naplánovaný“. Uvidí ho i ostatní trenéři.',[['Naplánovat','tab','plan',1]]):emptyCard('🗓','Žádný naplánovaný trénink','Tréninky plánuje: '+esc(who)+'. Jakmile nějaký trénink naplánují, objeví se tady.',[]))}
 function vPlanned(){const L=plannedAll();if(!L.length)return'';
- return `<section class="card"><h2>Naplánované tréninky · ${L.length}</h2><p class="small muted">Uložené tréninky, které ještě neproběhly. Po tréninku je uzavři v Tréninku tlačítkem „Trénink proběhl – uzavřít“ a přesunou se do Historie.</p>
+ return `<section class="card"><h2>Naplánované tréninky · ${L.length}</h2><p class="small muted">Uložené tréninky, které ještě neproběhly. Po tréninku je uzavři na kartě Na hřišti tlačítkem „Trénink proběhl – uzavřít“ a přesunou se do Historie.</p>
  ${L.map(([id,p])=>`<div class="pl-item"><div class="sumline"><span><b>${esc(planTitle(p))}</b>${p.name?' · '+fmtDate(p.date):''} · ${p.minutes} min${p.week?` <span class="lvl">týden ${p.week}</span>`:''}${S.plan&&S.plan.id===id?' <span class="lvl">otevřený</span>':''}</span></div>
   <p class="small muted">${planTeams(p).map(t=>esc(tName(t))).join(' + ')} · ${(p.present||[]).length} dětí · ${(p.coaches||[]).map(esc).join(', ')}${p.by&&typeof byName==='function'&&byName(p.by)?' · připravil(a) '+esc(byName(p.by)):''}</p>
   ${(p.date||'')<today()?'<p class="warnnote">Datum už uplynulo. Pokud trénink proběhl, otevři ho a uzavři, jinak ho smaž.</p>':''}
-  ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento naplánovaný trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="load" data-v="${esc(id)}">Otevřít</button><button class="btn ghost sm" data-a="hsum" data-v="${esc(id)}">Souhrn</button><button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button></div>`}</div>`).join('')}</section>`}
+  ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento naplánovaný trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="load" data-v="${esc(id)}">Otevřít</button><button class="btn ghost sm" data-a="hsum" data-v="${esc(id)}">Souhrn</button>${canPlan()?`<button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button>`:''}</div>`}</div>`).join('')}</section>`}
 function splitText(k,n){const b=Math.floor(k/n),r=k%n,out=[];for(let i=0;i<n;i++)out.push(b+(i<r?1:0));return out.join(' / ')+' dětí'}
 
 function vTrain(){
  const bar=vOpenBar();
- if(!S.plan)return bar+`<section class="card empty"><div class="em-ico" aria-hidden="true">📋</div><h2>Zatím žádný trénink</h2><p class="muted">Vyber v Plánování délku, týmy, trenéry a přítomné děti a klepni na Sestavit trénink. Nebo otevři uložený trénink z Historie.</p><div class="row" style="justify-content:center"><button class="btn" data-a="tab" data-v="plan">Naplánovat</button><button class="btn ghost" data-a="tab" data-v="hist">Historie</button></div></section>`;
+ if(!S.plan)return bar+`<section class="card empty"><div class="em-ico" aria-hidden="true">📋</div><h2>Zatím žádný trénink</h2><p class="muted">Vyber v Plánování délku, týmy, trenéry a přítomné děti a klepni na Sestavit trénink. Nebo otevři uložený trénink z Historie.</p><div class="row" style="justify-content:center">${canPlan()?'<button class="btn" data-a="tab" data-v="plan">Naplánovat</button>':'<button class="btn" data-a="tab" data-v="planned">Naplánované</button>'}<button class="btn ghost" data-a="tab" data-v="hist">Historie</button></div></section>`;
  const saved=!!S.plans[S.plan.id];
  return bar+vPlanOut()+(S.confirm==='replan'?`<section class="card"><p><b>Zahodit tento trénink a naplánovat nový?</b></p><p class="small muted">${saved?'Uložená verze zůstane.':'Trénink není uložený, smaže se úplně.'} Nastavení v Plánování (týmy, trenéři, docházka) zůstane.</p>
   <div class="row"><button class="btn danger" data-a="replango">Ano, naplánovat znovu</button><button class="btn ghost" data-a="noconf">Ne</button></div></section>`:`<p class="small muted" style="margin:4px 6px 0">Zhodnocení, info pro rodiče a uzavření tréninku najdeš dole na kartě Na hřišti.</p>`)
@@ -1386,20 +1388,20 @@ function vPlanOut(){
     <div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${si+1} · ${esc(gCo(p,si)||'Trenér '+(si+1))}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit stanoviště ${si+1} náhodně">⟳</button><button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat stanoviště ${si+1} ze seznamu">☰</button></span>`:''}</div>`).join('')}</div>`}
   else{const multi=b.items.length>1,per=Math.floor(b.min/b.items.length);
    body=`${multi?`<p class="small muted">asi ${per} min na každou položku</p>`:''}<div class="st-list">${b.items.map((id,si)=>`<div class="st"><span class="tag">${multi?si+1:'▶'}</span><button class="aname" data-a="open" data-v="${id}">${esc(actName(id))}</button>${ed?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="ib" data-a="swap" data-b="${bi}" data-s="${si}" aria-label="Vyměnit za jinou náhodně">⟳</button>${PICKABLE.includes(b.type)?`<button class="ib" data-a="pickit" data-b="${bi}" data-s="${si}" aria-label="Vybrat ze seznamu">☰</button>`:''}${multi?`<button class="ib" data-a="rmitem" data-b="${bi}" data-s="${si}" aria-label="Odebrat z bloku">✕</button>`:''}</span>`:''}</div>`).join('')}</div>${(cm||ROUT.includes(b.type))&&ed?`<div class="row"><button class="btn ghost sm" data-a="additem" data-b="${bi}">${ROUT.includes(b.type)?'+ Další položka do bloku':'+ Další cvik do bloku'}</button></div>`:''}`}
-  return `<div class="blk ${ed?'ed':''}"><div class="clock">${start}′<small>${BT[b.type]||b.type}</small><span class="bmin">${b.min} min${b.mode==='st'?' · stanoviště':cm&&G>1?' · všichni':''}</span></div><div class="bbody">${ed?seg:''}${body}${ed?ctr:''}</div><button class="ib bedit" data-a="bedit" data-v="${esc(bk)}" aria-expanded="${ed}" aria-label="${ed?'Hotovo':'Upravit blok'}">${ed?'✓':'⋯'}</button></div>`
+  return `<div class="blk ${ed?'ed':''}"><div class="clock">${start}′<small>${BT[b.type]||b.type}</small><span class="bmin">${b.min} min${b.mode==='st'?' · stanoviště':cm&&G>1?' · všichni':''}</span></div><div class="bbody">${ed?seg:''}${body}${ed?ctr:''}</div>${canPlan()?`<button class="ib bedit" data-a="bedit" data-v="${esc(bk)}" aria-expanded="${ed}" aria-label="${ed?'Hotovo':'Upravit blok'}">${ed?'✓':'⋯'}</button>`:''}</div>`
  }).join('');
  let h=`<section class="card" id="planCard">
   <div class="sumline"><h2 style="flex:1 1 100%">${esc(planTitle(p))}</h2><span class="total ${total!==p.minutes?'bad':''}">${p.age?p.age+' · ':''}${total} / ${p.minutes} min</span></div>
   <p class="small muted">${fmtDate(p.date)} · ${planTeams(p).length>1?planTeams(p).map(t=>esc(tName(t))).join(' + ')+' · ':''}${p.present.length} dětí · ${p.coaches.length} ${p.coaches.length===1?'trenér':p.coaches.length<5?'trenéři':'trenérů'} · ${p.venue==='hala'?'hala':'venku'} · ${p.focus.map(f=>CATS[f]).join(', ')}</p>
   <div class="tl">${blocks}</div>
-  <div class="row"><button class="btn ghost sm" data-a="addblk">+ Přidat hru</button><button class="btn ghost sm" data-a="adddrink">+ Pauza na pití</button><select class="btype" data-c="addbtype" aria-label="Přidat blok"><option value="">+ Přidat jiný blok…</option>${Object.entries(BT).filter(([k])=>k!=='drink').map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></div>
+  ${!canPlan()?`<p class="small muted">Plán tréninku mění jen ${planners().length?esc(planners().join(', ')):'správce'}. Ty můžeš upravit docházku a trénink spustit.</p>`:''}<div class="row" ${canPlan()?'':'hidden'}><button class="btn ghost sm" data-a="addblk">+ Přidat hru</button><button class="btn ghost sm" data-a="adddrink">+ Pauza na pití</button><select class="btype" data-c="addbtype" aria-label="Přidat blok"><option value="">+ Přidat jiný blok…</option>${Object.entries(BT).filter(([k])=>k!=='drink').map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></div>
  </section>`;
  const nCo=(p.coaches||[]).filter(n=>n!=='Trenér').length,gearN=(()=>{const m=new Set();p.blocks.forEach(b=>b.items.forEach(id=>{const a=ACT[id];if(a)gearOf(a).forEach(g=>m.add(g))}));return m.size})();
  h+=foldCard('att','Docházka',`${(p.present||[]).length} dětí · ${nCo} ${nCo>1&&nCo<5?'trenéři':nCo>=5?'trenérů':'trenér'}`,vAttEdit());
  if(nG(p)>1)h+=foldCard('grp','Skupiny',p.groups.map((g,i)=>GL[i]+' '+esc(gCo(p,i))+' · '+g.length).join(' | '),vGroups());
  h+=foldCard('gear','Pomůcky do tašky',`${gearN} položek${Object.values(S.gear||{}).filter(Boolean).length?' · sbaleno '+Object.values(S.gear).filter(Boolean).length:''}`,vGear());
- {const sv=S.plans[p.id];h+=`<section class="card"><div class="row"><button class="btn" data-a="go">Spustit na hřišti</button><button class="btn ghost" data-a="save">${!sv?'Uložit jako naplánovaný':'Uložit změny'}</button><button class="btn ghost" data-a="tmore" aria-expanded="${!!S.tmore}">⋯ Další</button></div>
-  ${S.tmore?`<div class="field tmore"><span class="label">Název tréninku</span><input type="text" id="plan_name" data-c="planname" value="${esc(p.name||'')}" placeholder="${esc('Trénink '+fmtDate(p.date))}"></div><div class="row"><button class="btn ghost sm" data-a="tab" data-v="plan">Upravit nastavení</button><button class="btn ghost sm" data-a="tplform">Uložit jako šablonu</button><button class="btn ghost sm" data-a="prplan">🖨 Vytisknout</button>${sv&&isPlanned(sv)?'<button class="btn ghost sm" data-a="ppark">Odložit</button>':''}${sv&&!isPlanned(sv)?'<button class="btn ghost sm" data-a="pclose">✓ Zavřít trénink</button>':''}<button class="btn ghost sm" data-a="replan">↺ Naplánovat znovu</button></div>${sv&&isPlanned(sv)?'<p class="small muted">„Odložit“ trénink jen zavře v tomto telefonu, zůstane mezi naplánovanými.</p>':''}`:''}
+ {const sv=S.plans[p.id];h+=`<section class="card"><div class="row"><button class="btn" data-a="go">Spustit na hřišti</button>${sv||canPlan()?`<button class="btn ghost" data-a="save">${!sv?'Uložit jako naplánovaný':'Uložit změny'}</button>`:''}<button class="btn ghost" data-a="tmore" aria-expanded="${!!S.tmore}">⋯ Další</button></div>
+  ${S.tmore?`<div class="field tmore" ${canPlan()?'':'hidden'}><span class="label">Název tréninku</span><input type="text" id="plan_name" data-c="planname" value="${esc(p.name||'')}" placeholder="${esc('Trénink '+fmtDate(p.date))}"></div><div class="row">${canPlan()?'<button class="btn ghost sm" data-a="tab" data-v="plan">Upravit nastavení</button><button class="btn ghost sm" data-a="tplform">Uložit jako šablonu</button>':''}<button class="btn ghost sm" data-a="prplan">🖨 Vytisknout</button>${sv&&isPlanned(sv)?'<button class="btn ghost sm" data-a="ppark">Odložit</button>':''}${sv&&!isPlanned(sv)?'<button class="btn ghost sm" data-a="pclose">✓ Zavřít trénink</button>':''}${canPlan()?'<button class="btn ghost sm" data-a="replan">↺ Naplánovat znovu</button>':''}</div>${sv&&isPlanned(sv)?'<p class="small muted">„Odložit“ trénink jen zavře v tomto telefonu, zůstane mezi naplánovanými.</p>':''}`:''}
   ${S.tplForm?`<form id="tplForm" class="row"><input type="text" id="tpl_name" placeholder="Název šablony, např. Hala 60 min" aria-label="Název šablony" style="flex:1 1 200px;width:auto" value="${esc(p.name||'')}"><button class="btn sm" type="submit">Uložit šablonu</button><button class="btn ghost sm" type="button" data-a="tplno">Zrušit</button></form><p class="small muted">Šablona si zapamatuje bloky, jejich délku a volbu Všichni / Stanoviště. Hry se při sestavení vyberou znovu.</p>`:''}</section>`}
  return h
 }
@@ -1480,7 +1482,7 @@ function steps(){const p=S.plan;if(!p)return[];const out=[];
 function stepTitle(s){const b=S.plan.blocks[s.bi];if(s.r!=null)return 'Stanoviště · rotace '+(s.r+1)+'/'+s.rot;return actName(b.items[s.item])}
 function vField(){
  const bar=vOpenBar();
- if(!S.plan)return bar+ `<section class="card empty"><div class="em-ico" aria-hidden="true">⏱</div><h2>Žádný plán</h2><p class="muted">Sestav trénink v Plánování nebo otevři uložený z Historie.</p><button class="btn" data-a="tab" data-v="plan">Naplánovat</button></section>`;
+ if(!S.plan)return bar+ `<section class="card empty"><div class="em-ico" aria-hidden="true">⏱</div><h2>Žádný plán</h2><p class="muted">${canPlan()?'Sestav trénink v Plánování nebo otevři naplánovaný.':'Otevři naplánovaný trénink.'}</p><button class="btn" data-a="tab" data-v="${canPlan()?'plan':'planned'}">${canPlan()?'Naplánovat':'Naplánované'}</button></section>`;
  const st=steps();if(S.run.i>=st.length)S.run.i=Math.max(0,st.length-1);
  const s=st[S.run.i];if(!s)return `<section class="card empty"><h2>Plán je prázdný</h2></section>`;
  const b=S.plan.blocks[s.bi];let at=0;for(let i=0;i<S.run.i;i++)at+=st[i].min;
@@ -1587,6 +1589,8 @@ function openAct(id){const a=ACT[id];if(!a)return;
   ${a.custom?(S.confirm==='act'?`<div class="row"><span class="warnnote">Opravdu smazat?</span><button class="btn danger sm" data-a="delact" data-v="${esc(a.custom)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn ghost sm" data-a="editact" data-v="${esc(a.custom)}">Upravit</button><button class="btn danger sm" data-a="askdel">Smazat</button></div>`):''}
  </div>`;sh.hidden=false;sh.dataset.id=id;mountAnims(sh)}
 /* dlaždice dítěte jako v Kdo je kdo (dodá webová verze) */
+/* kdo smí sestavovat a měnit plán tréninku (webová verze: správce nebo trenér s oprávněním) */
+let canPlan=()=>true,planners=()=>[];
 let kidTile=null,kidTileSize=()=>'m',kidTileSeg=()=>'';
 /* kontrola docházky na hřišti (nabídka, nic se neotevírá samo) */
 function openAttChk(){const p=S.plan;if(!p)return;const ts=planTeams(p),mt=ts.length>1,pr=new Set((p.present||[]).map(k=>normKey(k,p))),cs=coachPool(),sel=coachSelIds(),gs=guests(),G=nG(p),sh=$('#sheet');
@@ -1674,7 +1678,7 @@ function renderHistList(){
  el.innerHTML=(list.length?'':`<section class="card empty"><h2>Nic nenalezeno</h2><p class="muted">Žádný trénink neodpovídá filtru.${H.fav?' Hvězdičkou ☆ u tréninku ho přidáš do oblíbených.':''}</p><div class="row"><button class="btn sm" data-a="hreset">Zrušit filtry</button></div></section>`)+list.map(([id,p])=>`<section class="card"><div class="sumline"><h3><button class="hlink" data-a="hsum" data-v="${esc(id)}">${esc(planTitle(p))}</button>${p.name?` <span class="muted" style="font-weight:500">· ${fmtDate(p.date)}</span>`:''} · ${p.minutes} min${p.week?` <span class="lvl">týden ${p.week}</span>`:''}${p.season&&p.season!==SEA().name?` <span class="lvl">${esc(p.season)}</span>`:''}${p.rate&&Object.keys(p.rate).length?' <span class="lvl">zhodnoceno</span>':''}</h3><button class="ib star ${p.fav?'on':''}" data-a="fav" data-v="${esc(id)}" aria-pressed="${!!p.fav}" aria-label="${p.fav?'Odebrat z oblíbených':'Přidat do oblíbených'}">${p.fav?'★':'☆'}</button></div>
   <p class="small muted">${planTeams(p).length>1?'společně s '+planTeams(p).filter(t=>t!==S.teamId).map(t=>esc(tName(t))).join(', ')+' · ':''}${(p.present||[]).length} dětí · ${(p.coaches||[]).map(esc).join(', ')}${p.by&&byName(p.by)?' · připravil(a) '+esc(byName(p.by)):''}${(p.focus||[]).length?' · '+(p.focus||[]).map(f=>CATS[f]).join(', '):''}</p>
   <p class="small">${(p.blocks||[]).map(b=>b.items.map(actName).join(' + ')).join(' → ')}</p>
-  ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="hsum" data-v="${esc(id)}">Souhrn</button><button class="btn ghost sm" data-a="load" data-v="${esc(id)}">Otevřít</button><button class="btn ghost sm" data-a="hmore" data-v="${esc(id)}" aria-expanded="${S.hmore===id}" aria-label="Další možnosti">⋯</button></div>${S.hmore===id?`<div class="row tmore"><button class="btn ghost sm" data-a="dup" data-v="${esc(id)}">Použít znovu</button><button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button></div>`:''}`}
+  ${S.confirm==='p_'+id?`<div class="row"><span class="warnnote">Smazat tento trénink?</span><button class="btn danger sm" data-a="delplan" data-v="${esc(id)}">Smazat</button><button class="btn ghost sm" data-a="noconf">Ne</button></div>`:`<div class="row"><button class="btn sm" data-a="hsum" data-v="${esc(id)}">Souhrn</button><button class="btn ghost sm" data-a="load" data-v="${esc(id)}">Otevřít</button>${canPlan()?`<button class="btn ghost sm" data-a="hmore" data-v="${esc(id)}" aria-expanded="${S.hmore===id}" aria-label="Další možnosti">⋯</button>`:''}</div>${S.hmore===id?`<div class="row tmore"><button class="btn ghost sm" data-a="dup" data-v="${esc(id)}">Použít znovu</button><button class="btn ghost sm" data-a="askplan" data-v="${esc(id)}">Smazat</button></div>`:''}`}
  </section>`).join('')
 }
 
@@ -1773,7 +1777,8 @@ const actions={
  delplan:async v=>{S.confirm=null;await Store.del('plans',v);render(true)}
 };
 function gotoStep(i){const st=steps();if(i<0||i>=st.length)return;S.run.i=i;const s=st[i];beeped=false;if(S.run.running){S.run.endAt=Date.now()+s.min*60000;S.run.left=null;announce()}else S.run.left=null;saveRun();render(true)}
-document.addEventListener('click',e=>{if(S.menu&&!e.target.closest('.menu')){S.menu=false;render(true)}const b=e.target.closest('[data-a]');if(!b){if(e.target.id==='sheet')closeSheet();return}if(b.disabled)return;const f=actions[b.dataset.a];if(f){e.preventDefault();f(b.dataset.v,b)}});
+document.addEventListener('click',e=>{if(S.menu&&!e.target.closest('.menu')){S.menu=false;render(true)}const b=e.target.closest('[data-a]');if(!b){if(e.target.id==='sheet')closeSheet();return}if(b.disabled)return;if(!canPlan()&&PLAN_ONLY.has(b.dataset.a)){e.preventDefault();toast('Plán tréninku mění jen trenér s oprávněním plánovat.');return}const f=actions[b.dataset.a];if(f){e.preventDefault();f(b.dataset.v,b)}});
+const PLAN_ONLY=new Set(['gen','genask','genadd','replan','replango','dup','bedit','addblk','adddrink','tplform','askplan','delplan','pnew','m+','m-','up','down','rm','bmode','pickit','swap','additem','rmitem','psaveplan']);
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(S.menu){S.menu=false;render(true)}else if(!$('#sheet').hidden)closeSheet()});
 $('#teamSel').addEventListener('change',e=>actions.team(e.target.value));
 document.addEventListener('input',e=>{const id=e.target.id;if((id==='parHw'||id==='parNote')&&S.plan){const t=$('#parentsTxt');if(t)t.value=parTxt(pubData(S.plan))}});
@@ -1854,7 +1859,7 @@ function meEntry(){if(!W.coachId)return null;if(Array.isArray(W.raw.staff))retur
 function whoLabel(){if(W.role==='admin')return 'Správce';if(W.coachId){const m=meEntry();return (m&&m.name?m.name:'Trenér')+' · trenér'}return 'Trenér · společný kód'}
 /* trenér s osobním kódem vidí jen týmy, u kterých ho správce zaškrtl */
 function myTeamFilter(out){if(!W.coachId||W.role==='admin')return out;const m=meEntry(),ok=new Set(m&&m.teams||[]),r={};Object.keys(out).forEach(t=>{if(ok.has(t))r[t]=out[t]});return r}
-ME=()=>W.coachId||'';byName=id=>{const c=staffList().find(x=>x.id===id);return c?c.name:''};
+ME=()=>W.coachId||'';canPlan=()=>W.role==='admin'||(!!W.coachId&&!!W.plan);planners=()=>staffList().filter(c=>c.plan).map(c=>c.name);byName=id=>{const c=staffList().find(x=>x.id===id);return c?c.name:''};
 prefHook=()=>{if(!W.coachId||!W.fb||W.role==='admin')return;const o={};PREF_SYNC.forEach(k=>{if(S.pref[k]!==undefined)o[k]=S.pref[k]});const ts=Date.now();ls.set('u7w-prefts',ts);Web.write('training/prefs/'+W.coachId,{ts,json:J(o)})};
 /* ---------- historie přihlášení ---------- */
 function devLabel(){const u=navigator.userAgent||'';
@@ -1934,13 +1939,13 @@ const Web={
   if(PARENT){parentBoot();return}
   W.raw.photos=ls.get('u7w-photos',{})||{};S.season=ls.get('u7w-season',{})||{};
   ['teams','plans','custom','tpls','ages'].forEach(c=>S[c]=ls.get('u7w-'+c,{}));rebuildActs();fixTeam();
-  const a=ls.get(WKEY,null);if(a&&a.role&&a.code){W.role=a.role;W.code=a.code;W.coachId=a.coach||null}
+  const a=ls.get(WKEY,null);if(a&&a.role&&a.code){W.role=a.role;W.code=a.code;W.coachId=a.coach||null;W.plan=!!a.plan}
   S.teams=myTeamFilter(S.teams);fixTeam();
   render();syncLine();
   const f=fbInit();if(!f){render();return}
   (async()=>{
    if(!W.code){try{await signIn()}catch(e){}render();return}
-   try{const p=await claim(W.code),cid=p.coach||null;if(p.role!==W.role||cid!==W.coachId){W.role=p.role;W.coachId=cid;ls.set(WKEY,{code:W.code,role:p.role,coach:cid||''});S.teams=myTeamFilter(S.teams);fixTeam()}Web.subscribe();logLogin('open');render()}
+   try{const p=await claim(W.code),cid=p.coach||null;if(!!p.plan!==!!W.plan){W.plan=!!p.plan;ls.set(WKEY,{code:W.code,role:p.role,coach:cid||'',plan:W.plan})}if(p.role!==W.role||cid!==W.coachId){W.role=p.role;W.coachId=cid;ls.set(WKEY,{code:W.code,role:p.role,coach:cid||'',plan:!!p.plan});S.teams=myTeamFilter(S.teams);fixTeam()}Web.subscribe();logLogin('open');render()}
    catch(e){if(e&&e.code==='offline')return;if(isPerm(e)||e.code==='bad'||e.code==='scorer')Web.logout('Kód už neplatí. Přihlas se znovu.')}
   })()},
  write(path,val){if(!W.fb){toast('Bez připojení se nic neuloží.');return}
@@ -1972,7 +1977,7 @@ const Web={
  ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c]))S.ready=true},
  logout(msg){try{if(W.fb&&W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(e){}
   W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.denied={};W.seen={};W.loaded={};W.pins=null;
-  try{[WKEY,ME_KEY,'u7w-prefts'].forEach(k=>localStorage.removeItem(k))}catch(e){}W.role=null;W.code=null;W.coachId=null;W.logins=null;W.lgFilter='';W.guestHelp=false;W.msg=msg||'';S.ready=false;S.mode='local';render()}
+  try{[WKEY,ME_KEY,'u7w-prefts'].forEach(k=>localStorage.removeItem(k))}catch(e){}W.role=null;W.code=null;W.coachId=null;W.plan=false;W.logins=null;W.lgFilter='';W.guestHelp=false;W.msg=msg||'';S.ready=false;S.mode='local';render()}
 };
 
 /* ---------- přihlášení ---------- */
@@ -2044,7 +2049,7 @@ function renderLogin(){
   <section class="card"><div class="sumline"><span class="small muted">Nevíš si rady? Návod se dá přečíst i bez přihlášení.</span><button class="btn ghost sm" data-a="ghelp" data-v="1">📖 Návod</button></div></section>`}
 async function doLogin(){const code=normCode($('#w_code').value);if(code.replace('-','').length<8){W.msg='Zadej celý kód.';return render(true)}
  W.busy=true;W.msg='';render(true);
- try{const p=await claim(code);W.busy=false;W.role=p.role;W.code=code;W.coachId=p.coach||null;ls.set(WKEY,{code,role:p.role,coach:p.coach||''});
+ try{const p=await claim(code);W.busy=false;W.role=p.role;W.code=code;W.coachId=p.coach||null;W.plan=!!p.plan;ls.set(WKEY,{code,role:p.role,coach:p.coach||'',plan:W.plan});
   S.teams=myTeamFilter(S.teams);fixTeam();Web.subscribe();logLogin('login');
   S.tab=p.role==='admin'&&!Object.keys(S.teams).length?'set':S.tab;render(true);toast(p.role==='admin'?'Přihlášeno: Správce.':p.coach?'Přihlášeno osobním kódem.':'Přihlášeno společným kódem trenérů.')}
  catch(e){W.busy=false;try{if(W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(x){}
@@ -2056,7 +2061,7 @@ async function loadPins(){if(!W.fb||W.role!=='admin')return;try{W.pins=(await W.
 /* společný kód = role coach bez pole coach; osobní kód = role coach s id trenéra */
 const coachCodes=()=>Object.keys(W.pins||{}).filter(c=>W.pins[c]&&W.pins[c].role==='coach'&&!W.pins[c].coach);
 const personalCodes=id=>Object.keys(W.pins||{}).filter(c=>W.pins[c]&&W.pins[c].role==='coach'&&W.pins[c].coach===id);
-async function newPersonalPin(id){if(!W.fb||W.role!=='admin')return;const c=staffList().find(x=>x.id===id);if(!c)return;const u={};personalCodes(id).forEach(k=>u[k]=null);const code=genCode();u[code]={role:'coach',coach:id};
+async function newPersonalPin(id){if(!W.fb||W.role!=='admin')return;const c=staffList().find(x=>x.id===id);if(!c)return;const u={};personalCodes(id).forEach(k=>u[k]=null);const code=genCode();u[code]=c.plan?{role:'coach',coach:id,plan:true}:{role:'coach',coach:id};
  try{await W.fb.db.ref('pinmap').update(u);toast(Object.keys(u).length>1?'Nový kód pro '+c.name+'. Starý přestal platit.':'Kód pro '+c.name+' je vytvořený.')}catch(e){toast(isPerm(e)?'Kód se nepodařilo uložit (oprávnění).':'Kód se nepodařilo vytvořit.')}W.pdel=null;loadPins()}
 async function dropPersonalPin(id,quiet){if(!W.fb||W.role!=='admin')return;const u={};personalCodes(id).forEach(k=>u[k]=null);if(!Object.keys(u).length)return;
  try{await W.fb.db.ref('pinmap').update(u);if(!quiet)toast('Přístup zrušen.')}catch(e){if(!quiet)toast('Kód se nepodařilo zrušit.')}W.pdel=null;loadPins()}
@@ -2138,7 +2143,8 @@ const HELP=[
 <li><b>Menu</b> je vpravo nahoře. Tým přepínáš rozbalovacím seznamem v hlavičce (když jich vidíš víc).</li>
 <li><b>Šipky ▾ / ▴</b> u karet je sbalují a rozbalují. Telefon si pamatuje, co máš sbalené.</li></ol>
 <p class="small muted">S osobním kódem vidíš jen týmy, u kterých tě správce zaškrtl. Vzhled a hlasová hlášení se ukládají k tvému profilu, takže je máš stejné v každém zařízení.</p>`],
- ['plan','Plánování tréninku',`<p>Nový trénink se skládá ve dvou krocích.</p>
+ ['plan','Plánování tréninku',`<p>Plánovat smí správce a trenéři s oprávněním <b>Plánuje tréninky</b>. Ostatní kartu Plánování nevidí a pracují s menu <b>Naplánované</b>.</p>
+<p>Nový trénink se skládá ve dvou krocích.</p>
 <h3>1 · Kdo přijde</h3><ul>
 <li><b>Týmy na tréninku:</b> u společného tréninku vyber víc týmů, děti i trenéři se spojí.</li>
 <li><b>Trenéři:</b> klepnutím označ, kdo přijde. Hosta zapíšeš do políčka „Host na tento trénink“. Když máš méně než 2 trenéry, aplikace nabídne půjčit trenéra z jiného týmu.</li>
@@ -2195,6 +2201,7 @@ const HELP=[
 <li><b>Trenéři</b> tvých týmů a <b>Účet</b> s odhlášením.</li></ul>`],
  ['admin','Pro správce',`<ul>
 <li>Přihlášení kódem správce ze Scorekeeperu.</li>
+<li><b>Plánuje tréninky:</b> tréninky sestavují a mění jen trenéři, kterým v Nastavení → Trenéři zapneš <b>Plánuje tréninky</b> (a správce). Ostatní naplánovaný trénink otevřou, upraví docházku, spustí a uzavřou.</li>
 <li><b>Trenéři:</b> u každého zaškrtni týmy, kde trénuje. <b>Vytvořit kód</b> vyrobí osobní kód, <b>Poslat</b> ho pošle trenérovi, <b>Nový kód</b> starý zneplatní, <b>Zrušit</b> přístup vypne.</li>
 <li><b>Společný kód pro trenéry</b> je přechodný – až mají všichni osobní kód, zruš ho.</li>
 <li><b>Historie přihlášení:</b> kdo a kdy se přihlásil a z jakého zařízení.</li>
@@ -2305,12 +2312,12 @@ function vStaff(){const list=staffList(),teams=Object.entries(S.teams).sort((a,b
    ${mine.length?`<div class="dl">${mine.map(c=>`<div><b>${esc(c.name)}</b>${c.id===W.coachId?' (ty)':''}<br><span class="small muted">${(c.teams||[]).filter(t=>S.teams[t]).map(t=>esc(tName(t))).join(', ')}</span></div>`).join('')}</div>`:'<p class="muted">Zatím nikdo.</p>'}
    <p class="small muted">Seznam trenérů, jejich týmy a přístupové kódy spravuje správce.</p></section>`}
  return `<section class="card"><div class="sumline"><h2>Trenéři · ${list.length}</h2></div>
-  <p class="small muted">U každého trenéra zaškrtni týmy, kde trénuje. Na začátku tréninku se nabídnou trenéři vybraných týmů.${adm?' Trenér s osobním kódem uvidí jen zaškrtnuté týmy.':''}</p>
+  <p class="small muted">U každého trenéra zaškrtni týmy, kde trénuje. Tlačítkem <b>Plánuje tréninky</b> mu povolíš sestavovat a měnit tréninky, ostatní je jen spouštějí. Na začátku tréninku se nabídnou trenéři vybraných týmů.${adm?' Trenér s osobním kódem uvidí jen zaškrtnuté týmy.':''}</p>
   ${list.length?`<div class="stafflist">${list.map(c=>`<div class="staff">
    <div class="pl" style="grid-template-columns:1fr auto"><input type="text" id="st_${esc(c.id)}" data-c="stname" data-v="${esc(c.id)}" value="${esc(c.name)}" aria-label="Jméno trenéra">
    ${W.sdel===c.id?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn danger sm" data-a="stdelgo" data-v="${esc(c.id)}">Odebrat</button><button class="btn ghost sm" data-a="stdelno">Ne</button></span>`:`<button class="ib" data-a="stdel" data-v="${esc(c.id)}" aria-label="Odebrat ${esc(c.name)}">✕</button>`}</div>
    <div class="row" style="gap:6px">${teams.map(([id,x])=>{const on=(c.teams||[]).includes(id);return `<button class="chip sm ${on?'on':''}" data-a="stteam" data-v="${esc(c.id)}" data-t="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join('')}${(c.teams||[]).filter(id=>S.teams[id]).length?'':'<span class="small warnnote">Bez týmu, v tréninku se nenabídne.</span>'}</div>
-   ${adm?vPinRow(c):''}
+   ${adm?`<div class="row" style="gap:6px"><button class="chip sm ${c.plan?'on':''}" data-a="stplan" data-v="${esc(c.id)}" aria-pressed="${!!c.plan}">${c.plan?'✓ ':''}Plánuje tréninky</button><span class="small muted">${c.plan?'sestavuje a mění tréninky':'jen spouští naplánované'}</span></div>`+vPinRow(c):''}
   </div>`).join('')}</div>`:'<p class="muted">Zatím žádný trenér.</p>'}
   <form id="wAddC" class="pl" style="grid-template-columns:1fr auto"><input type="text" id="wc_name" placeholder="Jméno nového trenéra" aria-label="Jméno trenéra"><button class="btn sm" type="submit">Přidat</button></form>
   <p class="small muted">Nový trenér se přidá k týmu ${esc(team()?team().name:'')}, další týmy zaškrtneš.</p></section>`}
@@ -2433,6 +2440,7 @@ Object.assign(actions,{
  whoopen:v=>{W.phMsg='';W.phDel=null;openWho(v)},whodel:v=>{W.phDel=v;openWho(v)},whodelno:v=>{W.phDel=null;openWho(v)},
  whodelgo:v=>{const x=kid(v);W.phDel=null;photoSet(x.tid,x.num,null);openWho(v);if(S.tab==='who')render(true);toast('Fotka odebrána.')},
  whokid:v=>{const x=kid(v);if(S.teamId!==x.tid){S.teamId=x.tid;ls.set('u7-team',x.tid)}openKid(x.num)},
+ stplan:async v=>{const list=clone(staffList()),c=list.find(x=>x.id===v);if(!c)return;c.plan=!c.plan;if(!c.plan)delete c.plan;staffSave(list);if(!W.fb||W.role!=='admin')return;if(W.pins==null)await loadPins();const u={};personalCodes(v).forEach(k=>u[k+'/plan']=c.plan?true:null);if(Object.keys(u).length){try{await W.fb.db.ref('pinmap').update(u);await loadPins()}catch(e){toast('Oprávnění se nepodařilo uložit do kódů.')}}toast(c.name+(c.plan?' teď může plánovat tréninky.':' už nemůže plánovat tréninky.'))},
  stteam:(v,el)=>{const list=clone(staffList()),c=list.find(x=>x.id===v),t=el.dataset.t;if(!c)return;c.teams=c.teams||[];const i=c.teams.indexOf(t);if(i>=0)c.teams.splice(i,1);else c.teams.push(t);staffSave(list)},
  stdel:v=>{W.sdel=v;render(true)},stdelno:()=>{W.sdel=null;render(true)},stdelgo:v=>{W.sdel=null;if(W.role==='admin')dropPersonalPin(v,true);staffSave(clone(staffList()).filter(c=>c.id!==v));toast('Trenér odebrán.')},
  pinnew:v=>newPersonalPin(v),pinsend:v=>sendPin(v),pindrop:v=>{W.pdel=v;render(true)},pindropno:()=>{W.pdel=null;render(true)},pindropgo:v=>dropPersonalPin(v),

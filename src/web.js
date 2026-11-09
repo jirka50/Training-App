@@ -30,7 +30,7 @@ function meEntry(){if(!W.coachId)return null;if(Array.isArray(W.raw.staff))retur
 function whoLabel(){if(W.role==='admin')return 'Správce';if(W.coachId){const m=meEntry();return (m&&m.name?m.name:'Trenér')+' · trenér'}return 'Trenér · společný kód'}
 /* trenér s osobním kódem vidí jen týmy, u kterých ho správce zaškrtl */
 function myTeamFilter(out){if(!W.coachId||W.role==='admin')return out;const m=meEntry(),ok=new Set(m&&m.teams||[]),r={};Object.keys(out).forEach(t=>{if(ok.has(t))r[t]=out[t]});return r}
-ME=()=>W.coachId||'';byName=id=>{const c=staffList().find(x=>x.id===id);return c?c.name:''};
+ME=()=>W.coachId||'';canPlan=()=>W.role==='admin'||(!!W.coachId&&!!W.plan);planners=()=>staffList().filter(c=>c.plan).map(c=>c.name);byName=id=>{const c=staffList().find(x=>x.id===id);return c?c.name:''};
 prefHook=()=>{if(!W.coachId||!W.fb||W.role==='admin')return;const o={};PREF_SYNC.forEach(k=>{if(S.pref[k]!==undefined)o[k]=S.pref[k]});const ts=Date.now();ls.set('u7w-prefts',ts);Web.write('training/prefs/'+W.coachId,{ts,json:J(o)})};
 /* ---------- historie přihlášení ---------- */
 function devLabel(){const u=navigator.userAgent||'';
@@ -110,13 +110,13 @@ const Web={
   if(PARENT){parentBoot();return}
   W.raw.photos=ls.get('u7w-photos',{})||{};S.season=ls.get('u7w-season',{})||{};
   ['teams','plans','custom','tpls','ages'].forEach(c=>S[c]=ls.get('u7w-'+c,{}));rebuildActs();fixTeam();
-  const a=ls.get(WKEY,null);if(a&&a.role&&a.code){W.role=a.role;W.code=a.code;W.coachId=a.coach||null}
+  const a=ls.get(WKEY,null);if(a&&a.role&&a.code){W.role=a.role;W.code=a.code;W.coachId=a.coach||null;W.plan=!!a.plan}
   S.teams=myTeamFilter(S.teams);fixTeam();
   render();syncLine();
   const f=fbInit();if(!f){render();return}
   (async()=>{
    if(!W.code){try{await signIn()}catch(e){}render();return}
-   try{const p=await claim(W.code),cid=p.coach||null;if(p.role!==W.role||cid!==W.coachId){W.role=p.role;W.coachId=cid;ls.set(WKEY,{code:W.code,role:p.role,coach:cid||''});S.teams=myTeamFilter(S.teams);fixTeam()}Web.subscribe();logLogin('open');render()}
+   try{const p=await claim(W.code),cid=p.coach||null;if(!!p.plan!==!!W.plan){W.plan=!!p.plan;ls.set(WKEY,{code:W.code,role:p.role,coach:cid||'',plan:W.plan})}if(p.role!==W.role||cid!==W.coachId){W.role=p.role;W.coachId=cid;ls.set(WKEY,{code:W.code,role:p.role,coach:cid||'',plan:!!p.plan});S.teams=myTeamFilter(S.teams);fixTeam()}Web.subscribe();logLogin('open');render()}
    catch(e){if(e&&e.code==='offline')return;if(isPerm(e)||e.code==='bad'||e.code==='scorer')Web.logout('Kód už neplatí. Přihlas se znovu.')}
   })()},
  write(path,val){if(!W.fb){toast('Bez připojení se nic neuloží.');return}
@@ -148,7 +148,7 @@ const Web={
  ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c]))S.ready=true},
  logout(msg){try{if(W.fb&&W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(e){}
   W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.denied={};W.seen={};W.loaded={};W.pins=null;
-  try{[WKEY,ME_KEY,'u7w-prefts'].forEach(k=>localStorage.removeItem(k))}catch(e){}W.role=null;W.code=null;W.coachId=null;W.logins=null;W.lgFilter='';W.guestHelp=false;W.msg=msg||'';S.ready=false;S.mode='local';render()}
+  try{[WKEY,ME_KEY,'u7w-prefts'].forEach(k=>localStorage.removeItem(k))}catch(e){}W.role=null;W.code=null;W.coachId=null;W.plan=false;W.logins=null;W.lgFilter='';W.guestHelp=false;W.msg=msg||'';S.ready=false;S.mode='local';render()}
 };
 
 /* ---------- přihlášení ---------- */
@@ -220,7 +220,7 @@ function renderLogin(){
   <section class="card"><div class="sumline"><span class="small muted">Nevíš si rady? Návod se dá přečíst i bez přihlášení.</span><button class="btn ghost sm" data-a="ghelp" data-v="1">📖 Návod</button></div></section>`}
 async function doLogin(){const code=normCode($('#w_code').value);if(code.replace('-','').length<8){W.msg='Zadej celý kód.';return render(true)}
  W.busy=true;W.msg='';render(true);
- try{const p=await claim(code);W.busy=false;W.role=p.role;W.code=code;W.coachId=p.coach||null;ls.set(WKEY,{code,role:p.role,coach:p.coach||''});
+ try{const p=await claim(code);W.busy=false;W.role=p.role;W.code=code;W.coachId=p.coach||null;W.plan=!!p.plan;ls.set(WKEY,{code,role:p.role,coach:p.coach||'',plan:W.plan});
   S.teams=myTeamFilter(S.teams);fixTeam();Web.subscribe();logLogin('login');
   S.tab=p.role==='admin'&&!Object.keys(S.teams).length?'set':S.tab;render(true);toast(p.role==='admin'?'Přihlášeno: Správce.':p.coach?'Přihlášeno osobním kódem.':'Přihlášeno společným kódem trenérů.')}
  catch(e){W.busy=false;try{if(W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(x){}
@@ -232,7 +232,7 @@ async function loadPins(){if(!W.fb||W.role!=='admin')return;try{W.pins=(await W.
 /* společný kód = role coach bez pole coach; osobní kód = role coach s id trenéra */
 const coachCodes=()=>Object.keys(W.pins||{}).filter(c=>W.pins[c]&&W.pins[c].role==='coach'&&!W.pins[c].coach);
 const personalCodes=id=>Object.keys(W.pins||{}).filter(c=>W.pins[c]&&W.pins[c].role==='coach'&&W.pins[c].coach===id);
-async function newPersonalPin(id){if(!W.fb||W.role!=='admin')return;const c=staffList().find(x=>x.id===id);if(!c)return;const u={};personalCodes(id).forEach(k=>u[k]=null);const code=genCode();u[code]={role:'coach',coach:id};
+async function newPersonalPin(id){if(!W.fb||W.role!=='admin')return;const c=staffList().find(x=>x.id===id);if(!c)return;const u={};personalCodes(id).forEach(k=>u[k]=null);const code=genCode();u[code]=c.plan?{role:'coach',coach:id,plan:true}:{role:'coach',coach:id};
  try{await W.fb.db.ref('pinmap').update(u);toast(Object.keys(u).length>1?'Nový kód pro '+c.name+'. Starý přestal platit.':'Kód pro '+c.name+' je vytvořený.')}catch(e){toast(isPerm(e)?'Kód se nepodařilo uložit (oprávnění).':'Kód se nepodařilo vytvořit.')}W.pdel=null;loadPins()}
 async function dropPersonalPin(id,quiet){if(!W.fb||W.role!=='admin')return;const u={};personalCodes(id).forEach(k=>u[k]=null);if(!Object.keys(u).length)return;
  try{await W.fb.db.ref('pinmap').update(u);if(!quiet)toast('Přístup zrušen.')}catch(e){if(!quiet)toast('Kód se nepodařilo zrušit.')}W.pdel=null;loadPins()}
@@ -314,7 +314,8 @@ const HELP=[
 <li><b>Menu</b> je vpravo nahoře. Tým přepínáš rozbalovacím seznamem v hlavičce (když jich vidíš víc).</li>
 <li><b>Šipky ▾ / ▴</b> u karet je sbalují a rozbalují. Telefon si pamatuje, co máš sbalené.</li></ol>
 <p class="small muted">S osobním kódem vidíš jen týmy, u kterých tě správce zaškrtl. Vzhled a hlasová hlášení se ukládají k tvému profilu, takže je máš stejné v každém zařízení.</p>`],
- ['plan','Plánování tréninku',`<p>Nový trénink se skládá ve dvou krocích.</p>
+ ['plan','Plánování tréninku',`<p>Plánovat smí správce a trenéři s oprávněním <b>Plánuje tréninky</b>. Ostatní kartu Plánování nevidí a pracují s menu <b>Naplánované</b>.</p>
+<p>Nový trénink se skládá ve dvou krocích.</p>
 <h3>1 · Kdo přijde</h3><ul>
 <li><b>Týmy na tréninku:</b> u společného tréninku vyber víc týmů, děti i trenéři se spojí.</li>
 <li><b>Trenéři:</b> klepnutím označ, kdo přijde. Hosta zapíšeš do políčka „Host na tento trénink“. Když máš méně než 2 trenéry, aplikace nabídne půjčit trenéra z jiného týmu.</li>
@@ -371,6 +372,7 @@ const HELP=[
 <li><b>Trenéři</b> tvých týmů a <b>Účet</b> s odhlášením.</li></ul>`],
  ['admin','Pro správce',`<ul>
 <li>Přihlášení kódem správce ze Scorekeeperu.</li>
+<li><b>Plánuje tréninky:</b> tréninky sestavují a mění jen trenéři, kterým v Nastavení → Trenéři zapneš <b>Plánuje tréninky</b> (a správce). Ostatní naplánovaný trénink otevřou, upraví docházku, spustí a uzavřou.</li>
 <li><b>Trenéři:</b> u každého zaškrtni týmy, kde trénuje. <b>Vytvořit kód</b> vyrobí osobní kód, <b>Poslat</b> ho pošle trenérovi, <b>Nový kód</b> starý zneplatní, <b>Zrušit</b> přístup vypne.</li>
 <li><b>Společný kód pro trenéry</b> je přechodný – až mají všichni osobní kód, zruš ho.</li>
 <li><b>Historie přihlášení:</b> kdo a kdy se přihlásil a z jakého zařízení.</li>
@@ -481,12 +483,12 @@ function vStaff(){const list=staffList(),teams=Object.entries(S.teams).sort((a,b
    ${mine.length?`<div class="dl">${mine.map(c=>`<div><b>${esc(c.name)}</b>${c.id===W.coachId?' (ty)':''}<br><span class="small muted">${(c.teams||[]).filter(t=>S.teams[t]).map(t=>esc(tName(t))).join(', ')}</span></div>`).join('')}</div>`:'<p class="muted">Zatím nikdo.</p>'}
    <p class="small muted">Seznam trenérů, jejich týmy a přístupové kódy spravuje správce.</p></section>`}
  return `<section class="card"><div class="sumline"><h2>Trenéři · ${list.length}</h2></div>
-  <p class="small muted">U každého trenéra zaškrtni týmy, kde trénuje. Na začátku tréninku se nabídnou trenéři vybraných týmů.${adm?' Trenér s osobním kódem uvidí jen zaškrtnuté týmy.':''}</p>
+  <p class="small muted">U každého trenéra zaškrtni týmy, kde trénuje. Tlačítkem <b>Plánuje tréninky</b> mu povolíš sestavovat a měnit tréninky, ostatní je jen spouštějí. Na začátku tréninku se nabídnou trenéři vybraných týmů.${adm?' Trenér s osobním kódem uvidí jen zaškrtnuté týmy.':''}</p>
   ${list.length?`<div class="stafflist">${list.map(c=>`<div class="staff">
    <div class="pl" style="grid-template-columns:1fr auto"><input type="text" id="st_${esc(c.id)}" data-c="stname" data-v="${esc(c.id)}" value="${esc(c.name)}" aria-label="Jméno trenéra">
    ${W.sdel===c.id?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn danger sm" data-a="stdelgo" data-v="${esc(c.id)}">Odebrat</button><button class="btn ghost sm" data-a="stdelno">Ne</button></span>`:`<button class="ib" data-a="stdel" data-v="${esc(c.id)}" aria-label="Odebrat ${esc(c.name)}">✕</button>`}</div>
    <div class="row" style="gap:6px">${teams.map(([id,x])=>{const on=(c.teams||[]).includes(id);return `<button class="chip sm ${on?'on':''}" data-a="stteam" data-v="${esc(c.id)}" data-t="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join('')}${(c.teams||[]).filter(id=>S.teams[id]).length?'':'<span class="small warnnote">Bez týmu, v tréninku se nenabídne.</span>'}</div>
-   ${adm?vPinRow(c):''}
+   ${adm?`<div class="row" style="gap:6px"><button class="chip sm ${c.plan?'on':''}" data-a="stplan" data-v="${esc(c.id)}" aria-pressed="${!!c.plan}">${c.plan?'✓ ':''}Plánuje tréninky</button><span class="small muted">${c.plan?'sestavuje a mění tréninky':'jen spouští naplánované'}</span></div>`+vPinRow(c):''}
   </div>`).join('')}</div>`:'<p class="muted">Zatím žádný trenér.</p>'}
   <form id="wAddC" class="pl" style="grid-template-columns:1fr auto"><input type="text" id="wc_name" placeholder="Jméno nového trenéra" aria-label="Jméno trenéra"><button class="btn sm" type="submit">Přidat</button></form>
   <p class="small muted">Nový trenér se přidá k týmu ${esc(team()?team().name:'')}, další týmy zaškrtneš.</p></section>`}
@@ -609,6 +611,7 @@ Object.assign(actions,{
  whoopen:v=>{W.phMsg='';W.phDel=null;openWho(v)},whodel:v=>{W.phDel=v;openWho(v)},whodelno:v=>{W.phDel=null;openWho(v)},
  whodelgo:v=>{const x=kid(v);W.phDel=null;photoSet(x.tid,x.num,null);openWho(v);if(S.tab==='who')render(true);toast('Fotka odebrána.')},
  whokid:v=>{const x=kid(v);if(S.teamId!==x.tid){S.teamId=x.tid;ls.set('u7-team',x.tid)}openKid(x.num)},
+ stplan:async v=>{const list=clone(staffList()),c=list.find(x=>x.id===v);if(!c)return;c.plan=!c.plan;if(!c.plan)delete c.plan;staffSave(list);if(!W.fb||W.role!=='admin')return;if(W.pins==null)await loadPins();const u={};personalCodes(v).forEach(k=>u[k+'/plan']=c.plan?true:null);if(Object.keys(u).length){try{await W.fb.db.ref('pinmap').update(u);await loadPins()}catch(e){toast('Oprávnění se nepodařilo uložit do kódů.')}}toast(c.name+(c.plan?' teď může plánovat tréninky.':' už nemůže plánovat tréninky.'))},
  stteam:(v,el)=>{const list=clone(staffList()),c=list.find(x=>x.id===v),t=el.dataset.t;if(!c)return;c.teams=c.teams||[];const i=c.teams.indexOf(t);if(i>=0)c.teams.splice(i,1);else c.teams.push(t);staffSave(list)},
  stdel:v=>{W.sdel=v;render(true)},stdelno:()=>{W.sdel=null;render(true)},stdelgo:v=>{W.sdel=null;if(W.role==='admin')dropPersonalPin(v,true);staffSave(clone(staffList()).filter(c=>c.id!==v));toast('Trenér odebrán.')},
  pinnew:v=>newPersonalPin(v),pinsend:v=>sendPin(v),pindrop:v=>{W.pdel=v;render(true)},pindropno:()=>{W.pdel=null;render(true)},pindropgo:v=>dropPersonalPin(v),
