@@ -1643,7 +1643,7 @@ function planCtx(){const d=S.draft,st=selTeams(),mt=st.length>1,pr=presentKeys()
  const nC=sel.length+gs.length;
  const per=nC>1&&pr.length?splitText(pr.length,nC):'';
  return{d,st,mt,pr,cs,sel,gs,all,nAll,nC,per}}
-function vPlan1(){const {d,st,mt,pr,cs,sel,gs,all,nAll,nC,per}=planCtx();return `
+function vPlan1(){const {d,st,mt,pr,cs,sel,gs,all,nAll,nC}=planCtx();return `
   ${all.length>1?`<div class="field"><span class="label">Týmy na tréninku</span><div class="row hs">${all.map(([id,x])=>{const on=st.includes(id);return `<button class="chip ${on?'on':''}" data-a="tsel" data-v="${esc(id)}" aria-pressed="${on}">${esc(x.name)} · ${(x.players||[]).length}</button>`}).join('')}</div>${mt?'<span class="small muted">Společný trénink: děti i trenéři ze všech vybraných týmů.</span>':''}</div>`:''}
   <div class="field"><div class="sumline"><span class="label">Trenéři · přijde ${nC}${cs.length?' z '+cs.length:''}</span>${cs.length?`<span class="row"><button class="btn ghost sm" data-a="call">Všichni</button><button class="btn ghost sm" data-a="cnone">Nikdo</button></span>`:''}</div>
    ${cs.length?`<div class="kids">${cs.map(c=>{const on=sel.includes(c.key);return `<button class="chip coach ${on?'on':'off'}" data-a="ctog" data-v="${esc(c.key)}" aria-pressed="${on}">${esc(c.name)}</button>`}).join('')}${gs.map((g,i)=>`<button class="chip coach on" data-a="gdel" data-v="${i}" aria-label="Odebrat hosta ${esc(g)}">${esc(g)} <span class="guest">host ✕</span></button>`).join('')}</div>`
@@ -1658,7 +1658,7 @@ function vPlan1(){const {d,st,mt,pr,cs,sel,gs,all,nAll,nC,per}=planCtx();return 
    ${ps.length?`<div class="kids">${ps.map(p=>{const on=po.includes(p.num);return `<button class="chip kid ${on?'on':'off'}" data-a="att" data-v="${esc(K(tid,p.num))}" aria-pressed="${on}"><b>${esc(numShort(p.num))}</b>${esc(dn(p))}${LVL[p.lvl]?`<span class="lvl">${LVL[p.lvl]}</span>`:''}</button>`}).join('')}</div>`:`<p class="muted small">Soupiska ${esc(tName(tid))} je prázdná. Přidej děti v Nastavení.</p>`}`}).join('')}
   </div>
   <div class="row"><button class="btn" data-a="pstep" data-v="2">Dál: Co trénovat →</button><span class="small muted">${pr.length} dětí · ${nC||1} ${nC>1&&nC<5?'trenéři':nC>=5?'trenérů':'trenér'}</span></div>`}
-function vPlan2(){const {d,st,mt,pr,cs,sel,gs,all,nAll,nC,per}=planCtx();return `
+function vPlan2(){const {d,st,pr,nC}=planCtx();return `
   <div class="grid2">
    <div class="field"><span class="label">Datum</span><input type="date" id="pdate" data-c="date" value="${esc(d.date)}"></div>
    <div class="field"><span class="label">Prostor</span><div class="seg">${[['venku','Venku'],['hala','Hala']].map(([k,l])=>`<button data-a="venue" data-v="${k}" class="${d.venue===k?'on':''}">${l}</button>`).join('')}</div></div>
