@@ -379,11 +379,14 @@ const HELP=[
 <li><b>Týmy:</b> přehled týmů a export soupisek do Excelu. V záložce Tým přesun dítěte do jiného týmu (⇄). Nové týmy se zakládají ve Scorekeeperu.</li>
 <li><b>Sezóna:</b> nastavuje ji jen správce a platí pro všechny trenéry. Na konci sezóny „Začít novou sezónu“.</li></ul>`]];
 const HOPEN=new Set(['start']);
+/* snímky obrazovky k návodu (testovací tým s vymyšlenými jmény) */
+const HIMG={start:[['start','Přihlášení']],plan:[['plan','Plánování, krok 1'],['planned','Naplánované tréninky']],train:[['train','Trénink s bloky']],field:[['field','Na hřišti']],par:[['after','Po tréninku: Pro rodiče']],hist:[['hist','Historie']],team:[['kids','Dovednosti']],lib:[['lib','Detail hry s animací']],set:[['set','Nastavení']],admin:[['admin','Trenéři a oprávnění']]};
+const helpFigs=k=>(HIMG[k]||[]).length?`<div class="help-figs">${HIMG[k].map(([f,t])=>`<figure><img src="img/help/${f}.jpg" alt="Snímek obrazovky: ${t}" loading="lazy" width="260" height="480"><figcaption>${t}</figcaption></figure>`).join('')}</div>`:'';
 /* návod bez přihlášení: tlačítko na přihlašovací stránce nebo odkaz s ?navod */
 let HELPQ=(()=>{try{return new URLSearchParams(location.search).has('navod')}catch(e){return false}})();
 const helpUrl=()=>location.origin+location.pathname+'?navod';
 function vHelp(){return `<section class="card"><h2>Návod</h2><p class="small muted">Jak plánovač používat. Klepnutím na kapitolu ji rozbalíš. · ${esc(verTxt())}</p>${W.role?`<div class="row"><button class="btn ghost sm" data-a="wcopy" data-v="${esc(helpUrl())}">Kopírovat odkaz na návod</button></div><p class="small muted">Odkaz otevře návod i bez přihlášení, můžeš ho poslat novým trenérům.</p>`:''}</section>`+
- HELP.filter(([k])=>k!=='admin'||W.role==='admin').map(([k,t,h])=>`<section class="card help"><details data-h="${k}" ${HOPEN.has(k)?'open':''}><summary><h2>${t}</h2></summary><div class="help-b">${h}</div></details></section>`).join('')+
+ HELP.filter(([k])=>k!=='admin'||W.role==='admin').map(([k,t,h])=>`<section class="card help"><details data-h="${k}" ${HOPEN.has(k)?'open':''}><summary><h2>${t}</h2></summary><div class="help-b">${helpFigs(k)}${h}</div></details></section>`).join('')+
  (W.role?`<section class="card"><div class="row"><button class="btn" data-a="tab" data-v="plan">Naplánovat trénink</button><button class="btn ghost" data-a="tab" data-v="lib">Hry a cviky</button></div></section>`:`<section class="card"><div class="row"><button class="btn" data-a="ghelp" data-v="0">Přihlásit se</button></div></section>`)}
 document.addEventListener('toggle',e=>{const d=e.target;if(!d||!d.dataset||!d.dataset.h)return;if(d.open)HOPEN.add(d.dataset.h);else HOPEN.delete(d.dataset.h)},true);
 /* ---------- Kdo je kdo: fotka je u hráče v soupisce (player.photo), stejně jako ve Scorekeeperu.
