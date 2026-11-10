@@ -44,6 +44,20 @@ const lgKey=x=>x.role==='admin'?'admin':x.coach||'shared';
 const lgWho=x=>x.role==='admin'?'Správce':x.coach?(byName(x.coach)||'odebraný trenér'):'Společný kód';
 const lgTime=t=>t?new Date(t).toLocaleString('cs-CZ',{day:'numeric',month:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'–';
 function lastSeen(id){const x=(W.logins||[]).find(l=>l.coach===id);return x?lgTime(x.t):''}
+/* ---------- WhatsApp zpráva trenérům o naplánovaném tréninku ----------
+   phones/<coachId> = "+420…" · čte i zapisuje jen správce */
+const appUrl=()=>location.origin+location.pathname;
+function coachMsg(p,id){const d=p.date?new Date(p.date+'T12:00:00'):null,t=SEA().time||'',cs=(p.coaches||[]).filter(n=>n&&n!=='Trenér');
+ return `🗓 Trénink ${d?['ne','po','út','st','čt','pá','so'][d.getDay()]+' ':''}${fmtDate(p.date)}${t?' v '+t:''} · ${p.venue==='hala'?'hala':'venku'} (${p.minutes} min)${p.name?'\n'+p.name:''}
+Týmy: ${planTeams(p).map(tName).join(' + ')} · ${(p.present||[]).length} dětí${cs.length?'\nTrenéři: '+cs.join(', '):''}
+Otevřít v aplikaci: ${appUrl()}?trenink=${encodeURIComponent(id)}`}
+const waNum=v=>{let d=String(v||'').replace(/[^0-9+]/g,'');if(d.startsWith('+'))d=d.slice(1);else if(d.startsWith('00'))d=d.slice(2);else if(d.length===9)d='420'+d;return d.length>=11?d:''};
+async function loadPhones(){if(!W.fb||W.role!=='admin'||W.phones!==undefined)return;W.phones=null;try{W.phones=(await W.fb.db.ref('phones').once('value')).val()||{}}catch(e){W.phones={};W.phErr=isPerm(e)?'Telefonní čísla zatím nejde načíst: ve Firebase je potřeba vložit nová pravidla (database.rules.json).':'Čísla se nepodařilo načíst.'}render(true)}
+planShare=id=>{const p=S.plans[id]||(S.plan&&S.plan.id===id?S.plan:null);if(!p)return'';let one='';
+ if(W.role==='admin'){if(W.phones===undefined)loadPhones();const ph=W.phones||{},st=staffList(),names=(p.coaches||[]).filter(n=>n&&n!=='Trenér');
+  const who=names.map(n=>{const c=st.find(x=>x.name===n);return c&&waNum(ph[c.id])?c:null}).filter(Boolean);
+  if(who.length)one=who.map(c=>`<button class="chip sm" data-a="pwa1" data-v="${esc(id)}" data-c2="${esc(c.id)}" aria-label="Poslat ${esc(c.name)} přes WhatsApp">📲 ${esc(c.name)}</button>`).join('')}
+ return `<div class="row wa-row"><button class="btn ghost sm" data-a="pwa" data-v="${esc(id)}">📲 Poslat trenérům</button>${one}</div>`};
 async function loadLogins(){if(!W.fb||W.role!=='admin')return;W.lgErr='';
  try{const v=(await W.fb.db.ref('logins').orderByKey().limitToLast(300).once('value')).val()||{};W.logins=Object.entries(v).map(([id,x])=>Object.assign({id},x)).sort((a,b)=>(b.t||0)-(a.t||0))}
  catch(e){W.logins=[];W.lgErr=isPerm(e)?'Historii zatím nejde načíst: ve Firebase je potřeba vložit nová pravidla (database.rules.json).':'Historii se nepodařilo načíst.'}
@@ -303,6 +317,7 @@ function movePlayerW(copy){const tid=S.teamId,num=W.rmove,R=rosterOf(tid),p=R.pl
 document.addEventListener('submit',e=>{const id=e.target.id;if(id==='wAddP'){e.preventDefault();addRosterW()}else if(id==='wAss'){e.preventDefault();assignNumberW(W.assign,$('#w_assnum').value)}});
 document.addEventListener('change',e=>{const el=e.target,c=el.dataset&&el.dataset.c;
  if(c==='wnonum'){W.rNoNum=el.checked;render(true);const f=$(el.checked?'#wn_name':'#wn_num');if(f&&f.focus)f.focus()}
+ else if(c==='stphone'){const id=el.dataset.id,v=el.value.trim();if(v&&!waNum(v)){toast('Zadej číslo i s předvolbou, např. +420 777 123 456.');return}W.phones=Object.assign({},W.phones,{[id]:v||null});if(!v)delete W.phones[id];W.fb&&W.fb.db.ref('phones/'+id).set(v||null).then(()=>toast(v?'Číslo uloženo.':'Číslo smazáno.')).catch(e=>toast(isPerm(e)?'Číslo nejde uložit: vlož nová pravidla do Firebase.':'Číslo se nepodařilo uložit.'))}
  else if(c==='wtname'){const v=el.value.trim(),tid=S.teamId,R=rosterOf(tid);R.name=v;rosterSave(tid,R);if(v&&W.role==='admin'){W.raw.teamlist[tid]=Object.assign({},W.raw.teamlist[tid],{name:v});Web.compose();Web.write('teamlist/'+tid+'/name',v)}render(true)}});
 
 
@@ -327,7 +342,7 @@ const HELP=[
 <li><b>Sezónní plán:</b> týden plánu přidá povinné hry toho týdne.</li>
 <li><b>Délka tréninku</b> a <b>Zaměření dovedností</b> (házení, chytání, odpal, běh po metách, pozornost a hra). Aplikace upozorní na nejslabší oblast dětí.</li>
 <li><b>Další možnosti:</b> název tréninku a vlastní šablona struktury.</li></ul>
-<p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v menu <b>Naplánované</b>. Když už máš jiný trénink rozpracovaný, aplikace se zeptá, jestli ho <b>nahradit</b>, nebo nový <b>přidat jako další</b> – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
+<p>Klepni na <b>Sestavit trénink</b>. Když trénink připravuješ dopředu, ulož ho tlačítkem <b>Uložit jako naplánovaný</b>. Uvidí ho i ostatní trenéři v menu <b>Naplánované</b>. Tlačítkem <b>📲 Poslat trenérům</b> jim pošleš zprávu do WhatsAppu (datum, čas, místo, týmy, počet dětí, trenéři a odkaz, který trénink rovnou otevře). Když už máš jiný trénink rozpracovaný, aplikace se zeptá, jestli ho <b>nahradit</b>, nebo nový <b>přidat jako další</b> – mezi rozpracovanými tréninky pak přepínáš nahoře v Tréninku.</p>`],
  ['train','Úpravy tréninku',`<p>Po klepnutí na Sestavit trénink se otevře <b>Trénink</b> s celým plánem po blocích, který můžeš upravit před odchodem na hřiště. Zpátky se k němu dostaneš z Plánování tlačítkem <b>Otevřít trénink</b>.</p><ul>
 <li><b>⋯ u bloku:</b> délka, posun výš / níž, typ bloku, <b>Všichni / Stanoviště</b>, ⟳ náhodná výměna hry, ☰ výběr ze seznamu, odebrání.</li>
 <li><b>Všichni</b> = všechny skupiny dělají totéž se svým trenérem. <b>Stanoviště</b> = každá skupina jinou hru a po čase se točí (potřebuje aspoň 2 skupiny).</li>
@@ -375,6 +390,7 @@ const HELP=[
 <li><b>Plánuje tréninky:</b> tréninky sestavují a mění jen trenéři, kterým v Nastavení → Trenéři zapneš <b>Plánuje tréninky</b> (a správce). Ostatní naplánovaný trénink otevřou, upraví docházku, spustí a uzavřou.</li>
 <li><b>Trenéři:</b> u každého zaškrtni týmy, kde trénuje. <b>Vytvořit kód</b> vyrobí osobní kód, <b>Poslat</b> ho pošle trenérovi, <b>Nový kód</b> starý zneplatní, <b>Zrušit</b> přístup vypne.</li>
 <li><b>Společný kód pro trenéry</b> je přechodný – až mají všichni osobní kód, zruš ho.</li>
+<li><b>Telefony trenérů:</b> v Trenérech doplníš číslo pro WhatsApp. U naplánovaného tréninku se pak objeví tlačítka se jmény trenérů, která otevřou WhatsApp rovnou s nimi. Čísla vidí jen správce.</li>
 <li><b>Historie přihlášení:</b> kdo a kdy se přihlásil a z jakého zařízení.</li>
 <li><b>Týmy:</b> přehled týmů a export soupisek do Excelu. V záložce Tým přesun dítěte do jiného týmu (⇄). Nové týmy se zakládají ve Scorekeeperu.</li>
 <li><b>Sezóna:</b> nastavuje ji jen správce a platí pro všechny trenéry. Na konci sezóny „Začít novou sezónu“.</li></ul>`]];
@@ -383,6 +399,8 @@ const HOPEN=new Set(['start']);
 const HIMG={start:[['start','Přihlášení']],plan:[['plan','Plánování, krok 1'],['planned','Naplánované tréninky']],train:[['train','Trénink s bloky']],field:[['field','Na hřišti']],par:[['after','Po tréninku: Pro rodiče']],hist:[['hist','Historie']],team:[['kids','Dovednosti']],lib:[['lib','Detail hry s animací']],set:[['set','Nastavení']],admin:[['admin','Trenéři a oprávnění']]};
 const helpFigs=k=>(HIMG[k]||[]).length?`<div class="help-figs">${HIMG[k].map(([f,t])=>`<figure><img src="img/help/${f}.jpg" alt="Snímek obrazovky: ${t}" loading="lazy" width="260" height="480"><figcaption>${t}</figcaption></figure>`).join('')}</div>`:'';
 /* návod bez přihlášení: tlačítko na přihlašovací stránce nebo odkaz s ?navod */
+/* odkaz na naplánovaný trénink: ?trenink=<id> (po přihlášení ho otevře) */
+let TRQ=(()=>{try{return new URLSearchParams(location.search).get('trenink')||''}catch(e){return''}})();
 let HELPQ=(()=>{try{return new URLSearchParams(location.search).has('navod')}catch(e){return false}})();
 const helpUrl=()=>location.origin+location.pathname+'?navod';
 function vHelp(){return `<section class="card"><h2>Návod</h2><p class="small muted">Jak plánovač používat. Klepnutím na kapitolu ji rozbalíš. · ${esc(verTxt())}</p>${W.role?`<div class="row"><button class="btn ghost sm" data-a="wcopy" data-v="${esc(helpUrl())}">Kopírovat odkaz na návod</button></div><p class="small muted">Odkaz otevře návod i bez přihlášení, můžeš ho poslat novým trenérům.</p>`:''}</section>`+
@@ -480,7 +498,7 @@ let staffDone=false;
 function staffMigrate(){/* jednorázově: staré seznamy trenérů po týmech -> společný seznam */
  if(staffDone||!W.loaded.staff||!W.loaded.tl||Array.isArray(W.raw.staff))return;if(!Object.keys(W.raw.teamlist).every(t=>W.loaded['c_'+t]))return;
  staffDone=true;const m=staffList();if(m.length)Web.write('training/staff',{ts:Date.now(),json:J(m)})}
-function vStaff(){const list=staffList(),teams=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs')),adm=W.role==='admin';
+function vStaff(){if(W.role==='admin'&&W.phones===undefined)loadPhones();const list=staffList(),teams=Object.entries(S.teams).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','cs')),adm=W.role==='admin';
  if(W.coachId&&!adm){const mine=list.filter(c=>(c.teams||[]).some(t=>S.teams[t]));
   return `<section class="card"><div class="sumline"><h2>Trenéři tvých týmů · ${mine.length}</h2></div>
    ${mine.length?`<div class="dl">${mine.map(c=>`<div><b>${esc(c.name)}</b>${c.id===W.coachId?' (ty)':''}<br><span class="small muted">${(c.teams||[]).filter(t=>S.teams[t]).map(t=>esc(tName(t))).join(', ')}</span></div>`).join('')}</div>`:'<p class="muted">Zatím nikdo.</p>'}
@@ -491,6 +509,7 @@ function vStaff(){const list=staffList(),teams=Object.entries(S.teams).sort((a,b
    <div class="pl" style="grid-template-columns:1fr auto"><input type="text" id="st_${esc(c.id)}" data-c="stname" data-v="${esc(c.id)}" value="${esc(c.name)}" aria-label="Jméno trenéra">
    ${W.sdel===c.id?`<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn danger sm" data-a="stdelgo" data-v="${esc(c.id)}">Odebrat</button><button class="btn ghost sm" data-a="stdelno">Ne</button></span>`:`<button class="ib" data-a="stdel" data-v="${esc(c.id)}" aria-label="Odebrat ${esc(c.name)}">✕</button>`}</div>
    <div class="row" style="gap:6px">${teams.map(([id,x])=>{const on=(c.teams||[]).includes(id);return `<button class="chip sm ${on?'on':''}" data-a="stteam" data-v="${esc(c.id)}" data-t="${esc(id)}" aria-pressed="${on}">${esc(x.name)}</button>`}).join('')}${(c.teams||[]).filter(id=>S.teams[id]).length?'':'<span class="small warnnote">Bez týmu, v tréninku se nenabídne.</span>'}</div>
+   ${adm?`<div class="row" style="gap:6px"><input type="tel" inputmode="tel" class="stphone" data-c="stphone" data-id="${esc(c.id)}" value="${esc((W.phones||{})[c.id]||'')}" placeholder="Telefon pro WhatsApp" aria-label="Telefon ${esc(c.name)} pro WhatsApp" autocomplete="off"></div>`:''}
    ${adm?`<div class="row" style="gap:6px"><button class="chip sm ${c.plan?'on':''}" data-a="stplan" data-v="${esc(c.id)}" aria-pressed="${!!c.plan}">${c.plan?'✓ ':''}Plánuje tréninky</button><span class="small muted">${c.plan?'sestavuje a mění tréninky':'jen spouští naplánované'}</span></div>`+vPinRow(c):''}
   </div>`).join('')}</div>`:'<p class="muted">Zatím žádný trenér.</p>'}
   <form id="wAddC" class="pl" style="grid-template-columns:1fr auto"><input type="text" id="wc_name" placeholder="Jméno nového trenéra" aria-label="Jméno trenéra"><button class="btn sm" type="submit">Přidat</button></form>
@@ -605,6 +624,8 @@ Object.assign(actions,{
  wredit:()=>{W.redit=!W.redit;W.rmsg='';render(true)},
  gofold:v=>{FOLD=Object.assign({},FOLD,{[v]:1});ls.set('u7-fold',FOLD);actions.tab('set')},
  achksz:v=>{WHO.size=v;whoSave();openAttChk()},
+ pwa:v=>{const p=S.plans[v]||(S.plan&&S.plan.id===v?S.plan:null);if(p)shareWA(coachMsg(p,v))},
+ pwa1:(v,el)=>{const p=S.plans[v]||(S.plan&&S.plan.id===v?S.plan:null),n=waNum((W.phones||{})[el.dataset.c2]);if(!p||!n)return;const u='https://wa.me/'+n+'?text='+encodeURIComponent(coachMsg(p,v));try{window.open(u,'_blank','noopener')}catch(e){location.href=u}},
  ghelp:v=>{W.guestHelp=v==='1';render(true);window.scrollTo(0,0)},
  wcopy:async v=>{try{await navigator.clipboard.writeText(v);toast('Odkaz zkopírován.')}catch(e){toast(v)}},
  wrdel:v=>{const tid=S.teamId,R=rosterOf(tid);R.players=R.players.filter(p=>String(p.num)!==v);rosterSave(tid,R);W.rmsg='';render(true)},

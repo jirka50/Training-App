@@ -22,7 +22,7 @@ js = cut_block(js, 'const Store={db:null,', '\n};\n')
 js = cut_block(js, 'function vSet(){', '\n return h\n}\n')
 R("function syncLine(){const el=$('#sync');el.textContent=S.mode==='db'?'Sdílené s ostatními trenéry':S.mode==='err'?'Spojení se ztratilo, změny se neuloží':'Uloženo jen v tomto prohlížeči'}",
   "function syncLine(){const el=$('#sync');el.textContent=PARENT?'Pro rodiče':!W.role?'Přihlášení':S.mode==='err'?'Chybí oprávnění: '+Object.keys(W.denied).filter(k=>k!=='photos').map(k=>DEN_NAME[k]||k).join(', '):whoLabel()+(W.online?'':' · offline, uloží se po připojení');el.dataset.st=PARENT||!W.role?'':S.mode==='err'||!W.online?'off':'on'}")
-R("function render(force){\n", "function render(force){\n if(PARENT){renderParentPage();return}\n if(!W.role){if(HELPQ){HELPQ=false;W.guestHelp=true}renderLogin();return}\n if(HELPQ){HELPQ=false;S.tab='help'}\n")
+R("function render(force){\n", "function render(force){\n if(PARENT){renderParentPage();return}\n if(!W.role){if(HELPQ){HELPQ=false;W.guestHelp=true}renderLogin();return}\n if(HELPQ){HELPQ=false;S.tab='help'}\n if(TRQ&&S.plans[TRQ]){const id=TRQ;TRQ='';try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(()=>actions.load(id),0)}\n")
 R("'Založ tým a přidej děti a trenéry v Nastavení, nebo tam nahraj soubor ze zápisníku.'", "(W.coachId?'Zatím ti nebyl přidělen žádný tým. Požádej správce, aby tě u týmu zaškrtl.':'Týmy zakládá správce ve Scorekeeperu. Jakmile tam budou, objeví se tady.')")
 R("'Načítám sestavu…'}</p>${S.ready?'<button class=\"btn\" data-a=\"tab\" data-v=\"set\">Otevřít nastavení</button>':''}", "'Načítám sestavu…'}</p>")
 R("Přidej děti v Nastavení.</p>", "Děti přidáš v záložce Tým.</p>", 2)
