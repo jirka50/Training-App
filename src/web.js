@@ -58,6 +58,22 @@ planShare=id=>{const p=S.plans[id]||(S.plan&&S.plan.id===id?S.plan:null);if(!p)r
   const who=names.map(n=>{const c=st.find(x=>x.name===n);return c&&waNum(ph[c.id])?c:null}).filter(Boolean);
   if(who.length)one=who.map(c=>`<button class="chip sm" data-a="pwa1" data-v="${esc(id)}" data-c2="${esc(c.id)}" aria-label="Poslat ${esc(c.name)} přes WhatsApp">📲 ${esc(c.name)}</button>`).join('')}
  return `<div class="row wa-row"><button class="btn ghost sm" data-a="pwa" data-v="${esc(id)}">📲 Poslat trenérům</button>${one}</div>`};
+/* ---------- sdílený průběh tréninku: training/runs/<planId> = {i,running,endS,left,ts,by}
+   endS = konec bloku v serverovém čase; každý telefon si ho přepočítá podle svého posunu hodin ---------- */
+W.off=0;W.runs={};
+runPub=()=>{const p=S.plan;if(!p||!S.plans[p.id]||!W.fb)return;const r=S.run,now=Date.now()+W.off;
+ const o={i:r.i,running:!!r.running,endS:r.running&&r.endAt?Math.round(r.endAt+W.off):null,left:r.running?null:(r.left==null?null:Math.round(r.left)),ts:now,by:ME()||W.role||''};
+ r.rts=now;W.runs[p.id]=o;W.fb.db.ref('training/runs/'+p.id).set(o).catch(()=>{})};
+runApply=()=>{const p=S.plan;if(!p)return false;const o=W.runs&&W.runs[p.id];if(!o||!(o.ts>(S.run.rts||0)))return false;
+ if(Date.now()+W.off-o.ts>12*3600e3)return false;
+ const prevI=S.run.i,wasRun=S.run.running,n=steps().length;S.run.i=Math.min(Math.max(0,o.i|0),Math.max(0,n-1));S.run.running=!!o.running;
+ S.run.endAt=o.running&&o.endS?o.endS-W.off:null;S.run.left=o.running?null:(o.left==null?null:o.left);S.run.rts=o.ts;
+ beeped=S.run.running&&S.run.endAt<=Date.now();saveRun();try{lock(S.run.running)}catch(e){}
+ if(S.run.running&&(prevI!==S.run.i||!wasRun)&&S.tab==='field')announce();
+ return true};
+function runsSub(){if(!W.fb||W.runSub)return;W.runSub=1;
+ W.fb.db.ref('.info/serverTimeOffset').on('value',x=>{W.off=+x.val()||0});
+ Web.on('training/runs',x=>{W.runs=x.val()||{};if(W.role==='admin'&&!W.runClean){W.runClean=1;const old=Date.now()+W.off-7*864e5,u={};Object.entries(W.runs).forEach(([k,o])=>{if(!o||!o.ts||o.ts<old)u[k]=null});if(Object.keys(u).length)W.fb.db.ref('training/runs').update(u).catch(()=>{})}if(S.plan&&W.runs[S.plan.id]&&runApply()&&(S.tab==='field'||S.tab==='train'))render(true)})}
 async function loadLogins(){if(!W.fb||W.role!=='admin')return;W.lgErr='';
  try{const v=(await W.fb.db.ref('logins').orderByKey().limitToLast(300).once('value')).val()||{};W.logins=Object.entries(v).map(([id,x])=>Object.assign({id},x)).sort((a,b)=>(b.t||0)-(a.t||0))}
  catch(e){W.logins=[];W.lgErr=isPerm(e)?'Historii zatím nejde načíst: ve Firebase je potřeba vložit nová pravidla (database.rules.json).':'Historii se nepodařilo načíst.'}
@@ -144,7 +160,7 @@ const Web={
     players:(Array.isArray(R.players)?R.players:[]).filter(p=>p&&p.num!=null).map(p=>{const num=String(p.num),k=kids[num]||kv.find(x=>x.name&&x.name===p.name)||{};return{num,name:p.name||'',nick:p.nick||'',lvl:k.lvl||'',ag:k.ag||'',sk:Array.isArray(k.sk)?k.sk:[]}})}});
   S.teams=myTeamFilter(out);ls.set('u7w-teams',S.teams);fixTeam()},
  on(path,cb){const r=W.fb.db.ref(path);const h=r.on('value',cb,e=>{if(!isPerm(e))return;const k=deniedKey(path);W.denied[k]=1;console.warn('Firebase: chybí oprávnění ke čtení',path);if(k!=='photos')S.mode='err';syncLine();render()});W.subs.push(()=>r.off('value',h))},
- subscribe(){if(W.subs.length)return;S.mode='web';syncLine();
+ subscribe(){if(W.subs.length)return;S.mode='web';syncLine();runsSub();
   Web.on('teamlist',s=>{W.raw.teamlist=s.val()||{};W.loaded.tl=1;Object.keys(W.raw.teamlist).forEach(tid=>{if(W.seen[tid])return;W.seen[tid]=1;
    Web.on('teams/'+tid+'/roster',x=>{W.raw.roster[tid]=PJ(x.val())||{};W.loaded['r_'+tid]=1;migratePhotos(tid);kidsCarry();Web.compose();render()});
    Web.on('training/coaches/'+tid,x=>{W.raw.coaches[tid]=PJ(x.val())||[];W.loaded['c_'+tid]=1;staffMigrate();Web.compose();render()});
@@ -161,7 +177,7 @@ const Web={
   COLS.forEach(col=>Web.on('training/'+col,s=>{const v=s.val()||{},m={};Object.keys(v).forEach(id=>{const d=PJ(v[id]);if(d)m[id]=d});S[col]=m;ls.set('u7w-'+col,m);W.loaded[col]=1;if(col==='custom')rebuildActs();Web.ready();render()}))},
  ready(){if(W.loaded.tl&&COLS.every(c=>W.loaded[c]))S.ready=true},
  logout(msg){try{if(W.fb&&W.uid)W.fb.db.ref('claims/'+W.uid).remove()}catch(e){}
-  W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.denied={};W.seen={};W.loaded={};W.pins=null;
+  W.subs.forEach(off=>{try{off()}catch(e){}});W.subs=[];W.runSub=0;W.runs={};W.denied={};W.seen={};W.loaded={};W.pins=null;
   try{[WKEY,ME_KEY,'u7w-prefts'].forEach(k=>localStorage.removeItem(k))}catch(e){}W.role=null;W.code=null;W.coachId=null;W.plan=false;W.logins=null;W.lgFilter='';W.guestHelp=false;W.msg=msg||'';S.ready=false;S.mode='local';render()}
 };
 
@@ -354,6 +370,7 @@ const HELP=[
 <li>Dole: <b>Spustit na hřišti</b> a <b>Uložit</b>. Pod <b>⋯ Další</b> je Upravit nastavení, Uložit jako šablonu, 🖨 Vytisknout, Odložit / Zavřít trénink a Naplánovat znovu.</li></ul>`],
  ['field','Na hřišti',`<ul>
 <li><b>✓ Zkontrolovat docházku</b> nahoře: před startem rychle odškrtneš, kdo opravdu přišel, a upravíš trenéry. Skupiny se samy upraví.</li>
+<li><b>Více telefonů najednou:</b> u uloženého (naplánovaného) tréninku se start, pauza, +1 min a přepnutí bloku propíšou do telefonů všech trenérů, kteří mají trénink otevřený. Všichni tak vidí stejný blok i čas.</li>
 <li>Velký <b>časovač</b> odpočítává aktuální blok. Barva ukazuje, kolik času zbývá. Na šířku je časovač vlevo a stanoviště vpravo.</li>
 <li>Lišta dole: <b>◀ ▶</b> předchozí / další blok, <b>Start / Pauza</b>, <b>+1 min</b> a zkrácení / prodloužení.</li>
 <li>„Automaticky na další blok“ a „Hlásit střídání nahlas“ zapneš v Nastavení → Aplikace a hlas, tam je i hlas a tempo řeči. Seznam bloků je v kartě <b>Průběh</b>.</li>

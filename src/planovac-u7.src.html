@@ -1874,10 +1874,10 @@ async function mkToggle(key){const p=S.plan,x=kid(key,p),t=clone(S.teams[x.tid])
  pl.sk=sk.includes(id)?sk.filter(q=>q!==id):sk.concat([id]);await Store.put('teams',x.tid,t);openMk()}
 function remaining(){const s=curStep();if(!s)return 0;if(S.run.running&&S.run.endAt)return S.run.endAt-Date.now();return S.run.left!=null?S.run.left:s.min*60000}
 function tick(force){
- if(S.tab!=='field'||!S.plan)return;const s=curStep();if(!s)return;
+ if(S.tab!=='field'||!S.plan)return;runApply();const s=curStep();if(!s)return;
  let ms=remaining();
  if(S.run.running&&ms<=0&&!beeped){beeped=true;beep();
-  if(S.run.auto&&S.run.i<steps().length-1){S.run.i++;const n=curStep();S.run.endAt=Date.now()+n.min*60000;S.run.left=null;beeped=false;saveRun();render();announce();return}
+  if(S.run.auto&&S.run.i<steps().length-1){S.run.i++;const n=curStep();S.run.endAt=(S.run.endAt||Date.now())+n.min*60000;S.run.left=null;beeped=false;saveRun();runPub();render();announce();return}
   say(S.run.i<steps().length-1?'Čas! Pokračujte dalším blokem.':'Konec tréninku. Výborně!')}
  if(S.run.running&&ms<=60000&&ms>0&&warnedFor!==S.run.i&&s.min>=2){warnedFor=S.run.i;say('Ještě minuta.',false,true)}
  const el=$('#timer'),pr=$('#prog');if(!el)return;
@@ -1933,6 +1933,8 @@ function openAct(id){const a=ACT[id];if(!a)return;
  </div>`;sh.hidden=false;sh.dataset.id=id;mountAnims(sh)}
 /* dlaždice dítěte jako v Kdo je kdo (dodá webová verze) */
 /* kdo smí sestavovat a měnit plán tréninku (webová verze: správce nebo trenér s oprávněním) */
+/* sdílený průběh tréninku mezi telefony (webová verze): runPub zveřejní, runApply převezme */
+let runPub=()=>{},runApply=()=>{};
 let canPlan=()=>true,planners=()=>[],planShare=()=>'';
 let kidTile=null,kidTileSize=()=>'m',kidTileSeg=()=>'';
 /* kontrola docházky na hřišti (nabídka, nic se neotevírá samo) */
@@ -2124,8 +2126,8 @@ const actions={
  open:v=>openAct(v),close:()=>closeSheet(),
  startstop:()=>{if(!actx){try{const AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC()}catch(e){}}
   if(S.run.running){S.run.left=S.run.endAt-Date.now();S.run.running=false;S.run.endAt=null;lock(false)}
-  else{const ms=remaining();S.run.endAt=Date.now()+ms;S.run.running=true;S.run.left=null;beeped=ms<=0;lock(true);if(ms>=curStep().min*60000-1000)announce()}saveRun();render(true)},
- plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();tick()},
+  else{const ms=remaining();S.run.endAt=Date.now()+ms;S.run.running=true;S.run.left=null;beeped=ms<=0;lock(true);if(ms>=curStep().min*60000-1000)announce()}saveRun();runPub();render(true)},
+ plus1:()=>{if(S.run.running)S.run.endAt+=60000;else S.run.left=remaining()+60000;beeped=false;saveRun();runPub();tick()},
  next:()=>gotoStep(S.run.i+1),prev:()=>gotoStep(S.run.i-1),goto:v=>gotoStep(+v),
  lk:v=>{S.lib.kind=v;render(true)},fold:v=>{FOLD=Object.assign({},FOLD,{[v]:!FOLD[v]});ls.set('u7-fold',FOLD);render(true)},bedit:v=>{S.openBlk=S.openBlk===v?null:v;render(true)},pstep:v=>{S.pstep=+v;render(true);try{window.scrollTo(0,0)}catch(e){}},pmore:()=>{S.pmore=!S.pmore;render(true)},pattf:()=>{S.pattOpen=!S.pattOpen;ls.set('u7-pattopen',S.pattOpen);render(true)},libreset:()=>{S.lib={kind:'all',cat:'all',age:'all',q:''};render(true)},hreset:()=>{S.hist.fav=false;S.hist.mine=false;S.hist.focus='all';S.hist.q='';S.hist.sea=false;render(true);renderHistList()},hsum:v=>openSummary(v),hsumload:v=>{closeSheet();actions.load(v)},hsumpr:v=>{const p=S.plans[v];if(!p)return;closeSheet();printHtml(planPrintHtml(p))},popen:v=>switchPlan(v),pnew:()=>{parkCurrent();S.addNew=true;actions.tab('plan')},pnewno:()=>{S.addNew=false;render(true)},
  pdone:async()=>{if(!S.plan)return;try{await savePlanToHistory(true,'done')}catch(e){toast('Uložení se nepovedlo.');return}const id=S.plan.id;closePlan(id);toast('Trénink uzavřen a uložen do Historie.');if(!S.plan)actions.tab('plan');else render(true)},
@@ -2157,7 +2159,7 @@ const actions={
  askplan:v=>{S.confirm='p_'+v;render(true)},
  delplan:async v=>{S.confirm=null;await Store.del('plans',v);render(true)}
 };
-function gotoStep(i){const st=steps();if(i<0||i>=st.length)return;S.run.i=i;const s=st[i];beeped=false;if(S.run.running){S.run.endAt=Date.now()+s.min*60000;S.run.left=null;announce()}else S.run.left=null;saveRun();render(true)}
+function gotoStep(i){const st=steps();if(i<0||i>=st.length)return;S.run.i=i;const s=st[i];beeped=false;if(S.run.running){S.run.endAt=Date.now()+s.min*60000;S.run.left=null;announce()}else S.run.left=null;saveRun();runPub();render(true)}
 document.addEventListener('click',e=>{if(S.menu&&!e.target.closest('.menu')){S.menu=false;render(true)}const b=e.target.closest('[data-a]');if(!b){if(e.target.id==='sheet')closeSheet();return}if(b.disabled)return;if(!canPlan()&&PLAN_ONLY.has(b.dataset.a)){e.preventDefault();toast('Plán tréninku mění jen trenér s oprávněním plánovat.');return}const f=actions[b.dataset.a];if(f){e.preventDefault();f(b.dataset.v,b)}});
 const PLAN_ONLY=new Set(['gen','genask','genadd','replan','replango','dup','bedit','addblk','adddrink','tplform','askplan','delplan','pnew','m+','m-','up','down','rm','bmode','pickit','swap','additem','rmitem','psaveplan']);
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(S.menu){S.menu=false;render(true)}else if(!$('#sheet').hidden)closeSheet()});
