@@ -81,6 +81,11 @@ const A=[
  d:'Hraje se v hale s plastovou pálkou. Vedle domácí mety leží žíněnka, kužel stojí asi 3 m za první metou. Děti stojí v řadě kousek za domácí metou. První se postaví do pálkařského postoje a drží pálku nahoře, jako by pálilo. Trenér stojí u nadhazovací mety a dá signál: tleskne nebo zavolá „Raketa!“. Dítě naznačí švih, pálku položí na žíněnku (nikdy ji nehází, hozená pálka znamená návrat a nový pokus) a vyrazí na první metu. Metu proběhne naplno a zastaví se až u kuželu. Zpátky se vrací po vnější straně a zařadí se na konec řady. Každé dítě 4–6 startů s krátkou pauzou mezi nimi. Dívá se na metu, ne na míček, a stačí se mety dotknout.',
  va:'Falešné signály: „Ra… rajče!“ nebo jen jedno tlesknutí místo dvou. Kdo vystartuje, udělá jeden raketový skok na místě, je to legrace, ne trest. Semafor: zelený kužel nahoře znamená běž, červený stůj. Závod ve dvojicích: dvě domácí a dvě první mety vedle sebe. Raketa proti polaři: na signál trenér hodí míček polaři na první metě, stihne to raketa dřív? Když pokládání pálky ještě nejde, hrajte nejdřív bez pálek.',
  kid:'„Raketa startuje na tlesknutí! Pálku polož na žíněnku a proleť první metu až ke kuželu.“'},
+{id:'g53',k:'game',n:'Hra dle výběru dětí',c:'hra',t:['hra'],e:2,min:10,kids:2,noauto:1,
+ gear:['Kužely'],gn:'pomůcky podle vybrané hry',dev:'radost ze hry, rozhodování a hlasování ve skupině, opakování oblíbených her',
+ d:'Děti si samy vyberou hru, kterou si zahrají. Trenér nabídne 2–3 hry, které už děti znají (třeba z dnešního tréninku nebo oblíbené z Historie), a krátce je připomene. Děti hlasují: postaví se ke kuželu nebo trenérovi, který danou hru zastupuje, nebo zvednou ruku. Hraje se hra s nejvíc hlasy, při rovnosti rozhodne trenér nebo „hvězda tréninku“. Hodí se jako odměna na konec tréninku. Pravidla zůstávají jako u původní hry, včetně bezpečnosti v hale.',
+ va:'Výběr jednoho dítěte: hru vybírá dítě, které má narozeniny, nebo kdo se ten den nejvíc snažil. Dvojí výběr: když je čas, zahrají se dvě nejoblíbenější hry po 5 minutách.',
+ kid:'„Dneska vybíráte vy! Kdo chce hrát … stoupne si sem!“'},
 {id:'g17',k:'game',n:'Trenér říká',c:'hra',e:1,min:5,kids:2,
  gear:[],dev:'pozornost, nácvik baseballových pohybů, koordinace',
  d:'Baseballová varianta „Simon říká“. Trenér dává pokyny jako „Trenér říká: švihni pálkou“, „chyť vysoký míč“, „běž na místě“, „hoď na první metu“. Děti pohyb jen předvádějí. Pokud pokyn nezačíná slovy „Trenér říká“, nesmí se pohnout. Kdo se splete, udělá 3 dřepy a hraje dál.'},
@@ -982,7 +987,7 @@ function score(a,c,cat){let s=Math.random()*1.5;const tags=[a.c].concat(a.t||[])
  else if(c.focus.includes(a.c))s+=3;else if(tags.some(t=>c.focus.includes(t)))s+=1.5;
  const rt=RS[a.id];if(rt)s+=Math.max(-2,Math.min(2,rt.up-rt.down))*.8;
  if(c.recent.has(a.id))s-=2.5;if(c.used.has(a.id))s-=100;return s}
-function best(list,c,cat){if(!list.length)return null;let b=null,bs=-1e9;list.forEach(a=>{const s=score(a,c,cat);if(s>bs){bs=s;b=a}});if(b)c.used.add(b.id);return b}
+function best(list,c,cat){list=list.filter(a=>!a.noauto);if(!list.length)return null;let b=null,bs=-1e9;list.forEach(a=>{const s=score(a,c,cat);if(s>bs){bs=s;b=a}});if(b)c.used.add(b.id);return b}
 const isWarm=a=>(a.k==='game'||a.k==='seq')&&(a.c==='warm'||(a.t||[]).includes('warm'));
 const pools={
  warm:c=>acts().filter(a=>isWarm(a)&&fits(a,c)),
