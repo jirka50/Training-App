@@ -91,6 +91,11 @@ const A=[
  d:'Dvě družstva: jedno pálí, druhé je v poli. Kousek od druhé mety (mimo dráhu běžců) stojí kbelík. Pálkař odpálí měkký míček rukou z domácí mety, buď z tee, nebo si ho sám nadhodí. Po odpalu se pálkař posune na první metu a všichni běžci na metách se posunou o jednu metu dál. Kdo dojde na domácí metu, získá bod. Polaři mají za úkol míček co nejrychleji chytit nebo sebrat a dát ho do kbelíku. Míček si můžou přihrát nebo ho doběhnout. Když je míček v kbelíku dřív, než pálkař doběhne na první metu, získává bod obrana. Pak se míček vrátí k domácí metě a pálí další. Každý v útoku pálí jednou, pak se družstva vymění. Běží se jen o jednu metu, takže na metě nikdy nejsou dva.',
  va:'Bez soupeření: obrana jen zkouší překonat svůj rekord, kolik míčků dá do kbelíku dřív, než pálkař doběhne. Pro šikovnější: míček musí projít rukama aspoň dvou polařů, nebo se odpaluje plastovou pálkou z tee.',
  kid:'„Odpal rukou a běž na další metu! Polaři, míček co nejrychleji do kbelíku!“'},
+{id:'g55',k:'game',n:'Štafeta kolem met',c:'mety',t:['hra'],e:3,min:8,kids:6,
+ gear:['Mety', 'Kužely'],gn:'4 mety, 2 kužely jako místo pro čekající družstva (vně diamantu); v hale menší čtverec a žíněnky ke stěnám',dev:'běh po metách se šlápnutím na každou metu, rychlost, předávka štafety, týmový duch',
+ d:'Dvě družstva. První stojí za domácí metou, druhé za druhou metou, obě mimo dráhu běžců. Na povel vyběhnou první běžci obou družstev současně a oběhnou všechny 4 mety proti směru hodinových ručiček zpátky na svou startovní metu. Na každou metu musí šlápnout, kdo ji mine, vrátí se. Doma plácnou do ruky dalšího běžce svého družstva, a teprve pak smí vyběhnout. Vyhrává družstvo, jehož poslední běžec doběhne jako první. Obě družstva běží stejným směrem, takže se nepotkají čelem. Kdo dobíhá soupeře, předbíhá jen z vnější strany.',
+ va:'Kratší verze: každý běžec oběhne jen polovinu (dvě mety) a předá štafetu na protější metě. Pro nejmenší: štafetou je měkký míček nebo šátek, který si běžci předávají z ruky do ruky. Při lichém počtu dětí běží jeden běžec dvakrát.',
+ kid:'„Šlápni na všechny mety, plácni kamaráda a fandíme!“'},
 {id:'g17',k:'game',n:'Trenér říká',c:'hra',e:1,min:5,kids:2,
  gear:[],dev:'pozornost, nácvik baseballových pohybů, koordinace',
  d:'Baseballová varianta „Simon říká“. Trenér dává pokyny jako „Trenér říká: švihni pálkou“, „chyť vysoký míč“, „běž na místě“, „hoď na první metu“. Děti pohyb jen předvádějí. Pokud pokyn nezačíná slovy „Trenér říká“, nesmí se pohnout. Kdo se splete, udělá 3 dřepy a hraje dál.'},
@@ -598,6 +603,8 @@ g54:{d:7,s:[['diamond'],['hoop',58,18,3]],cap:[[0,'Odpal rukou z domácí mety']
  KP([[0,49,57],[.12,49,57],[.45,72,34],[1,72,34]]),KP([[0,72,34],[.12,72,34],[.45,52,13],[1,52,13]]),
  KP([[0,38,24],[.22,38,24],[.32,36,26],[.36,36,26],[.55,56,19],[1,56,19]],{t:'k2'}),KP([[0,66,22]],{t:'k2'}),KP([[0,28,40]],{t:'k2'}),
  BALL([[.05,.1,50,55,50,50,4],[.1,.32,50,50,36,27,9]],{show:[.05,.36]}),BALL([[.36,.55,36,25,57,18,0]],{show:[.36,.58]}),BALL([[.58,.6,58,18,58,18,0]],{show:[.58,1]})]},
+g55:{d:8,s:[['diamond']],cap:[[0,'Oba týmy vybíhají najednou'],[.5,'Šlápni na každou metu'],[.92,'Doma plácni dalšího!']],a:[
+ KP([[0.00,49,56],[0.06,49,56],[0.27,72,34],[0.48,50,12],[0.69,28,34],[0.90,49,56]]),KP([[0.00,50,12],[0.06,50,12],[0.27,28,34],[0.48,49,56],[0.69,72,34],[0.90,50,12]],{t:'k2'}),KP([[0,44,61]]),KP([[0,39,62]]),KP([[0,55,8]],{t:'k2'}),KP([[0,60,6]],{t:'k2'})]},
 g17:{d:6,s:[['txt',50,8,'Trenér říká…']],cap:[[0,'„Trenér říká: běž na místě!“ – všichni běží'],[.5,'„Švihni!“ – bez Trenér říká se nehýbáme']],a:[
  {t:'c',p:pth([[0,50,16]])},...[20,35,50,65,80].map((x,i)=>K_(t=>[x,40+(t<.5?Math.sin(t*TAU*8+i)*1.5:0),0]))]},
 g18:{d:7,s:[['diamond']],cap:[[0,'Vláček obíhá mety, pak mini zápas']],a:[0,1,2,3,4].map(i=>KP(around(i*.04,.8+i*.04)))},
