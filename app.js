@@ -249,6 +249,11 @@ const A=[
  d:'Děti stojí v řadě za domácí metou. Po jednom oběhnou všechny mety proti směru hodinových ručiček: první, druhá, třetí a domů. Na každou metu musí šlápnout, kdo ji mine, vrátí se a šlápne. Trenér stojí uprostřed, hlídá směr a šlápnutí a nahlas vyvolává mety. Další dítě vybíhá, když předchozí šlápne na první metu. Nezávodí se. První kolo pomalu klusem, další rychleji, poslední kolo naplno. Doma dítě zpomalí a zařadí se na konec řady.',
  va:'Děti samy hlásí metu, na kterou šlapou („Jedna! Dva! Tři! Doma!“). Pro šikovnější: na metě zatáčet obloukem a šlapat na vnitřní roh mety. Pro nejmenší: trenér nebo rodič stojí u každé mety a dítě mu tam „plácne“.',
  kid:'„Šlápni na každou metu a hlasitě ji řekni: jedna, dva, tři, doma!“'},
+{id:'d29',k:'drill',n:'Sbírání míčků lopatkou',c:'chytani',e:1,min:7,kids:1,st:1,
+ gear:['Měkké míčky', 'Kbelíky', 'Kužely'],gn:'lopatka na smetí pro každé dítě v řadě, 5–10 míčků, kbelík nebo krabice na míčky',dev:'návyk sbírat míček ze země, postavení před míčem, zavření míčku shora, přendání do házecí ruky a hod',
+ d:'Děti stojí v řadě. Každé má na ruce, kde nosí rukavici, lopatku na smetí. Trenér stojí 4–6 m před dítětem a kutálí mu míček po zemi. Dítě vyjde míčku naproti a postaví se před něj. Lopatku položí na zem a nechá míček do ní vkutálet. Házecí rukou ho shora „zavře“ a vyndá. Pak se otočí k připravenému kbelíku 3–4 m stranou a hodí do něj míček házecí rukou. Každé dítě má 3 míčky, pak jde na konec řady. Hlídej, aby lopatka byla dole na zemi a dítě nesbíralo míček jen jednou rukou z boku.',
+ va:'Pro šikovnější: rychlejší a trochu do strany kutálené míčky, dítě se musí přesunout. Soutěž: kolik míčků z 5 skončí v kbelíku. Pak stejné cvičení s rukavicí místo lopatky.',
+ kid:'„Lopatka dolů na zem, míček do ní vjede, druhou rukou ho zavři a hoď do kbelíku!“'},
 {id:'d01',k:'drill',n:'Držení míče',c:'hazeni',e:1,min:5,kids:1,st:1,gear:['Měkké míčky'],gn:'míček pro každé dítě',
  dev:'správný úchop míče, příprava na hod',
  d:'Dítě drží míč dvěma prsty nahoře (ukazovák a prostředník) a palcem dole, z boku je vidět písmeno C. Míč se nedrží v dlani. Trenér řekne „ukaž céčko“ a děti zvednou míč. Pak hledají šev a pokládají prsty přes něj.',
@@ -692,6 +697,9 @@ d27:{d:6,cap:[[0,'Trenér hodí obloukem, oči na míček'],[.5,'Přesuň se pod
  BALL([[.1,.38,24,30,66,27,22],[.6,.88,24,30,78,23,26]],{show:[.1,1]})]},
 d28:{d:8,s:[['diamond']],cap:[[0,'Šlápni na první metu'],[.3,'Druhá…'],[.55,'Třetí…'],[.8,'…a domů!']],a:[
  {t:'c',p:pth([[0,50,34]])},KP([[0,49,57],[.05,49,57],[.28,72,34],[.32,72,34],[.53,50,12],[.57,50,12],[.78,28,34],[.82,28,34],[1,49,56]]),KP([[0,44,61]],{t:'k2'}),KP([[0,39,62]],{t:'k2'})]},
+d29:{d:6,s:[['hoop',80,20,4],['txt',80,10,'kbelík']],cap:[[0,'Trenér kutálí míček po zemi'],[.32,'Lopatka dolů, míček do ní vjede'],[.48,'Zavři ho druhou rukou'],[.6,'…a hoď do kbelíku']],a:[
+ {t:'c',p:pth([[0,16,34]])},KP([[0,58,38],[.28,50,36],[.6,50,36],[.65,52,34],[.9,52,34],[1,58,38]]),KP([[0,64,48]],{t:'k2'}),KP([[0,70,52]],{t:'k2'}),
+ BALL([[.02,.34,19,36,48,37,0],[.62,.85,50,33,80,20,12]],{show:[.02,.9]})]},
 d01:{d:4,s:[['big',78,30,'C']],cap:[[0,'Dva prstíky nahoře, palec dole'],[.5,'Ukaž céčko!']],fig:loopP([[0,pz({ball:1,rs:30,re:60})],[.4,pz({ball:1,rs:30,re:60})],[.6,pz({ball:1,rs:120,re:40})],[.9,pz({ball:1,rs:120,re:40})]])},
 d02:{d:3.5,cap:[[0,'Koleno dole, rukavice míří'],[.45,'Ruka letí nahoru jako letadlo'],[.7,'…a plácne do kolena']],
  fig:loopP([[0,pz(Object.assign({},KNEEL,{ls:95,le:0,rs:60,re:80,ball:1}))],[.3,pz(Object.assign({},KNEEL,{ls:95,le:0,rs:-115,re:-35,ball:1}))],[.45,pz(Object.assign({},KNEEL,{lean:5,ls:70,le:20,rs:-190,re:-15,ball:1}))],[.55,pz(Object.assign({},KNEEL,{lean:25,ls:30,le:40,rs:-262,re:0}))],[.75,pz(Object.assign({},KNEEL,{lean:35,ls:-10,le:60,rs:-345,re:0}))],[.9,pz(Object.assign({},KNEEL,{ls:95,le:0,rs:60,re:80}))]]),
