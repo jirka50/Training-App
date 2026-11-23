@@ -106,6 +106,11 @@ const A=[
  d:'Děti stojí v zástupu za sebou, asi na délku paže od sebe. První drží míček a posílá ho dozadu tak, jak trenér zavolá: nad hlavou, mezi nohama, bokem (vpravo nebo vlevo) nebo vsedě. Další dítě si míček převezme oběma rukama a pošle ho stejným způsobem dál. Poslední s míčkem doběhne dopředu, postaví se na začátek zástupu a začíná znovu. Když míček spadne, dítě ho zvedne a pokračuje tam, kde upadl. Kolo končí, když se na začátek vrátí ten, kdo začínal. Trenér mezi koly mění způsob nebo je střídá: nahoru, dolů, nahoru, dolů.',
  va:'Závod dvou družstev vedle sebe: kdo dřív dokončí kolo. Pro nejmenší jen nad hlavou a mezi nohama, s velkým měkkým míčem. Pro šikovnější „had“ s dvěma míčky za sebou nebo předávání se zavřenýma očima podle hlasu kamaráda.',
  kid:'„Had má v bříšku míček: nahoru, dolů, nahoru, dolů, a poslední běží dopředu!“'},
+{id:'g58',k:'game',n:'Lasery',c:'warm',t:['hra'],e:3,min:6,kids:4,
+ gear:['Lano'],gn:'1–2 dlouhá lana (švihadla nebo měkké lano, 6–10 m), lavička pro vyřazené',dev:'reakce, sledování pohybu, rychlá změna směru, podlézání a přeskakování, ohleduplnost k ostatním',
+ d:'Dva trenéři drží napnuté lano mezi sebou, každý za jeden konec. Děti jsou rozprostřené po hřišti. Na povel trenéři s lanem pomalu přecházejí přes hřiště a lano je „laser“. Děti před ním musí uhnout: utéct stranou, podlézt ho, nebo ho přeskočit, podle toho, jak vysoko je. Kdo se lana dotkne, jde na lavičku. Když jsou trenéři čtyři, jdou dvě lana najednou a mohou se i křížit. Hraje se, dokud na hřišti nezůstanou 2–3 děti. Ty vyhrávají a začíná se znovu. Lano držte nízko u kolen nebo nad hlavou dětí, nikdy ne v úrovni krku. Na začátku jděte pomalu a lano při dotyku povolte, aby nikoho nepodrazilo.',
+ va:'Pro nejmenší: z lavičky se vrací po příštím přechodu lana, ať nikdo nesedí dlouho. Pro šikovnější: trenéři mění výšku lana za chůze (nízko – přeskočit, vysoko – podlézt) nebo se lana pohybují proti sobě. Bez vyřazování: za dotyk jen 5 dřepů a hned zpět do hry.',
+ kid:'„Laser tě nesmí chytit! Uteč, podlez nebo přeskoč!“'},
 {id:'g17',k:'game',n:'Trenér říká',c:'hra',e:1,min:5,kids:2,
  gear:[],dev:'pozornost, nácvik baseballových pohybů, koordinace',
  d:'Baseballová varianta „Simon říká“. Trenér dává pokyny jako „Trenér říká: švihni pálkou“, „chyť vysoký míč“, „běž na místě“, „hoď na první metu“. Děti pohyb jen předvádějí. Pokud pokyn nezačíná slovy „Trenér říká“, nesmí se pohnout. Kdo se splete, udělá 3 dřepy a hraje dál.'},
@@ -625,6 +630,13 @@ g56:{d:8,s:[['diamond']],cap:[[0,'Oba týmy vybíhají z první a třetí mety']
 g57:{d:7,s:[['cone',14,40]],cap:[[0,'Nad hlavou…'],[.18,'…mezi nohama…'],[.36,'…a zase nad hlavou'],[.56,'Poslední běží s míčkem dopředu'],[.88,'…a začíná znovu']],a:[
  {t:'c',p:pth([[0,50,18]])},KP([[0,30,40]]),KP([[0,42,40]]),KP([[0,54,40]]),KP([[0,66,40],[.56,66,40],[.64,72,50],[.8,24,52],[.88,20,40],[1,20,40]]),
  BALL([[.02,.16,30,39,42,39,7],[.2,.34,42,41,54,41,0],[.38,.52,54,39,66,39,7],[.56,.64,66,40,72,50,0],[.64,.8,72,50,24,52,0],[.8,.88,24,52,20,40,0]],{show:[.02,1]})]},
+g58:{d:9,s:[['txt',84,60,'lavička']],cap:[[0,'Trenéři nesou napnuté lano přes hřiště'],[.18,'Uteč, podlez nebo přeskoč!'],[.3,'Kdo se dotkne, jde na lavičku'],[.55,'Druhé lano může jít křížem']],a:[
+ {t:'c',p:pth([[0,8,5],[.5,92,5],[1,8,5]])},{t:'c',p:pth([[0,8,51],[.5,92,51],[1,8,51]])},{t:'link',a:0,b:1},
+ {t:'c',p:pth([[0,4,10],[.25,4,10],[.62,4,46],[1,4,10]])},{t:'c',p:pth([[0,96,10],[.25,96,10],[.62,96,46],[1,96,10]])},{t:'link',a:3,b:4},
+ KP([[0,30,30],[.12,26,30],[.18,22,30],[.24,30,24],[.4,40,20],[.7,50,24],[1,30,30]]),
+ KP([[0,55,40],[.3,58,40],[.4,48,40],[.55,60,30],[.8,62,40],[1,55,40]]),
+ KP([[0,70,22],[.4,74,22],[.48,64,22],[.62,70,36],[.82,74,26],[1,70,22]]),
+ KP([[0,42,44],[.22,42,44],[.26,40,44],[.34,70,56],[.4,76,56],[.95,76,56],[1,42,44]],{t:'k2'})]},
 g17:{d:6,s:[['txt',50,8,'Trenér říká…']],cap:[[0,'„Trenér říká: běž na místě!“ – všichni běží'],[.5,'„Švihni!“ – bez Trenér říká se nehýbáme']],a:[
  {t:'c',p:pth([[0,50,16]])},...[20,35,50,65,80].map((x,i)=>K_(t=>[x,40+(t<.5?Math.sin(t*TAU*8+i)*1.5:0),0]))]},
 g18:{d:7,s:[['diamond']],cap:[[0,'Vláček obíhá mety, pak mini zápas']],a:[0,1,2,3,4].map(i=>KP(around(i*.04,.8+i*.04)))},
