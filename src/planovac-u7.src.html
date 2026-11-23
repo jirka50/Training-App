@@ -417,6 +417,11 @@ const A=[
  d:'Dvě družstva. První stojí u první mety, druhé u třetí mety, obě vně diamantu mimo dráhu běžců. Na povel vyběhnou první běžci obou družstev současně a oběhnou celé hřiště proti směru hodinových ručiček zpátky na svou metu. Družstvo z první mety běží přes druhou, třetí a domácí metu, družstvo ze třetí mety přes domácí, první a druhou. Na každou metu musí šlápnout, kdo ji mine, vrátí se. Na své metě plácne do ruky dalšího běžce, teprve pak smí vyběhnout. Vyhrává družstvo, jehož poslední běžec doběhne první. Obě družstva běží stejným směrem a startují naproti sobě, takže se nepotkají čelem. Kdo dobíhá soupeře, předbíhá jen z vnější strany.',
  va:'Kratší verze: každý běžec oběhne jen dvě mety a předá štafetu na protější metě. Pro nejmenší: štafetou je šátek nebo měkký míček, který si běžci předávají z ruky do ruky. Při lichém počtu dětí běží jeden běžec dvakrát.',
  kid:'„Celé kolečko, šlápni na každou metu a plácni kamaráda!“'},
+{id:'g57',k:'game',n:'Had – posílání míčku',c:'chytani',t:['hra'],e:1,min:6,kids:4,st:1,
+ gear:['Měkké míčky', 'Kužely'],gn:'1 měkký míček nebo malý balon pro každé družstvo, kužel na startovní čáru',dev:'jistý úchop a předání míčku oběma rukama, ohebnost, koordinace, spolupráce v družstvu',
+ d:'Děti stojí v zástupu za sebou, asi na délku paže od sebe. První drží míček a posílá ho dozadu tak, jak trenér zavolá: nad hlavou, mezi nohama, bokem (vpravo nebo vlevo) nebo vsedě. Další dítě si míček převezme oběma rukama a pošle ho stejným způsobem dál. Poslední s míčkem doběhne dopředu, postaví se na začátek zástupu a začíná znovu. Když míček spadne, dítě ho zvedne a pokračuje tam, kde upadl. Kolo končí, když se na začátek vrátí ten, kdo začínal. Trenér mezi koly mění způsob nebo je střídá: nahoru, dolů, nahoru, dolů.',
+ va:'Závod dvou družstev vedle sebe: kdo dřív dokončí kolo. Pro nejmenší jen nad hlavou a mezi nohama, s velkým měkkým míčem. Pro šikovnější „had“ s dvěma míčky za sebou nebo předávání se zavřenýma očima podle hlasu kamaráda.',
+ kid:'„Had má v bříšku míček: nahoru, dolů, nahoru, dolů, a poslední běží dopředu!“'},
 {id:'g17',k:'game',n:'Trenér říká',c:'hra',e:1,min:5,kids:2,
  gear:[],dev:'pozornost, nácvik baseballových pohybů, koordinace',
  d:'Baseballová varianta „Simon říká“. Trenér dává pokyny jako „Trenér říká: švihni pálkou“, „chyť vysoký míč“, „běž na místě“, „hoď na první metu“. Děti pohyb jen předvádějí. Pokud pokyn nezačíná slovy „Trenér říká“, nesmí se pohnout. Kdo se splete, udělá 3 dřepy a hraje dál.'},
@@ -933,6 +938,9 @@ g55:{d:8,s:[['diamond']],cap:[[0,'Oba týmy vybíhají najednou'],[.5,'Šlápni 
  KP([[0.00,49,56],[0.06,49,56],[0.27,72,34],[0.48,50,12],[0.69,28,34],[0.90,49,56]]),KP([[0.00,50,12],[0.06,50,12],[0.27,28,34],[0.48,49,56],[0.69,72,34],[0.90,50,12]],{t:'k2'}),KP([[0,44,61]]),KP([[0,39,62]]),KP([[0,55,8]],{t:'k2'}),KP([[0,60,6]],{t:'k2'})]},
 g56:{d:8,s:[['diamond']],cap:[[0,'Oba týmy vybíhají z první a třetí mety'],[.5,'Celé kolečko, šlápni na každou metu'],[.92,'Na své metě plácni dalšího!']],a:[
  KP([[0.00,72,34],[0.06,72,34],[0.27,50,12],[0.48,28,34],[0.69,49,56],[0.90,72,34]]),KP([[0.00,28,34],[0.06,28,34],[0.27,49,56],[0.48,72,34],[0.69,50,12],[0.90,28,34]],{t:'k2'}),KP([[0,78,38]]),KP([[0,83,41]]),KP([[0,22,38]],{t:'k2'}),KP([[0,17,41]],{t:'k2'})]},
+g57:{d:7,s:[['cone',14,40]],cap:[[0,'Nad hlavou…'],[.18,'…mezi nohama…'],[.36,'…a zase nad hlavou'],[.56,'Poslední běží s míčkem dopředu'],[.88,'…a začíná znovu']],a:[
+ {t:'c',p:pth([[0,50,18]])},KP([[0,30,40]]),KP([[0,42,40]]),KP([[0,54,40]]),KP([[0,66,40],[.56,66,40],[.64,72,50],[.8,24,52],[.88,20,40],[1,20,40]]),
+ BALL([[.02,.16,30,39,42,39,7],[.2,.34,42,41,54,41,0],[.38,.52,54,39,66,39,7],[.56,.64,66,40,72,50,0],[.64,.8,72,50,24,52,0],[.8,.88,24,52,20,40,0]],{show:[.02,1]})]},
 g17:{d:6,s:[['txt',50,8,'Trenér říká…']],cap:[[0,'„Trenér říká: běž na místě!“ – všichni běží'],[.5,'„Švihni!“ – bez Trenér říká se nehýbáme']],a:[
  {t:'c',p:pth([[0,50,16]])},...[20,35,50,65,80].map((x,i)=>K_(t=>[x,40+(t<.5?Math.sin(t*TAU*8+i)*1.5:0),0]))]},
 g18:{d:7,s:[['diamond']],cap:[[0,'Vláček obíhá mety, pak mini zápas']],a:[0,1,2,3,4].map(i=>KP(around(i*.04,.8+i*.04)))},
